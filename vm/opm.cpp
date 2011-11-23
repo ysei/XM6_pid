@@ -4,6 +4,7 @@
 // ---------------------------------------------------------------------------
 //	$Id: opm.cpp,v 1.26 2003/08/25 13:53:08 cisc Exp $
 
+#include "stdafx.h"
 #include "os.h"
 #include "cisc.h"
 #include "opm.h"

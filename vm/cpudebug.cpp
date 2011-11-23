@@ -6,7 +6,8 @@
 ** Refer to STARDOC.TXT for terms of use, API reference, and directions on
 ** how to compile.
 */
-
+#include "stdafx.h"
+#define _CRT_SECURE_NO_WARNINGS //VC2010//
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,12 +16,14 @@
 #include <assert.h>
 #include "starcpu.h"
 
+extern "C" {
+
 void (*cpudebug_get)(char*, int);
 void (*cpudebug_put)(const char*);
 
 typedef unsigned char BYTE;
 typedef unsigned short WORD;
-typedef unsigned int DWORD;
+//typedef unsigned int DWORD;
 
 static char out_buffer[0x100];
 static int out_count;
@@ -1857,3 +1860,5 @@ void cpudebug_disassemble(int n) {
 		cpudebug_printf("%s\n", sdebug);
 	}
 }
+
+}// extern "C"

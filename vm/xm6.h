@@ -9,6 +9,8 @@
 
 #if !defined(xm6_h)
 #define xm6_h
+#define _CRT_SECURE_NO_WARNINGS	//VC2010//
+#pragma warning(disable : 4100)	//VC2010//
 
 //---------------------------------------------------------------------------
 //
