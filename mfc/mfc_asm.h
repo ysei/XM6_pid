@@ -31,6 +31,7 @@ void SoundMMX(DWORD *pSrc, WORD *pDst, int nBytes);
 void SoundEMMS();
 										// サウンドサンプルサイジング(EMMS)
 
+/*
 void VideoText(const BYTE *pTVRAM, DWORD *pBits, int nLen, DWORD *pPalette);
 										// テキストVRAM
 void VideoG1024A(const BYTE *src, DWORD *dst, DWORD *plt);
@@ -57,7 +58,7 @@ void VideoBG16(BYTE *pcg, DWORD *dst, DWORD bg, int y, DWORD *plt);
 										// BG 16x16
 void VideoBG8(BYTE *pcg, DWORD *dst, DWORD bg, int y, DWORD *plt);
 										// BG 8x8
-
+*/
 #if defined(__cplusplus)
 }
 #endif	//__cplusplus

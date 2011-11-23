@@ -76,7 +76,7 @@ void FASTCALL CComponent::Cleanup()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL CComponent::Save(Fileio* /*pFio*/, int /*nVer*/)
+BOOL FASTCALL CComponent::Save(Fileio* , int )
 {
 	ASSERT(this);
 	ASSERT_VALID(this);
@@ -89,7 +89,7 @@ BOOL FASTCALL CComponent::Save(Fileio* /*pFio*/, int /*nVer*/)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL CComponent::Load(Fileio* /*pFio*/, int /*nVer*/)
+BOOL FASTCALL CComponent::Load(Fileio* , int )
 {
 	ASSERT(this);
 	ASSERT_VALID(this);
@@ -102,7 +102,7 @@ BOOL FASTCALL CComponent::Load(Fileio* /*pFio*/, int /*nVer*/)
 //	設定適用
 //
 //---------------------------------------------------------------------------
-void FASTCALL CComponent::ApplyCfg(const Config* /*pConfig*/)
+void FASTCALL CComponent::ApplyCfg(const Config* )
 {
 	ASSERT(this);
 	ASSERT_VALID(this);

@@ -1013,7 +1013,8 @@ void FASTCALL CHostFilename::SetHuman(int nCount)
 	DWORD nExt = pExt - pSecond;	// Šg’£q–¼•”•ª‚Ì’·‚³
 	if ((DWORD)(pCut - pFirst) + nExt > nMax) pCut = pFirst + nMax - nExt;
 	// 2ƒoƒCƒg•¶š‚Ì“r’†‚È‚ç‚³‚ç‚É’Zk
-	for (p = pFirst; p < pCut; p++) {
+//VC2010//	for (p = pFirst; p < pCut; p++) {
+	for (const BYTE* p = pFirst; p < pCut; p++) {	//VC2010//
 		BYTE c = *p;
 		if ((0x80 <= c && c <= 0x9F) || 0xE0 <= c) {	// Œµ–§‚É‚Í 0x81`0x9F 0xE0`0xEF
 			p++;
@@ -1097,7 +1098,8 @@ BOOL FASTCALL CHostFilename::SetEntry(const WIN32_FIND_DATA* pWin32Find)
 			m_dirEntry.name[i] = ' ';
 	}
 
-	for (i = 0; i < 10; i++) {
+//VC2010//	for (i = 0; i < 10; i++) {
+	for (int i = 0; i < 10; i++) {	//VC2010//
 		if (p < m_pszHumanExt)
 			m_dirEntry.add[i] = *p++;
 		else
@@ -1105,7 +1107,8 @@ BOOL FASTCALL CHostFilename::SetEntry(const WIN32_FIND_DATA* pWin32Find)
 	}
 
 	if (*p == '.') p++;
-	for (i = 0; i < 3; i++) {
+//VC2010//	for (i = 0; i < 3; i++) {
+	for (int i = 0; i < 3; i++) {
 		BYTE c = *p;
 		if (c) p++;
 		m_dirEntry.ext[i] = c;
@@ -3209,7 +3212,8 @@ CWinFileSys::CWinFileSys()
 	m_bResume = FALSE;
 	m_nDrives = 0;
 
-	for (n = 0; n < DrvMax; n++) {
+//VC2010//	for (n = 0; n < DrvMax; n++) {
+	for (int n = 0; n < DrvMax; n++) {
 		m_nFlag[n] = 0;
 		m_szBase[n][0] = _T('\0');
 	}
@@ -4465,7 +4469,8 @@ int FASTCALL CWinFileSys::DiskRead(CWindrv* ps, DWORD nAddress, DWORD nSector, D
 		// ‹[—ƒfƒBƒŒƒNƒgƒŠƒGƒ“ƒgƒŠ‚ğ“]‘—
 		BYTE* p = (BYTE*)&dir;
 		for (int i = 0; i < 0x20; i++) pMemory->WriteByte(nAddress++, *p++);
-		for (i = 0x20; i < 0x200; i++) pMemory->WriteByte(nAddress++, 0xFF);
+//VC2010//		for (i = 0x20; i < 0x200; i++) pMemory->WriteByte(nAddress++, 0xFF);
+		for (int i = 0x20; i < 0x200; i++) pMemory->WriteByte(nAddress++, 0xFF);
 
 		ps->UnlockXM();
 

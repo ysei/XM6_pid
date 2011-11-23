@@ -18,7 +18,9 @@
 //
 //---------------------------------------------------------------------------
 #define WINVER					0x500	// Windows98,Me,2000,XP以降
-#define _WIN32_WINNT			0x410	// Windows98,Me,2000,XP以降
+//VC2010//	#define _WIN32_WINNT			0x410	// Windows98,Me,2000,XP以降
+#define _WIN32_WINNT			0x501	//VC2010//
+#define _CRT_SECURE_NO_WARNINGS			//VC2010//
 #define VC_EXTRALEAN
 
 // MFC
@@ -37,7 +39,8 @@
 // DirectX
 #define DIRECTSOUND_VERSION		0x500	// DirectX5を指定
 #include <dsound.h>
-#define DIRECTINPUT_VERSION		0x500	// DirectX5を指定
+//VC2010//#define DIRECTINPUT_VERSION		0x500	// DirectX5を指定
+#define DIRECTINPUT_VERSION		0x0800	//VC2010//	// DirectX8を指定
 #include <dinput.h>
 
 // C Runtime
@@ -66,45 +69,16 @@
 //	クラス宣言
 //
 //---------------------------------------------------------------------------
-class VM;
-										// 仮想マシン
-
-class CApp;
-										// アプリケーション
-class CFrmWnd;
-										// フレームウィンドウ
-class CDrawView;
-										// 描画ビュー
-class CStatusView;
-										// ステータスビュー
-
-class CSubWnd;
-										// サブウィンドウ
-class CSubTextWnd;
-										// サブウィンドウ(テキスト)
-class CSubListWnd;
-										// サブウィンドウ(リストコントロール)
-
-class CComponent;
-										// コンポーネント共通
-class CConfig;
-										// コンフィグコンポーネント
-class CScheduler;
-										// スケジュールコンポーネント
-class CSound;
-										// サウンドコンポーネント
-class CInput;
-										// インプットコンポーネント
-class CPort;
-										// ポートコンポーネント
-class CMIDI;
-										// MIDIコンポーネント
-class CTKey;
-										// TrueKeyコンポーネント
-class CHost;
-										// ホストコンポーネント
-class CInfo;
-										// 情報コンポーネント
+class VM;								// 仮想マシン
+class CApp;								// アプリケーション
+class CFrmWnd;							// フレームウィンドウ
+class CDrawView;						// 描画ビュー
+class CComponent;						// コンポーネント共通
+class CConfig;							// コンフィグコンポーネント
+class CScheduler;						// スケジュールコンポーネント
+class CSound;							// サウンドコンポーネント
+class CInput;							// インプットコンポーネント
+class CHost;							// ホストコンポーネント
 
 //---------------------------------------------------------------------------
 //

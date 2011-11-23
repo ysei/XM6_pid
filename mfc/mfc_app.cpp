@@ -15,9 +15,13 @@
 #include "mfc_frm.h"
 #include "mfc_asm.h"
 #include "mfc_com.h"
-#include "mfc_info.h"
 #include "mfc_res.h"
 #include "mfc_app.h"
+
+#include "vm.h"
+#include "cpu.h"
+#include "memory.h"
+
 
 //---------------------------------------------------------------------------
 //
@@ -303,12 +307,6 @@ void FASTCALL SetInfoMsg(LPCTSTR lpszMsg, BOOL bRec)
 	// バッファアドレスが与えられていなければ、無視
 	if (!lpszInfoMsg) {
 		return;
-	}
-
-	// バッファサイズチェック
-	if (_tcslen(lpszInfoMsg) < CInfo::InfoBufMax) {
-		// 与えられた文字列をコピー
-		_tcscpy(lpszInfoMsg, lpszMsg);
 	}
 }
 
@@ -604,4 +602,28 @@ BOOL CALLBACK CApp::EnumXM6Proc(HWND hWnd, LPARAM lParam)
 	return TRUE;
 }
 
+//---------------------------------------------------------------------------
+//
+//	cpudebug.c ワード読み出し (mfc_cpu.cpp)
+//
+//---------------------------------------------------------------------------
+extern "C" WORD cpudebug_fetch(DWORD addr)
+{
+	static Memory* cpudebug_memory = 0;
+
+	WORD w;
+
+	if(cpudebug_memory == 0) {
+		cpudebug_memory = (Memory*)::GetVM()->SearchDevice(MAKEID('M', 'E', 'M', ' '));
+	}
+
+	ASSERT(cpudebug_memory);
+
+	addr &= 0xfffffe;
+	w = (WORD) cpudebug_memory->ReadOnly(addr);
+	w <<= 8;
+	w |= cpudebug_memory->ReadOnly(addr + 1);
+
+	return w;
+}
 #endif	// _WIN32

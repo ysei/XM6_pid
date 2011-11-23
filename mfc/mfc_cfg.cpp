@@ -27,10 +27,6 @@
 #include "mfc_res.h"
 #include "mfc_snd.h"
 #include "mfc_inp.h"
-#include "mfc_midi.h"
-#include "mfc_tkey.h"
-#include "mfc_w32.h"
-#include "mfc_info.h"
 #include "mfc_cfg.h"
 
 //===========================================================================
@@ -90,7 +86,7 @@ BOOL FASTCALL CConfig::Init()
 	LoadKey();
 
 	// TrueKey
-	LoadTKey();
+//	LoadTKey();
 
 	// セーブ・ロード
 	m_bApply = FALSE;
@@ -121,7 +117,7 @@ void FASTCALL CConfig::Cleanup()
 	SaveKey();
 
 	// TrueKey
-	SaveTKey();
+//	SaveTKey();
 
 	// 基本クラス
 	CComponent::Cleanup();
@@ -847,7 +843,7 @@ void FASTCALL CConfig::SaveKey() const
 									strKey, m_IniFile);
 	}
 }
-
+/*
 //---------------------------------------------------------------------------
 //
 //	TrueKeyロード
@@ -892,7 +888,7 @@ void FASTCALL CConfig::LoadTKey() const
 
 	// フラグが立っていれば、マップデータ設定
 	if (bFlag) {
-		pTKey->SetKeyMap(nMap);
+//		pTKey->SetKeyMap(nMap);
 	}
 }
 
@@ -916,7 +912,7 @@ void FASTCALL CConfig::SaveTKey() const
 	ASSERT(pTKey);
 
 	// キーマップ取得
-	pTKey->GetKeyMap(nMap);
+//	pTKey->GetKeyMap(nMap);
 
 	// ループ
 	for (i=0; i<0x73; i++) {
@@ -927,13 +923,13 @@ void FASTCALL CConfig::SaveTKey() const
 									strKey, m_IniFile);
 	}
 }
-
+*/
 //---------------------------------------------------------------------------
 //
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL CConfig::Save(Fileio *pFio, int /*nVer*/)
+BOOL FASTCALL CConfig::Save(Fileio *pFio, int )
 {
 	size_t sz;
 
@@ -1482,7 +1478,7 @@ END_MESSAGE_MAP()
 BOOL CSoundPage::OnInitDialog()
 {
 	CFrmWnd *pFrmWnd;
-	CSound *pSound;
+//	CSound *pSound;
 	CComboBox *pComboBox;
 	CButton *pButton;
 	CEdit *pEdit;
@@ -1497,8 +1493,8 @@ BOOL CSoundPage::OnInitDialog()
 	// サウンドコンポーネントを取得
 	pFrmWnd = (CFrmWnd*)AfxGetApp()->m_pMainWnd;
 	ASSERT(pFrmWnd);
-	pSound = pFrmWnd->GetSound();
-	ASSERT(pSound);
+//	pSound = pFrmWnd->GetSound();
+//	ASSERT(pSound);
 
 	// デバイスコンボボックス初期化
 	pComboBox = (CComboBox*)GetDlgItem(IDC_SOUND_DEVICEC);
@@ -1506,19 +1502,20 @@ BOOL CSoundPage::OnInitDialog()
 	pComboBox->ResetContent();
 	::GetMsg(IDS_SOUND_NOASSIGN, strName);
 	pComboBox->AddString(strName);
-	for (i=0; i<pSound->m_nDeviceNum; i++) {
-		pComboBox->AddString(pSound->m_DeviceDescr[i]);
-	}
+//	for (i=0; i<pSound->m_nDeviceNum; i++) {
+//		pComboBox->AddString(pSound->m_DeviceDescr[i]);
+//	}
 
 	// コンボボックスのカーソル位置
 	if (m_pConfig->sample_rate == 0) {
 		pComboBox->SetCurSel(0);
 	}
 	else {
-		if (pSound->m_nDeviceNum <= m_pConfig->sound_device) {
-			pComboBox->SetCurSel(0);
-		}
-		else {
+//		if (pSound->m_nDeviceNum <= m_pConfig->sound_device) {
+//			pComboBox->SetCurSel(0);
+//		}
+//		else
+		{
 			pComboBox->SetCurSel(m_pConfig->sound_device + 1);
 		}
 	}
@@ -1625,7 +1622,7 @@ void CSoundPage::OnOK()
 //	縦スクロール
 //
 //---------------------------------------------------------------------------
-void CSoundPage::OnVScroll(UINT /*nSBCode*/, UINT nPos, CScrollBar* pBar)
+void CSoundPage::OnVScroll(UINT , UINT nPos, CScrollBar* pBar)
 {
 	CEdit *pEdit;
 	CSpinButtonCtrl *pSpin;
@@ -1773,10 +1770,10 @@ CVolPage::CVolPage()
 	m_uHelpID = IDC_VOL_HELP;
 
 	// オブジェクト
-	m_pSound = NULL;
+//	m_pSound = NULL;
 	m_pOPMIF = NULL;
 	m_pADPCM = NULL;
-	m_pMIDI = NULL;
+//	m_pMIDI = NULL;
 
 	// タイマー
 	m_nTimerID = NULL;
@@ -1807,7 +1804,7 @@ BOOL CVolPage::OnInitDialog()
 	CString strLabel;
 	CButton *pButton;
 	int nPos;
-	int nMax;
+	int nMax = 100;
 
 	// 基本クラス
 	CConfigPage::OnInitDialog();
@@ -1815,8 +1812,8 @@ BOOL CVolPage::OnInitDialog()
 	// サウンドコンポーネントを取得
 	pFrmWnd = (CFrmWnd*)AfxGetApp()->m_pMainWnd;
 	ASSERT(pFrmWnd);
-	m_pSound = pFrmWnd->GetSound();
-	ASSERT(m_pSound);
+//	m_pSound = pFrmWnd->GetSound();
+//	ASSERT(m_pSound);
 
 	// OPMIFを取得
 	m_pOPMIF = (OPMIF*)::GetVM()->SearchDevice(MAKEID('O', 'P', 'M', ' '));
@@ -1826,15 +1823,16 @@ BOOL CVolPage::OnInitDialog()
 	m_pADPCM = (ADPCM*)::GetVM()->SearchDevice(MAKEID('A', 'P', 'C', 'M'));
 	ASSERT(m_pADPCM);
 
-	// MIDIを取得
-	m_pMIDI = pFrmWnd->GetMIDI();
-	ASSERT(m_pMIDI);
+//		// MIDIを取得
+//		m_pMIDI = pFrmWnd->GetMIDI();
+//		ASSERT(m_pMIDI);
 
 	// マスタボリューム
 	pSlider = (CSliderCtrl*)GetDlgItem(IDC_VOL_VOLS);
 	ASSERT(pSlider);
 	pSlider->SetRange(0, 100);
-	nPos = m_pSound->GetMasterVol(nMax);
+	nPos = -1;
+//	nPos = m_pSound->GetMasterVol(nMax);
 	if (nPos >= 0) {
 		// 音量調整できる
 		pSlider->SetRange(0, nMax);
@@ -1858,7 +1856,7 @@ BOOL CVolPage::OnInitDialog()
 	ASSERT(pSlider);
 	pSlider->SetRange(0, 100);
 	::LockVM();
-	nPos = m_pSound->GetVolume();
+//	nPos = m_pSound->GetVolume();
 	::UnlockVM();
 	pSlider->SetPos(nPos);
 	strLabel.Format(_T(" %d"), nPos);
@@ -1866,26 +1864,26 @@ BOOL CVolPage::OnInitDialog()
 	pStatic->SetWindowText(strLabel);
 
 	// MIDIレベル
-	pSlider = (CSliderCtrl*)GetDlgItem(IDC_VOL_SEPS);
-	ASSERT(pSlider);
-	pSlider->SetRange(0, 0xffff);
-	nPos = m_pMIDI->GetOutVolume();
-	if (nPos >= 0) {
-		// MIDI出力デバイスはアクティブかつ音量調整できる
-		pSlider->SetPos(nPos);
-		pSlider->EnableWindow(TRUE);
-		strLabel.Format(_T(" %d"), ((nPos + 1) * 100) >> 16);
-	}
-	else {
-		// MIDI出力デバイスはアクティブでない、又は音量調整できない
-		pSlider->SetPos(0);
-		pSlider->EnableWindow(FALSE);
-		strLabel.Empty();
-	}
-	pStatic = (CStatic*)GetDlgItem(IDC_VOL_SEPN);
-	pStatic->SetWindowText(strLabel);
-	m_nMIDIVol = nPos;
-	m_nMIDIOrg = nPos;
+//	pSlider = (CSliderCtrl*)GetDlgItem(IDC_VOL_SEPS);
+//	ASSERT(pSlider);
+//	pSlider->SetRange(0, 0xffff);
+//	nPos = m_pMIDI->GetOutVolume();
+//	if (nPos >= 0) {
+//		// MIDI出力デバイスはアクティブかつ音量調整できる
+//		pSlider->SetPos(nPos);
+//		pSlider->EnableWindow(TRUE);
+//		strLabel.Format(_T(" %d"), ((nPos + 1) * 100) >> 16);
+//	}
+//	else {
+//		// MIDI出力デバイスはアクティブでない、又は音量調整できない
+//		pSlider->SetPos(0);
+//		pSlider->EnableWindow(FALSE);
+//		strLabel.Empty();
+//	}
+//	pStatic = (CStatic*)GetDlgItem(IDC_VOL_SEPN);
+//	pStatic->SetWindowText(strLabel);
+//	m_nMIDIVol = nPos;
+//	m_nMIDIOrg = nPos;
 
 	// FM音源
 	pButton = (CButton*)GetDlgItem(IDC_VOL_FMC);
@@ -1922,7 +1920,7 @@ BOOL CVolPage::OnInitDialog()
 //	水平スクロール
 //
 //---------------------------------------------------------------------------
-void CVolPage::OnHScroll(UINT /*nSBCode*/, UINT nPos, CScrollBar *pBar)
+void CVolPage::OnHScroll(UINT , UINT nPos, CScrollBar *pBar)
 {
 	UINT uID;
 	CSliderCtrl *pSlider;
@@ -1941,7 +1939,7 @@ void CVolPage::OnHScroll(UINT /*nSBCode*/, UINT nPos, CScrollBar *pBar)
 		// マスタボリューム変更
 		case IDC_VOL_VOLS:
 			nPos = pSlider->GetPos();
-			m_pSound->SetMasterVol(nPos);
+//			m_pSound->SetMasterVol(nPos);
 			// 更新はOnTimerに任せる
 			OnTimer(m_nTimerID);
 			return;
@@ -1951,7 +1949,7 @@ void CVolPage::OnHScroll(UINT /*nSBCode*/, UINT nPos, CScrollBar *pBar)
 			// 変更
 			nPos = pSlider->GetPos();
 			::LockVM();
-			m_pSound->SetVolume(nPos);
+//			m_pSound->SetVolume(nPos);
 			::UnlockVM();
 
 			// 更新
@@ -1959,20 +1957,20 @@ void CVolPage::OnHScroll(UINT /*nSBCode*/, UINT nPos, CScrollBar *pBar)
 			strLabel.Format(_T(" %d"), nPos);
 			break;
 
-		// MIDIレベル変更
-		case IDC_VOL_SEPS:
-			nPos = pSlider->GetPos();
-			m_pMIDI->SetOutVolume(nPos);
-			// 更新はOnTimerに任せる
-			OnTimer(m_nTimerID);
-			return;
+//		// MIDIレベル変更
+//		case IDC_VOL_SEPS:
+//			nPos = pSlider->GetPos();
+//			m_pMIDI->SetOutVolume(nPos);
+//			// 更新はOnTimerに任せる
+//			OnTimer(m_nTimerID);
+//			return;
 
 		// FM音量変更
 		case IDC_VOL_FMS:
 			// 変更
 			nPos = pSlider->GetPos();
 			::LockVM();
-			m_pSound->SetFMVol(nPos);
+//			m_pSound->SetFMVol(nPos);
 			::UnlockVM();
 
 			// 更新
@@ -1985,7 +1983,7 @@ void CVolPage::OnHScroll(UINT /*nSBCode*/, UINT nPos, CScrollBar *pBar)
 			// 変更
 			nPos = pSlider->GetPos();
 			::LockVM();
-			m_pSound->SetADPCMVol(nPos);
+//			m_pSound->SetADPCMVol(nPos);
 			::UnlockVM();
 
 			// 更新
@@ -2010,18 +2008,18 @@ void CVolPage::OnHScroll(UINT /*nSBCode*/, UINT nPos, CScrollBar *pBar)
 //	タイマ
 //
 //---------------------------------------------------------------------------
-void CVolPage::OnTimer(UINT /*nTimerID*/)
+void CVolPage::OnTimer(UINT )
 {
 	CSliderCtrl *pSlider;
 	CStatic *pStatic;
 	CString strLabel;
-	int nPos;
-	int nMax;
+	int nPos = -1;
+	int nMax = 100;
 
 	// メインボリューム取得
 	pSlider = (CSliderCtrl*)GetDlgItem(IDC_VOL_VOLS);
 	ASSERT(pSlider);
-	nPos = m_pSound->GetMasterVol(nMax);
+//	nPos = m_pSound->GetMasterVol(nMax);
 
 	// ボリューム比較
 	if (nPos != m_nMasterVol) {
@@ -2045,31 +2043,31 @@ void CVolPage::OnTimer(UINT /*nTimerID*/)
 		pStatic->SetWindowText(strLabel);
 	}
 
-	// MIDI
-	pSlider = (CSliderCtrl*)GetDlgItem(IDC_VOL_SEPS);
-	nPos = m_pMIDI->GetOutVolume();
-
-	// MIDI比較
-	if (nPos != m_nMIDIVol) {
-		m_nMIDIVol = nPos;
-
-		// 処理
-		if (nPos >= 0) {
-			// 有効化
-			pSlider->SetPos(nPos);
-			pSlider->EnableWindow(TRUE);
-			strLabel.Format(_T(" %d"), ((nPos + 1) * 100) >> 16);
-		}
-		else {
-			// 無効化
-			pSlider->SetPos(0);
-			pSlider->EnableWindow(FALSE);
-			strLabel.Empty();
-		}
-
-		pStatic = (CStatic*)GetDlgItem(IDC_VOL_SEPN);
-		pStatic->SetWindowText(strLabel);
-	}
+//	// MIDI
+//	pSlider = (CSliderCtrl*)GetDlgItem(IDC_VOL_SEPS);
+//	nPos = m_pMIDI->GetOutVolume();
+//
+//	// MIDI比較
+//	if (nPos != m_nMIDIVol) {
+//		m_nMIDIVol = nPos;
+//
+//		// 処理
+//		if (nPos >= 0) {
+//			// 有効化
+//			pSlider->SetPos(nPos);
+//			pSlider->EnableWindow(TRUE);
+//			strLabel.Format(_T(" %d"), ((nPos + 1) * 100) >> 16);
+//		}
+//		else {
+//			// 無効化
+//			pSlider->SetPos(0);
+//			pSlider->EnableWindow(FALSE);
+//			strLabel.Empty();
+//		}
+//
+//		pStatic = (CStatic*)GetDlgItem(IDC_VOL_SEPN);
+//		pStatic->SetWindowText(strLabel);
+//	}
 }
 
 //---------------------------------------------------------------------------
@@ -2170,20 +2168,20 @@ void CVolPage::OnCancel()
 
 	// 元の値に再設定(CONFIGデータ)
 	::LockVM();
-	m_pSound->SetVolume(m_pConfig->master_volume);
+//	m_pSound->SetVolume(m_pConfig->master_volume);
 	m_pOPMIF->EnableFM(m_pConfig->fm_enable);
-	m_pSound->SetFMVol(m_pConfig->fm_volume);
+//	m_pSound->SetFMVol(m_pConfig->fm_volume);
 	m_pADPCM->EnableADPCM(m_pConfig->adpcm_enable);
-	m_pSound->SetADPCMVol(m_pConfig->adpcm_volume);
+//	m_pSound->SetADPCMVol(m_pConfig->adpcm_volume);
 	::UnlockVM();
 
 	// 元の値に再設定(ミキサ)
 	if (m_nMasterOrg >= 0) {
-		m_pSound->SetMasterVol(m_nMasterOrg);
+//		m_pSound->SetMasterVol(m_nMasterOrg);
 	}
-	if (m_nMIDIOrg >= 0) {
-		m_pMIDI->SetOutVolume(m_nMIDIOrg);
-	}
+//	if (m_nMIDIOrg >= 0) {
+//		m_pMIDI->SetOutVolume(m_nMIDIOrg);
+//	}
 
 	// 基本クラス
 	CConfigPage::OnCancel();
@@ -2443,7 +2441,7 @@ void CKbdPage::OnDefault()
 //	アイテムクリック
 //
 //---------------------------------------------------------------------------
-void CKbdPage::OnClick(NMHDR * /*pNMHDR*/, LRESULT * /*pResult*/)
+void CKbdPage::OnClick(NMHDR * , LRESULT * )
 {
 	CListCtrl *pListCtrl;
 	int nCount;
@@ -2519,7 +2517,7 @@ void CKbdPage::OnClick(NMHDR * /*pNMHDR*/, LRESULT * /*pResult*/)
 //	アイテム右クリック
 //
 //---------------------------------------------------------------------------
-void CKbdPage::OnRClick(NMHDR * /*pNMHDR*/, LRESULT * /*pResult*/)
+void CKbdPage::OnRClick(NMHDR * , LRESULT * )
 {
 	CListCtrl *pListCtrl;
 	int nCount;
@@ -2753,9 +2751,9 @@ BOOL CKbdMapDlg::OnInitDialog()
 	pStatic->GetWindowRect(&rectWnd);
 	ScreenToClient(&rectWnd);
 	pStatic->DestroyWindow();
-	m_pDispWnd = new CKeyDispWnd;
-	m_pDispWnd->Create(NULL, NULL, WS_CHILD | WS_VISIBLE,
-					rectWnd, this, 0, NULL);
+//	m_pDispWnd = new CKeyDispWnd;
+//	m_pDispWnd->Create(NULL, NULL, WS_CHILD | WS_VISIBLE,
+//					rectWnd, this, 0, NULL);
 
 	// ウィンドウ中央
 	CenterWindow(GetParent());
@@ -2846,13 +2844,13 @@ void FASTCALL CKbdMapDlg::OnDraw(CDC *pDC)
 //	アイドル処理
 //
 //---------------------------------------------------------------------------
-LONG CKbdMapDlg::OnKickIdle(UINT /*uParam*/, LONG /*lParam*/)
+LONG CKbdMapDlg::OnKickIdle(UINT , LONG )
 {
 	BOOL bBuf[0x100];
 	BOOL bFlg[0x100];
 	int nWin;
 	DWORD dwCode;
-	CKeyDispWnd *pWnd;
+//	CKeyDispWnd *pWnd;
 
 	// キー状態を得る
 	ASSERT(m_pInput);
@@ -2878,8 +2876,8 @@ LONG CKbdMapDlg::OnKickIdle(UINT /*uParam*/, LONG /*lParam*/)
 	bFlg[0x74] = bFlg[0x70];
 
 	// リフレッシュ(描画)
-	pWnd = (CKeyDispWnd*)m_pDispWnd;
-	pWnd->Refresh(bFlg);
+//	pWnd = (CKeyDispWnd*)m_pDispWnd;
+//	pWnd->Refresh(bFlg);
 
 	return 0;
 }
@@ -3210,7 +3208,7 @@ void FASTCALL CKeyinDlg::OnDraw(CDC *pDC)
 //	アイドル
 //
 //---------------------------------------------------------------------------
-LONG CKeyinDlg::OnKickIdle(UINT /*uParam*/, LONG /*lParam*/)
+LONG CKeyinDlg::OnKickIdle(UINT , LONG )
 {
 	BOOL bKey[0x100];
 	int i;
@@ -3255,7 +3253,7 @@ LONG CKeyinDlg::OnKickIdle(UINT /*uParam*/, LONG /*lParam*/)
 //	右ボタン押下
 //
 //---------------------------------------------------------------------------
-void CKeyinDlg::OnRButtonDown(UINT /*nFlags*/, CPoint /*point*/)
+void CKeyinDlg::OnRButtonDown(UINT , CPoint )
 {
 	// ダイアログ終了
 	EndDialog(IDOK);
@@ -3414,7 +3412,7 @@ void CMousePage::OnOK()
 //	水平スクロール
 //
 //---------------------------------------------------------------------------
-void CMousePage::OnHScroll(UINT /*nSBCode*/, UINT /*nPos*/, CScrollBar *pBar)
+void CMousePage::OnHScroll(UINT , UINT , CScrollBar *pBar)
 {
 	CSliderCtrl *pSlider;
 	CStatic *pStatic;
@@ -4348,7 +4346,7 @@ void CBtnSetPage::OnPaint()
 //	水平スクロール
 //
 //---------------------------------------------------------------------------
-void CBtnSetPage::OnHScroll(UINT /*nSBCode*/, UINT /*nPos*/, CScrollBar *pBar)
+void CBtnSetPage::OnHScroll(UINT , UINT , CScrollBar *pBar)
 {
 	CSliderCtrl *pSlider;
 	UINT nID;
@@ -4467,7 +4465,7 @@ void FASTCALL CBtnSetPage::OnDraw(CDC *pDC, BOOL *pButton, BOOL bForce)
 //	タイマ
 //
 //---------------------------------------------------------------------------
-void CBtnSetPage::OnTimer(UINT /*nTimerID*/)
+void CBtnSetPage::OnTimer(UINT )
 {
 	int nButton;
 	BOOL bButton[CInput::JoyButtons];
@@ -5103,7 +5101,7 @@ void CSASIPage::OnOK()
 //	縦スクロール
 //
 //---------------------------------------------------------------------------
-void CSASIPage::OnVScroll(UINT /*nSBCode*/, UINT nPos, CScrollBar* /*pBar*/)
+void CSASIPage::OnVScroll(UINT , UINT nPos, CScrollBar* )
 {
 	ASSERT(this);
 	ASSERT(nPos <= SASI::SASIMax);
@@ -5128,7 +5126,7 @@ void CSASIPage::OnVScroll(UINT /*nSBCode*/, UINT nPos, CScrollBar* /*pBar*/)
 //	リストコントロールクリック
 //
 //---------------------------------------------------------------------------
-void CSASIPage::OnClick(NMHDR* /*pNMHDR*/, LRESULT* /*pResult*/)
+void CSASIPage::OnClick(NMHDR* , LRESULT* )
 {
 	CListCtrl *pListCtrl;
 	int i;
@@ -5573,7 +5571,7 @@ BOOL CSxSIPage::OnSetActive()
 //	縦スクロール
 //
 //---------------------------------------------------------------------------
-void CSxSIPage::OnVScroll(UINT /*nSBCode*/, UINT nPos, CScrollBar* /*pBar*/)
+void CSxSIPage::OnVScroll(UINT , UINT nPos, CScrollBar* )
 {
 	// リストコントロール更新(内部でBuildMapを行う)
 	UpdateList();
@@ -5592,7 +5590,7 @@ void CSxSIPage::OnVScroll(UINT /*nSBCode*/, UINT nPos, CScrollBar* /*pBar*/)
 //	リストコントロールクリック
 //
 //---------------------------------------------------------------------------
-void CSxSIPage::OnClick(NMHDR* /*pNMHDR*/, LRESULT* /*pResult*/)
+void CSxSIPage::OnClick(NMHDR* , LRESULT* )
 {
 	CListCtrl *pListCtrl;
 	int i;
@@ -6347,7 +6345,7 @@ void CSCSIPage::OnOK()
 //	縦スクロール
 //
 //---------------------------------------------------------------------------
-void CSCSIPage::OnVScroll(UINT /*nSBCode*/, UINT nPos, CScrollBar* /*pBar*/)
+void CSCSIPage::OnVScroll(UINT , UINT nPos, CScrollBar* )
 {
 	// ドライブ数取得
 	m_nDrives = nPos;
@@ -6369,7 +6367,7 @@ void CSCSIPage::OnVScroll(UINT /*nSBCode*/, UINT nPos, CScrollBar* /*pBar*/)
 //	リストコントロールクリック
 //
 //---------------------------------------------------------------------------
-void CSCSIPage::OnClick(NMHDR* /*pNMHDR*/, LRESULT* /*pResult*/)
+void CSCSIPage::OnClick(NMHDR* , LRESULT* )
 {
 	CListCtrl *pListCtrl;
 	int i;
@@ -7083,7 +7081,7 @@ CMIDIPage::CMIDIPage()
 	m_uHelpID = IDC_MIDI_HELP;
 
 	// オブジェクト
-	m_pMIDI = NULL;
+//	m_pMIDI = NULL;
 }
 
 //---------------------------------------------------------------------------
@@ -7105,102 +7103,102 @@ END_MESSAGE_MAP()
 //---------------------------------------------------------------------------
 BOOL CMIDIPage::OnInitDialog()
 {
-	CButton *pButton;
-	CComboBox *pComboBox;
-	CSpinButtonCtrl *pSpin;
-	CFrmWnd *pFrmWnd;
+//	CButton *pButton;
+//	CComboBox *pComboBox;
+//	CSpinButtonCtrl *pSpin;
+//	CFrmWnd *pFrmWnd;
 	CString strDesc;
-	int nNum;
-	int i;
+//	int nNum;
+//	int i;
 
 	// 基本クラス
 	CConfigPage::OnInitDialog();
 
-	// MIDIコンポーネント取得
-	pFrmWnd = (CFrmWnd*)AfxGetApp()->m_pMainWnd;
-	ASSERT(pFrmWnd);
-	m_pMIDI = pFrmWnd->GetMIDI();
-	ASSERT(m_pMIDI);
-
-	// コントロール有効・無効
-	m_bEnableCtrl = TRUE;
-	EnableControls(FALSE);
-	if (m_pConfig->midi_bid != 0) {
-		EnableControls(TRUE);
-	}
-
-	// ボードID
-	pButton = (CButton*)GetDlgItem(IDC_MIDI_BID0 + m_pConfig->midi_bid);
-	ASSERT(pButton);
-	pButton->SetCheck(1);
-
-	// 割り込みレベル
-	pButton = (CButton*)GetDlgItem(IDC_MIDI_ILEVEL4 + m_pConfig->midi_ilevel);
-	ASSERT(pButton);
-	pButton->SetCheck(1);
-
-	// 音源リセット
-	pButton = (CButton*)GetDlgItem(IDC_MIDI_RSTGM + m_pConfig->midi_reset);
-	ASSERT(pButton);
-	pButton->SetCheck(1);
-
-	// デバイス(IN)
-	pComboBox = (CComboBox*)GetDlgItem(IDC_MIDI_INC);
-	ASSERT(pComboBox);
-	pComboBox->ResetContent();
-	::GetMsg(IDS_MIDI_NOASSIGN, strDesc);
-	pComboBox->AddString(strDesc);
-	nNum = (int)m_pMIDI->GetInDevs();
-	for (i=0; i<nNum; i++) {
-		m_pMIDI->GetInDevDesc(i, strDesc);
-		pComboBox->AddString(strDesc);
-	}
-
-	// コンボボックスのカーソルを設定
-	if (m_pConfig->midiin_device <= nNum) {
-		pComboBox->SetCurSel(m_pConfig->midiin_device);
-	}
-	else {
-		pComboBox->SetCurSel(0);
-	}
-
-	// デバイス(OUT)
-	pComboBox = (CComboBox*)GetDlgItem(IDC_MIDI_OUTC);
-	ASSERT(pComboBox);
-	pComboBox->ResetContent();
-	::GetMsg(IDS_MIDI_NOASSIGN, strDesc);
-	pComboBox->AddString(strDesc);
-	nNum = (int)m_pMIDI->GetOutDevs();
-	if (nNum >= 1) {
-		::GetMsg(IDS_MIDI_MAPPER, strDesc);
-		pComboBox->AddString(strDesc);
-		for (i=0; i<nNum; i++) {
-			m_pMIDI->GetOutDevDesc(i, strDesc);
-			pComboBox->AddString(strDesc);
-		}
-	}
-
-	// コンボボックスのカーソルを設定
-	if (m_pConfig->midiout_device < (nNum + 2)) {
-		pComboBox->SetCurSel(m_pConfig->midiout_device);
-	}
-	else {
-		pComboBox->SetCurSel(0);
-	}
-
-	// 遅延(IN)
-	pSpin = (CSpinButtonCtrl*)GetDlgItem(IDC_MIDI_DLYIS);
-	ASSERT(pSpin);
-	pSpin->SetBase(10);
-	pSpin->SetRange(0, 200);
-	pSpin->SetPos(m_pConfig->midiin_delay);
-
-	// 遅延(OUT)
-	pSpin = (CSpinButtonCtrl*)GetDlgItem(IDC_MIDI_DLYOS);
-	ASSERT(pSpin);
-	pSpin->SetBase(10);
-	pSpin->SetRange(20, 200);
-	pSpin->SetPos(m_pConfig->midiout_delay);
+//	// MIDIコンポーネント取得
+//	pFrmWnd = (CFrmWnd*)AfxGetApp()->m_pMainWnd;
+//	ASSERT(pFrmWnd);
+//	m_pMIDI = pFrmWnd->GetMIDI();
+//	ASSERT(m_pMIDI);
+//
+//	// コントロール有効・無効
+//	m_bEnableCtrl = TRUE;
+//	EnableControls(FALSE);
+//	if (m_pConfig->midi_bid != 0) {
+//		EnableControls(TRUE);
+//	}
+//
+//	// ボードID
+//	pButton = (CButton*)GetDlgItem(IDC_MIDI_BID0 + m_pConfig->midi_bid);
+//	ASSERT(pButton);
+//	pButton->SetCheck(1);
+//
+//	// 割り込みレベル
+//	pButton = (CButton*)GetDlgItem(IDC_MIDI_ILEVEL4 + m_pConfig->midi_ilevel);
+//	ASSERT(pButton);
+//	pButton->SetCheck(1);
+//
+//	// 音源リセット
+//	pButton = (CButton*)GetDlgItem(IDC_MIDI_RSTGM + m_pConfig->midi_reset);
+//	ASSERT(pButton);
+//	pButton->SetCheck(1);
+//
+//	// デバイス(IN)
+//	pComboBox = (CComboBox*)GetDlgItem(IDC_MIDI_INC);
+//	ASSERT(pComboBox);
+//	pComboBox->ResetContent();
+//	::GetMsg(IDS_MIDI_NOASSIGN, strDesc);
+//	pComboBox->AddString(strDesc);
+//	nNum = (int)m_pMIDI->GetInDevs();
+//	for (i=0; i<nNum; i++) {
+//		m_pMIDI->GetInDevDesc(i, strDesc);
+//		pComboBox->AddString(strDesc);
+//	}
+//
+//	// コンボボックスのカーソルを設定
+//	if (m_pConfig->midiin_device <= nNum) {
+//		pComboBox->SetCurSel(m_pConfig->midiin_device);
+//	}
+//	else {
+//		pComboBox->SetCurSel(0);
+//	}
+//
+//	// デバイス(OUT)
+//	pComboBox = (CComboBox*)GetDlgItem(IDC_MIDI_OUTC);
+//	ASSERT(pComboBox);
+//	pComboBox->ResetContent();
+//	::GetMsg(IDS_MIDI_NOASSIGN, strDesc);
+//	pComboBox->AddString(strDesc);
+//	nNum = (int)m_pMIDI->GetOutDevs();
+//	if (nNum >= 1) {
+//		::GetMsg(IDS_MIDI_MAPPER, strDesc);
+//		pComboBox->AddString(strDesc);
+//		for (i=0; i<nNum; i++) {
+//			m_pMIDI->GetOutDevDesc(i, strDesc);
+//			pComboBox->AddString(strDesc);
+//		}
+//	}
+//
+//	// コンボボックスのカーソルを設定
+//	if (m_pConfig->midiout_device < (nNum + 2)) {
+//		pComboBox->SetCurSel(m_pConfig->midiout_device);
+//	}
+//	else {
+//		pComboBox->SetCurSel(0);
+//	}
+//
+//	// 遅延(IN)
+//	pSpin = (CSpinButtonCtrl*)GetDlgItem(IDC_MIDI_DLYIS);
+//	ASSERT(pSpin);
+//	pSpin->SetBase(10);
+//	pSpin->SetRange(0, 200);
+//	pSpin->SetPos(m_pConfig->midiin_delay);
+//
+//	// 遅延(OUT)
+//	pSpin = (CSpinButtonCtrl*)GetDlgItem(IDC_MIDI_DLYOS);
+//	ASSERT(pSpin);
+//	pSpin->SetBase(10);
+//	pSpin->SetRange(20, 200);
+//	pSpin->SetPos(m_pConfig->midiout_delay);
 
 	return TRUE;
 }
@@ -7278,12 +7276,12 @@ void CMIDIPage::OnOK()
 //---------------------------------------------------------------------------
 void CMIDIPage::OnCancel()
 {
-	// MIDIディレイを戻す(IN)
-	m_pMIDI->SetInDelay(m_pConfig->midiin_delay);
-
-	// MIDIディレイを戻す(OUT)
-	m_pMIDI->SetOutDelay(m_pConfig->midiout_delay);
-
+//	// MIDIディレイを戻す(IN)
+//	m_pMIDI->SetInDelay(m_pConfig->midiin_delay);
+//
+//	// MIDIディレイを戻す(OUT)
+//	m_pMIDI->SetOutDelay(m_pConfig->midiout_delay);
+//
 	// 基本クラス
 	CConfigPage::OnCancel();
 }
@@ -7293,7 +7291,7 @@ void CMIDIPage::OnCancel()
 //	縦スクロール
 //
 //---------------------------------------------------------------------------
-void CMIDIPage::OnVScroll(UINT /*nSBCode*/, UINT nPos, CScrollBar *pBar)
+void CMIDIPage::OnVScroll(UINT , UINT nPos, CScrollBar *pBar)
 {
 	CSpinButtonCtrl *pSpin;
 
@@ -7301,14 +7299,14 @@ void CMIDIPage::OnVScroll(UINT /*nSBCode*/, UINT nPos, CScrollBar *pBar)
 	pSpin = (CSpinButtonCtrl*)GetDlgItem(IDC_MIDI_DLYIS);
 	ASSERT(pSpin);
 	if ((CWnd*)pSpin == (CWnd*)pBar) {
-		m_pMIDI->SetInDelay(nPos);
+//		m_pMIDI->SetInDelay(nPos);
 	}
 
 	// OUT
 	pSpin = (CSpinButtonCtrl*)GetDlgItem(IDC_MIDI_DLYOS);
 	ASSERT(pSpin);
 	if ((CWnd*)pSpin == (CWnd*)pBar) {
-		m_pMIDI->SetOutDelay(nPos);
+//		m_pMIDI->SetOutDelay(nPos);
 	}
 }
 
@@ -7554,7 +7552,7 @@ void CResumePage::DoDataExchange(CDataExchange *pDX)
 	DDX_Check(pDX, IDC_RESUME_SCREENC, m_pConfig->resume_screen);
 	DDX_Check(pDX, IDC_RESUME_DIRC, m_pConfig->resume_dir);
 }
-
+/*
 //===========================================================================
 //
 //	TrueKeyダイアログ
@@ -7604,7 +7602,7 @@ BOOL CTKeyDlg::OnInitDialog()
 {
 	CString strText;
 	CStatic *pStatic;
-	LPCSTR lpszKey;
+//	LPCSTR lpszKey;
 
 	// 基本クラス
 	CDialog::OnInitDialog();
@@ -7634,10 +7632,10 @@ BOOL CTKeyDlg::OnInitDialog()
 	ASSERT(pStatic);
 	pStatic->GetWindowText(m_strKey);
 	if (m_nKey != 0) {
-		lpszKey = m_pTKey->GetKeyID(m_nKey);
-		if (lpszKey) {
-			m_strKey = lpszKey;
-		}
+//		lpszKey = m_pTKey->GetKeyID(m_nKey);
+//		if (lpszKey) {
+//			m_strKey = lpszKey;
+//		}
 	}
 	pStatic->GetWindowRect(&m_rectKey);
 	ScreenToClient(&m_rectKey);
@@ -7780,7 +7778,7 @@ void CTKeyDlg::OnTimer(UINT nID)
 	BYTE state[0x100];
 	int nKey;
 	int nTarget;
-	LPCTSTR lpszKey;
+//	LPCTSTR lpszKey;
 
 	// IDチェック
 	if (m_nTimerID != nID) {
@@ -7820,15 +7818,15 @@ void CTKeyDlg::OnTimer(UINT nID)
 	}
 
 	// 文字列取得
-	lpszKey = m_pTKey->GetKeyID(nTarget);
-	if (lpszKey) {
-		// キー文字列があるので、新規設定
-		m_nKey = nTarget;
-
-		// コントロールに設定、再描画
-		m_strKey = lpszKey;
-		Invalidate(FALSE);
-	}
+//	lpszKey = m_pTKey->GetKeyID(nTarget);
+//	if (lpszKey) {
+//		// キー文字列があるので、新規設定
+//		m_nKey = nTarget;
+//
+//		// コントロールに設定、再描画
+//		m_strKey = lpszKey;
+//		Invalidate(FALSE);
+//	}
 }
 
 //---------------------------------------------------------------------------
@@ -7836,7 +7834,7 @@ void CTKeyDlg::OnTimer(UINT nID)
 //	右クリック
 //
 //---------------------------------------------------------------------------
-void CTKeyDlg::OnRButtonDown(UINT /*nFlags*/, CPoint /*point*/)
+void CTKeyDlg::OnRButtonDown(UINT , CPoint )
 {
 	// タイマ停止
 	if (m_nTimerID) {
@@ -7985,7 +7983,7 @@ BOOL CTKeyPage::OnInitDialog()
 	pListCtrl->SendMessage(LVM_SETEXTENDEDLISTVIEWSTYLE, 0, LVS_EX_FULLROWSELECT);
 
 	// VKマッピング取得
-	m_pTKey->GetKeyMap(m_nKey);
+//	m_pTKey->GetKeyMap(m_nKey);
 
 	// リストコントロール更新
 	UpdateReport();
@@ -8037,7 +8035,7 @@ void CTKeyPage::OnOK()
 	}
 
 	// キーマップ設定
-	m_pTKey->SetKeyMap(m_nKey);
+//	m_pTKey->SetKeyMap(m_nKey);
 
 	// 基本クラス
 	CConfigPage::OnOK();
@@ -8069,7 +8067,7 @@ void CTKeyPage::OnSelChange()
 //	アイテムクリック
 //
 //---------------------------------------------------------------------------
-void CTKeyPage::OnClick(NMHDR* /*pNMHDR*/, LRESULT* /*pResult*/)
+void CTKeyPage::OnClick(NMHDR* , LRESULT* )
 {
 	CListCtrl *pListCtrl;
 	int nItem;
@@ -8119,7 +8117,7 @@ void CTKeyPage::OnClick(NMHDR* /*pNMHDR*/, LRESULT* /*pResult*/)
 //	アイテム右クリック
 //
 //---------------------------------------------------------------------------
-void CTKeyPage::OnRClick(NMHDR* /*pNMHDR*/, LRESULT* /*pResult*/)
+void CTKeyPage::OnRClick(NMHDR* , LRESULT* )
 {
 	CString strText;
 	CString strMsg;
@@ -8156,7 +8154,7 @@ void CTKeyPage::OnRClick(NMHDR* /*pNMHDR*/, LRESULT* /*pResult*/)
 
 	// メッセージボックスで、削除の有無をチェック
 	::GetMsg(IDS_KBD_DELMSG, strText);
-	strMsg.Format(strText, nKey, m_pTKey->GetKeyID(m_nKey[nKey - 1]));
+//	strMsg.Format(strText, nKey, m_pTKey->GetKeyID(m_nKey[nKey - 1]));
 	::GetMsg(IDS_KBD_DELTITLE, strText);
 	if (MessageBox(strMsg, strText, MB_ICONQUESTION | MB_YESNO) != IDYES) {
 		return;
@@ -8202,7 +8200,7 @@ void FASTCALL CTKeyPage::UpdateReport()
 			// VK割り当てがあれば、名称を取得
 			nVK = m_nKey[nKey - 1];
 			if (nVK != 0) {
-				lpszKey = m_pTKey->GetKeyID(nVK);
+//				lpszKey = m_pTKey->GetKeyID(nVK);
 				strNext = lpszKey;
 			}
 
@@ -8295,7 +8293,7 @@ const UINT CTKeyPage::ControlTable[] = {
 	IDC_TKEY_LIST,
 	NULL
 };
-
+*/
 //===========================================================================
 //
 //	その他ページ
@@ -8380,7 +8378,7 @@ CConfigSheet::CConfigSheet(CWnd *pParent) : CPropertySheet(IDS_OPTIONS, pParent)
 	m_MIDI.Init(this);
 	m_Alter.Init(this);
 	m_Resume.Init(this);
-	m_TKey.Init(this);
+//	m_TKey.Init(this);
 	m_Misc.Init(this);
 }
 
@@ -8475,8 +8473,6 @@ void CConfigSheet::OnTimer(UINT_PTR nID)
 void CConfigSheet::OnTimer(UINT nID)
 #endif
 {
-	CInfo *pInfo;
-
 	ASSERT(m_pFrmWnd);
 
 	// IDチェック
@@ -8487,14 +8483,6 @@ void CConfigSheet::OnTimer(UINT nID)
 	// タイマ停止
 	KillTimer(m_nTimerID);
 	m_nTimerID = NULL;
-
-	// Infoが存在すれば、更新
-	pInfo = m_pFrmWnd->GetInfo();
-	if (pInfo) {
-		pInfo->UpdateStatus();
-		pInfo->UpdateCaption();
-		pInfo->UpdateInfo();
-	}
 
 	// タイマ再開(表示完了から100msあける)
 	m_nTimerID = SetTimer(IDM_OPTIONS, 100, NULL);

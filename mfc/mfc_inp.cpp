@@ -162,8 +162,10 @@ BOOL FASTCALL CInput::Init()
 	ASSERT(m_pPPI);
 
 	// DirectInputオブジェクトを作成
-	if (FAILED(DirectInputCreate(AfxGetApp()->m_hInstance, DIRECTINPUT_VERSION,
-							&m_lpDI, NULL))) {
+//VC2010//	if (FAILED(DirectInputCreate(AfxGetApp()->m_hInstance, DIRECTINPUT_VERSION,
+//VC2010//							&m_lpDI, NULL))) {
+	if (FAILED(DirectInput8Create(AfxGetApp()->m_hInstance, DIRECTINPUT_VERSION,	//VC2010//
+							IID_IDirectInput8, (void**) &m_lpDI, NULL))) {			//VC2010//
 		return FALSE;
 	}
 
@@ -1751,8 +1753,10 @@ void FASTCALL CInput::EnumJoy()
 	m_dwJoyDevs = 0;
 
 	// 列挙開始
-	m_lpDI->EnumDevices(DIDEVTYPE_JOYSTICK, (LPDIENUMDEVICESCALLBACK)EnumCb,
-							this, DIEDFL_ATTACHEDONLY);
+//VC2010//	m_lpDI->EnumDevices(DIDEVTYPE_JOYSTICK, (LPDIENUMDEVICESCALLBACK)EnumCb,
+//VC2010//							this, DIEDFL_ATTACHEDONLY);
+	m_lpDI->EnumDevices(DI8DEVTYPE_JOYSTICK, (LPDIENUMDEVICESCALLBACK)EnumCb,	//VC2010//
+							this, DIEDFL_ATTACHEDONLY);							//VC2010//
 }
 
 //---------------------------------------------------------------------------

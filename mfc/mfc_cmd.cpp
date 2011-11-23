@@ -24,20 +24,20 @@
 #include "mfc_frm.h"
 #include "mfc_res.h"
 #include "mfc_draw.h"
-#include "mfc_cpu.h"
-#include "mfc_sys.h"
-#include "mfc_dev.h"
-#include "mfc_w32.h"
-#include "mfc_ver.h"
+
+#include "mfp.h"
+#include "dmac.h"
+#include "scc.h"
+#include "fdc.h"
+#include "midi.h"
+#include "sasi.h"
+#include "scsi.h"
+
 #include "mfc_com.h"
 #include "mfc_sch.h"
 #include "mfc_snd.h"
 #include "mfc_inp.h"
 #include "mfc_cfg.h"
-#include "mfc_vid.h"
-#include "mfc_rend.h"
-#include "mfc_stat.h"
-#include "mfc_tool.h"
 
 //---------------------------------------------------------------------------
 //
@@ -53,7 +53,7 @@ void CFrmWnd::OnOpen()
 	::GetVM()->GetPath(path);
 	_tcscpy(szPath, path.GetPath());
 	if (!::FileOpenDlg(this, szPath, IDS_XM6OPEN)) {
-		ResetCaption();
+//		ResetCaption();
 		return;
 	}
 	path.SetPath(szPath);
@@ -277,7 +277,6 @@ BOOL FASTCALL CFrmWnd::OnOpenPrep(const Filepath& path, BOOL bWarning)
 BOOL FASTCALL CFrmWnd::OnOpenSub(const Filepath& path)
 {
 	BOOL bRun;
-	BOOL bSound;
 	CString strMsg;
 	DWORD dwPos;
 	Filepath diskpath;
@@ -288,8 +287,8 @@ BOOL FASTCALL CFrmWnd::OnOpenSub(const Filepath& path)
 	GetScheduler()->Enable(FALSE);
 	::LockVM();
 	::UnlockVM();
-	bSound = GetSound()->IsEnable();
-	GetSound()->Enable(FALSE);
+//	BOOL bSound = GetSound()->IsEnable();
+//	GetSound()->Enable(FALSE);
 
 	// ロード
 	AfxGetApp()->BeginWaitCursor();
@@ -301,10 +300,10 @@ BOOL FASTCALL CFrmWnd::OnOpenSub(const Filepath& path)
 
 		// 失敗は途中中断で危険なため、必ずリセットする
 		::GetVM()->Reset();
-		GetSound()->Enable(bSound);
+//		GetSound()->Enable(bSound);
 		GetScheduler()->Reset();
 		GetScheduler()->Enable(bRun);
-		ResetCaption();
+//		ResetCaption();
 
 		// ロードエラー
 		::GetMsg(IDS_XM6LOADERR, strMsg);
@@ -318,10 +317,10 @@ BOOL FASTCALL CFrmWnd::OnOpenSub(const Filepath& path)
 
 		// 失敗は途中中断で危険なため、必ずリセットする
 		::GetVM()->Reset();
-		GetSound()->Enable(bSound);
+//		GetSound()->Enable(bSound);
 		GetScheduler()->Reset();
 		GetScheduler()->Enable(bRun);
-		ResetCaption();
+//		ResetCaption();
 
 		// ロードエラー
 		::GetMsg(IDS_XM6LOADERR, strMsg);
@@ -343,10 +342,10 @@ BOOL FASTCALL CFrmWnd::OnOpenSub(const Filepath& path)
 		m_pSASI->GetPath(diskpath);
 		GetConfig()->SetMRUFile(2, diskpath.GetPath());
 	}
-	if (m_pSCSI->IsReady(FALSE)) {
-		m_pSCSI->GetPath(diskpath, FALSE);
-		GetConfig()->SetMRUFile(3, diskpath.GetPath());
-	}
+//	if (m_pSCSI->IsReady(FALSE)) {
+//		m_pSCSI->GetPath(diskpath, FALSE);
+//		GetConfig()->SetMRUFile(3, diskpath.GetPath());
+//	}
 
 	// スケジューラが停止の状態でセーブされていれば、停止のまま(version2.04)
 	if (GetScheduler()->HasSavedEnable()) {
@@ -357,17 +356,17 @@ BOOL FASTCALL CFrmWnd::OnOpenSub(const Filepath& path)
 	m_dwExec = 0;
 
 	// 成功
-	GetSound()->Enable(bSound);
+//	GetSound()->Enable(bSound);
 	GetScheduler()->Reset();
 	GetScheduler()->Enable(bRun);
-	ResetCaption();
+//	ResetCaption();
 
 	// MRUに追加
 	GetConfig()->SetMRUFile(4, path.GetPath());
 
 	// 情報メッセージを表示
 	::GetMsg(IDS_XM6LOADOK, strMsg);
-	SetInfo(strMsg);
+//	SetInfo(strMsg);
 
 	return TRUE;
 }
@@ -435,7 +434,7 @@ void CFrmWnd::OnSaveAs()
 	::GetVM()->GetPath(path);
 	_tcscpy(szPath, path.GetPath());
 	if (!::FileSaveDlg(this, szPath, _T("xm6"), IDS_XM6OPEN)) {
-		ResetCaption();
+//		ResetCaption();
 		return;
 	}
 	path.SetPath(szPath);
@@ -463,7 +462,6 @@ void CFrmWnd::OnSaveAsUI(CCmdUI *pCmdUI)
 void FASTCALL CFrmWnd::OnSaveSub(const Filepath& path)
 {
 	BOOL bRun;
-	BOOL bSound;
 	CString strMsg;
 	DWORD dwPos;
 
@@ -472,8 +470,8 @@ void FASTCALL CFrmWnd::OnSaveSub(const Filepath& path)
 	GetScheduler()->Enable(FALSE);
 	::LockVM();
 	::UnlockVM();
-	bSound = GetSound()->IsEnable();
-	GetSound()->Enable(FALSE);
+//	BOOL bSound = GetSound()->IsEnable();
+//	GetSound()->Enable(FALSE);
 
 	AfxGetApp()->BeginWaitCursor();
 
@@ -486,10 +484,10 @@ void FASTCALL CFrmWnd::OnSaveSub(const Filepath& path)
 		AfxGetApp()->EndWaitCursor();
 
 		// セーブ失敗
-		GetSound()->Enable(bSound);
+//		GetSound()->Enable(bSound);
 		GetScheduler()->Reset();
 		GetScheduler()->Enable(bRun);
-		ResetCaption();
+//		ResetCaption();
 
 		// セーブエラー
 		::GetMsg(IDS_XM6SAVEERR, strMsg);
@@ -502,10 +500,10 @@ void FASTCALL CFrmWnd::OnSaveSub(const Filepath& path)
 		AfxGetApp()->EndWaitCursor();
 
 		// セーブ失敗
-		GetSound()->Enable(bSound);
+//		GetSound()->Enable(bSound);
 		GetScheduler()->Reset();
 		GetScheduler()->Enable(bRun);
-		ResetCaption();
+//		ResetCaption();
 
 		// セーブエラー
 		::GetMsg(IDS_XM6SAVEERR, strMsg);
@@ -519,17 +517,17 @@ void FASTCALL CFrmWnd::OnSaveSub(const Filepath& path)
 	AfxGetApp()->EndWaitCursor();
 
 	// 成功
-	GetSound()->Enable(bSound);
+//	GetSound()->Enable(bSound);
 	GetScheduler()->Reset();
 	GetScheduler()->Enable(bRun);
-	ResetCaption();
+//	ResetCaption();
 
 	// MRUに追加
 	GetConfig()->SetMRUFile(4, path.GetPath());
 
 	// 情報メッセージを表示
 	::GetMsg(IDS_XM6SAVEOK, strMsg);
-	SetInfo(strMsg);
+//	SetInfo(strMsg);
 }
 
 //---------------------------------------------------------------------------
@@ -604,7 +602,7 @@ void CFrmWnd::OnReset()
 	// リセット＆再描画
 	::GetVM()->Reset();
 	GetView()->Refresh();
-	ResetCaption();
+//	ResetCaption();
 
 	// メモリスイッチ取得を行う
 	pSRAM = (SRAM*)::GetVM()->SearchDevice(MAKEID('S', 'R', 'A', 'M'));
@@ -620,7 +618,7 @@ void CFrmWnd::OnReset()
 
 	// メモリスイッチの先頭を比較
 	if (memcmp(Sw, SigTable, sizeof(DWORD) * 7) != 0) {
-		SetInfo(strReset);
+//		SetInfo(strReset);
 		return;
 	}
 
@@ -677,7 +675,7 @@ void CFrmWnd::OnReset()
 	// 表示
 	strReset += _T(" (");
 	strReset += strSub;
-	SetInfo(strReset);
+//	SetInfo(strReset);
 }
 
 //---------------------------------------------------------------------------
@@ -718,7 +716,7 @@ void CFrmWnd::OnInterrupt()
 
 		// メッセージ
 		::GetMsg(IDS_INTERRUPT, strIntr);
-		SetInfo(strIntr);
+//		SetInfo(strIntr);
 	}
 }
 
@@ -865,7 +863,7 @@ void FASTCALL CFrmWnd::OnFDOpen(int nDrive)
 	// コモンダイアログ実行
 	memset(szPath, 0, sizeof(szPath));
 	if (!::FileOpenDlg(this, szPath, IDS_FDOPEN)) {
-		ResetCaption();
+//		ResetCaption();
 		return;
 	}
 	path.SetPath(szPath);
@@ -881,7 +879,7 @@ void FASTCALL CFrmWnd::OnFDOpen(int nDrive)
 		// オープンエラー
 		::GetMsg(IDS_FDERR, strMsg);
 		MessageBox(strMsg, NULL, MB_ICONSTOP | MB_OK);
-		ResetCaption();
+//		ResetCaption();
 		return;
 	}
 
@@ -890,7 +888,7 @@ void FASTCALL CFrmWnd::OnFDOpen(int nDrive)
 
 	// 成功
 	GetScheduler()->Reset();
-	ResetCaption();
+//	ResetCaption();
 	::UnlockVM();
 
 	// MRUに追加
@@ -1024,7 +1022,7 @@ void FASTCALL CFrmWnd::OnFDMRU(int nDrive, int nMRU)
 	bResult = m_pFDD->Open(nDrive, path);
 	pFDI = m_pFDD->GetFDI(nDrive);
 	GetScheduler()->Reset();
-	ResetCaption();
+//	ResetCaption();
 
 	// VMアンロック
 	::UnlockVM();
@@ -1401,7 +1399,7 @@ void CFrmWnd::OnFDMRUUI(CCmdUI *pCmdUI)
 		pCmdUI->Enable(TRUE);
 	}
 }
-
+/*
 //---------------------------------------------------------------------------
 //
 //	MOディスクオープン
@@ -3021,6 +3019,7 @@ void CFrmWnd::OnBGSpBufUI(CCmdUI *pCmdUI)
 	ON_UPDATE_SUB_WINDOW(MAKEID('B', 'G', 'S', 'P'));
 }
 
+/*
 //---------------------------------------------------------------------------
 //
 //	パレットバッファ
@@ -3805,7 +3804,7 @@ void CFrmWnd::OnSaveWavUI(CCmdUI *pCmdUI)
 //---------------------------------------------------------------------------
 void CFrmWnd::OnTrap()
 {
-	CTrapDlg dlg(this);
+//	CTrapDlg dlg(this);
 	DWORD dwVector;
 	MFP *pMFP;
 	Memory *pMemory;
@@ -3847,16 +3846,16 @@ void CFrmWnd::OnTrap()
 	}
 
 	// コード選択
-	dlg.m_dwCode = pMemory->ReadOnly(0x6809);
+	dwCode = pMemory->ReadOnly(0x6809);
 	if (pMemory->ReadOnly(0x6808) == 0xff) {
 		// 未初期化とみなし、0からスタート
-		dlg.m_dwCode = 1;
+		dwCode = 1;
 	}
 	::UnlockVM();
-	if (dlg.DoModal() != IDOK) {
-		return;
-	}
-	dwCode = dlg.m_dwCode;
+//	if (dlg.DoModal() != IDOK) {
+//		return;
+//	}
+//	dwCode = dlg.m_dwCode;
 
 	// コード書き込み
 	::LockVM();
@@ -4134,6 +4133,7 @@ void CFrmWnd::OnNewDisk(UINT uID)
 	GetScheduler()->Enable(bRun);
 	ResetCaption();
 }
+*/
 
 //---------------------------------------------------------------------------
 //
@@ -4161,10 +4161,10 @@ void CFrmWnd::OnOptions()
 	::LockVM();
 	ApplyCfg();
 	GetScheduler()->Reset();
-	ResetCaption();
+//	ResetCaption();
 	::UnlockVM();
 }
-
+/*
 //---------------------------------------------------------------------------
 //
 //	重ねて表示
@@ -4511,5 +4511,6 @@ void CFrmWnd::OnAbout()
 	// モーダルダイアログを実行
 	dlg.DoModal();
 }
+*/
 
 #endif	// _WIN32

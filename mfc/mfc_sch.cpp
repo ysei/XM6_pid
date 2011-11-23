@@ -21,7 +21,6 @@
 #include "mfc_draw.h"
 #include "mfc_snd.h"
 #include "mfc_inp.h"
-#include "mfc_cpu.h"
 #include "mfc_sch.h"
 
 //===========================================================================
@@ -459,7 +458,7 @@ void FASTCALL CScheduler::Run()
 //---------------------------------------------------------------------------
 void FASTCALL CScheduler::Refresh()
 {
-	int num;
+//	int num;
 	CDrawView *pView;
 
 	ASSERT(this);
@@ -470,14 +469,16 @@ void FASTCALL CScheduler::Refresh()
 	pView = m_pFrmWnd->GetView();
 	ASSERT(pView);
 
-	// サブウィンドウの個数を取得
-	num = pView->GetSubWndNum();
-
-	// 個数が記憶値と違ったらリセット
-	if (m_nSubWndNum != num) {
-		m_nSubWndNum = num;
-		m_nSubWndDisp = -1;
-	}
+//	// サブウィンドウの個数を取得
+//	num = pView->GetSubWndNum();
+//
+//	// 個数が記憶値と違ったらリセット
+//	if (m_nSubWndNum != num) {
+//		m_nSubWndNum = num;
+//		m_nSubWndDisp = -1;
+//	}
+//
+	m_nSubWndDisp = -1;
 
 	if (m_bEnable) {
 		// 実行中でメイン画面の番か
@@ -513,7 +514,7 @@ void FASTCALL CScheduler::Refresh()
 //---------------------------------------------------------------------------
 void FASTCALL CScheduler::SyncDisasm()
 {
-	CDisasmWnd *pWnd;
+//	CDisasmWnd *pWnd;
 	CDrawView *pView;
 	DWORD dwID;
 	int i;
@@ -528,11 +529,11 @@ void FASTCALL CScheduler::SyncDisasm()
 	// 最大8コまで
 	for (i=0; i<8; i++) {
 		dwID = MAKEID('D', 'I', 'S', ('A' + i));
-		pWnd = (CDisasmWnd*)pView->SearchSWnd(dwID);
-		if (pWnd) {
-			// 見つかった
-			pWnd->SetPC(m_pCPU->GetPC());
-		}
+//		pWnd = (CDisasmWnd*)pView->SearchSWnd(dwID);
+//		if (pWnd) {
+//			// 見つかった
+//			pWnd->SetPC(m_pCPU->GetPC());
+//		}
 	}
 }
 

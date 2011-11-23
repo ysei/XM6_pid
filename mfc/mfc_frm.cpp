@@ -23,19 +23,12 @@
 #include "mfc_frm.h"
 #include "mfc_draw.h"
 #include "mfc_res.h"
-#include "mfc_sub.h"
-#include "mfc_cpu.h"
 #include "mfc_com.h"
 #include "mfc_sch.h"
 #include "mfc_snd.h"
 #include "mfc_inp.h"
-#include "mfc_port.h"
-#include "mfc_midi.h"
-#include "mfc_tkey.h"
 #include "mfc_host.h"
-#include "mfc_info.h"
 #include "mfc_cfg.h"
-#include "mfc_stat.h"
 
 //===========================================================================
 //
@@ -75,15 +68,15 @@ CFrmWnd::CFrmWnd()
 	// コンポーネント
 	m_pFirstComponent = NULL;
 	m_pDrawView = NULL;
-	m_pStatusView = NULL;
+//	m_pStatusView = NULL;
 	m_pSch = NULL;
 	m_pSound = NULL;
 	m_pInput = NULL;
-	m_pPort = NULL;
-	m_pMIDI = NULL;
-	m_pTKey = NULL;
+//	m_pPort = NULL;
+//	m_pMIDI = NULL;
+//	m_pTKey = NULL;
 	m_pHost = NULL;
-	m_pInfo = NULL;
+//	m_pInfo = NULL;
 	m_pConfig = NULL;
 
 	// フルスクリーン
@@ -97,9 +90,9 @@ CFrmWnd::CFrmWnd()
 	m_strWndClsName.Empty();
 
 	// ステータスバー・メニュー・キャプション
-	m_bStatusBar = FALSE;
+//	m_bStatusBar = FALSE;
 	m_bMenuBar = TRUE;
-	m_bCaption = TRUE;
+//	m_bCaption = TRUE;
 
 	// シェル通知
 	m_uNotifyId = NULL;
@@ -180,158 +173,158 @@ BEGIN_MESSAGE_MAP(CFrmWnd, CFrameWnd)
 	ON_UPDATE_COMMAND_UI_RANGE(IDM_D0_MRU0, IDM_D0_MRU8, OnFDMRUUI)
 	ON_UPDATE_COMMAND_UI_RANGE(IDM_D1_MRU0, IDM_D1_MRU8, OnFDMRUUI)
 
-	ON_COMMAND(IDM_MOOPEN, OnMOOpen)
-	ON_UPDATE_COMMAND_UI(IDM_MOOPEN, OnMOOpenUI)
-	ON_COMMAND(IDM_MOEJECT, OnMOEject)
-	ON_UPDATE_COMMAND_UI(IDM_MOEJECT, OnMOEjectUI)
-	ON_COMMAND(IDM_MOWRITEP, OnMOWriteP)
-	ON_UPDATE_COMMAND_UI(IDM_MOWRITEP, OnMOWritePUI)
-	ON_COMMAND(IDM_MOFORCE, OnMOForce)
-	ON_UPDATE_COMMAND_UI(IDM_MOFORCE, OnMOForceUI)
-	ON_COMMAND_RANGE(IDM_MO_MRU0, IDM_MO_MRU8, OnMOMRU)
-	ON_UPDATE_COMMAND_UI_RANGE(IDM_MO_MRU0, IDM_MO_MRU8, OnMOMRUUI)
+//	ON_COMMAND(IDM_MOOPEN, OnMOOpen)
+//	ON_UPDATE_COMMAND_UI(IDM_MOOPEN, OnMOOpenUI)
+//	ON_COMMAND(IDM_MOEJECT, OnMOEject)
+//	ON_UPDATE_COMMAND_UI(IDM_MOEJECT, OnMOEjectUI)
+//	ON_COMMAND(IDM_MOWRITEP, OnMOWriteP)
+//	ON_UPDATE_COMMAND_UI(IDM_MOWRITEP, OnMOWritePUI)
+//	ON_COMMAND(IDM_MOFORCE, OnMOForce)
+//	ON_UPDATE_COMMAND_UI(IDM_MOFORCE, OnMOForceUI)
+//	ON_COMMAND_RANGE(IDM_MO_MRU0, IDM_MO_MRU8, OnMOMRU)
+//	ON_UPDATE_COMMAND_UI_RANGE(IDM_MO_MRU0, IDM_MO_MRU8, OnMOMRUUI)
 
-	ON_COMMAND(IDM_CDOPEN, OnCDOpen)
-	ON_UPDATE_COMMAND_UI(IDM_CDOPEN, OnCDOpenUI)
-	ON_COMMAND(IDM_CDEJECT, OnCDEject)
-	ON_UPDATE_COMMAND_UI(IDM_CDEJECT, OnCDEjectUI)
-	ON_COMMAND(IDM_CDFORCE, OnCDForce)
-	ON_UPDATE_COMMAND_UI(IDM_CDFORCE, OnCDForceUI)
-	ON_COMMAND_RANGE(IDM_CD_MRU0, IDM_CD_MRU8, OnCDMRU)
-	ON_UPDATE_COMMAND_UI_RANGE(IDM_CD_MRU0, IDM_CD_MRU8, OnCDMRUUI)
-
-	ON_COMMAND(IDM_LOG, OnLog)
-	ON_UPDATE_COMMAND_UI(IDM_LOG, OnLogUI)
-	ON_COMMAND(IDM_SCHEDULER, OnScheduler)
-	ON_UPDATE_COMMAND_UI(IDM_SCHEDULER, OnSchedulerUI)
-	ON_COMMAND(IDM_DEVICE, OnDevice)
-	ON_UPDATE_COMMAND_UI(IDM_DEVICE, OnDeviceUI)
-	ON_COMMAND(IDM_CPUREG, OnCPUReg)
-	ON_UPDATE_COMMAND_UI(IDM_CPUREG, OnCPURegUI)
-	ON_COMMAND(IDM_INT, OnInt)
-	ON_UPDATE_COMMAND_UI(IDM_INT, OnIntUI)
-	ON_COMMAND(IDM_DISASM, OnDisasm)
-	ON_UPDATE_COMMAND_UI(IDM_DISASM, OnDisasmUI)
-	ON_COMMAND(IDM_MEMORY, OnMemory)
-	ON_UPDATE_COMMAND_UI(IDM_MEMORY, OnMemoryUI)
-	ON_COMMAND(IDM_BREAKP, OnBreakP)
-	ON_UPDATE_COMMAND_UI(IDM_BREAKP, OnBreakPUI)
-	ON_COMMAND(IDM_MFP, OnMFP)
-	ON_UPDATE_COMMAND_UI(IDM_MFP, OnMFPUI)
-	ON_COMMAND(IDM_DMAC, OnDMAC)
-	ON_UPDATE_COMMAND_UI(IDM_DMAC, OnDMACUI)
-	ON_COMMAND(IDM_CRTC, OnCRTC)
-	ON_UPDATE_COMMAND_UI(IDM_CRTC, OnCRTCUI)
-	ON_COMMAND(IDM_VC, OnVC)
-	ON_UPDATE_COMMAND_UI(IDM_VC, OnVCUI)
-	ON_COMMAND(IDM_RTC, OnRTC)
-	ON_UPDATE_COMMAND_UI(IDM_RTC, OnRTCUI)
-	ON_COMMAND(IDM_OPM, OnOPM)
-	ON_UPDATE_COMMAND_UI(IDM_OPM, OnOPMUI)
-	ON_COMMAND(IDM_KEYBOARD, OnKeyboard)
-	ON_UPDATE_COMMAND_UI(IDM_KEYBOARD, OnKeyboardUI)
-	ON_COMMAND(IDM_FDD, OnFDD)
-	ON_UPDATE_COMMAND_UI(IDM_FDD, OnFDDUI)
-	ON_COMMAND(IDM_FDC, OnFDC)
-	ON_UPDATE_COMMAND_UI(IDM_FDC, OnFDCUI)
-	ON_COMMAND(IDM_SCC, OnSCC)
-	ON_UPDATE_COMMAND_UI(IDM_SCC, OnSCCUI)
-	ON_COMMAND(IDM_CYNTHIA, OnCynthia)
-	ON_UPDATE_COMMAND_UI(IDM_CYNTHIA, OnCynthiaUI)
-	ON_COMMAND(IDM_SASI, OnSASI)
-	ON_UPDATE_COMMAND_UI(IDM_SASI, OnSASIUI)
-	ON_COMMAND(IDM_MIDI, OnMIDI)
-	ON_UPDATE_COMMAND_UI(IDM_MIDI, OnMIDIUI)
-	ON_COMMAND(IDM_SCSI, OnSCSI)
-	ON_UPDATE_COMMAND_UI(IDM_SCSI, OnSCSIUI)
+//	ON_COMMAND(IDM_CDOPEN, OnCDOpen)
+//	ON_UPDATE_COMMAND_UI(IDM_CDOPEN, OnCDOpenUI)
+//	ON_COMMAND(IDM_CDEJECT, OnCDEject)
+//	ON_UPDATE_COMMAND_UI(IDM_CDEJECT, OnCDEjectUI)
+//	ON_COMMAND(IDM_CDFORCE, OnCDForce)
+//	ON_UPDATE_COMMAND_UI(IDM_CDFORCE, OnCDForceUI)
+//	ON_COMMAND_RANGE(IDM_CD_MRU0, IDM_CD_MRU8, OnCDMRU)
+//	ON_UPDATE_COMMAND_UI_RANGE(IDM_CD_MRU0, IDM_CD_MRU8, OnCDMRUUI)
+//
+//	ON_COMMAND(IDM_LOG, OnLog)
+//	ON_UPDATE_COMMAND_UI(IDM_LOG, OnLogUI)
+//	ON_COMMAND(IDM_SCHEDULER, OnScheduler)
+//	ON_UPDATE_COMMAND_UI(IDM_SCHEDULER, OnSchedulerUI)
+//	ON_COMMAND(IDM_DEVICE, OnDevice)
+//	ON_UPDATE_COMMAND_UI(IDM_DEVICE, OnDeviceUI)
+//	ON_COMMAND(IDM_CPUREG, OnCPUReg)
+//	ON_UPDATE_COMMAND_UI(IDM_CPUREG, OnCPURegUI)
+//	ON_COMMAND(IDM_INT, OnInt)
+//	ON_UPDATE_COMMAND_UI(IDM_INT, OnIntUI)
+//	ON_COMMAND(IDM_DISASM, OnDisasm)
+//	ON_UPDATE_COMMAND_UI(IDM_DISASM, OnDisasmUI)
+//	ON_COMMAND(IDM_MEMORY, OnMemory)
+//	ON_UPDATE_COMMAND_UI(IDM_MEMORY, OnMemoryUI)
+//	ON_COMMAND(IDM_BREAKP, OnBreakP)
+//	ON_UPDATE_COMMAND_UI(IDM_BREAKP, OnBreakPUI)
+//	ON_COMMAND(IDM_MFP, OnMFP)
+//	ON_UPDATE_COMMAND_UI(IDM_MFP, OnMFPUI)
+//	ON_COMMAND(IDM_DMAC, OnDMAC)
+//	ON_UPDATE_COMMAND_UI(IDM_DMAC, OnDMACUI)
+//	ON_COMMAND(IDM_CRTC, OnCRTC)
+//	ON_UPDATE_COMMAND_UI(IDM_CRTC, OnCRTCUI)
+//	ON_COMMAND(IDM_VC, OnVC)
+//	ON_UPDATE_COMMAND_UI(IDM_VC, OnVCUI)
+//	ON_COMMAND(IDM_RTC, OnRTC)
+//	ON_UPDATE_COMMAND_UI(IDM_RTC, OnRTCUI)
+//	ON_COMMAND(IDM_OPM, OnOPM)
+//	ON_UPDATE_COMMAND_UI(IDM_OPM, OnOPMUI)
+//	ON_COMMAND(IDM_KEYBOARD, OnKeyboard)
+//	ON_UPDATE_COMMAND_UI(IDM_KEYBOARD, OnKeyboardUI)
+//	ON_COMMAND(IDM_FDD, OnFDD)
+//	ON_UPDATE_COMMAND_UI(IDM_FDD, OnFDDUI)
+//	ON_COMMAND(IDM_FDC, OnFDC)
+//	ON_UPDATE_COMMAND_UI(IDM_FDC, OnFDCUI)
+//	ON_COMMAND(IDM_SCC, OnSCC)
+//	ON_UPDATE_COMMAND_UI(IDM_SCC, OnSCCUI)
+//	ON_COMMAND(IDM_CYNTHIA, OnCynthia)
+//	ON_UPDATE_COMMAND_UI(IDM_CYNTHIA, OnCynthiaUI)
+//	ON_COMMAND(IDM_SASI, OnSASI)
+//	ON_UPDATE_COMMAND_UI(IDM_SASI, OnSASIUI)
+//	ON_COMMAND(IDM_MIDI, OnMIDI)
+//	ON_UPDATE_COMMAND_UI(IDM_MIDI, OnMIDIUI)
+//	ON_COMMAND(IDM_SCSI, OnSCSI)
+//	ON_UPDATE_COMMAND_UI(IDM_SCSI, OnSCSIUI)
 //	ON_COMMAND(IDM_TVRAM, OnTVRAM)
 //	ON_UPDATE_COMMAND_UI(IDM_TVRAM, OnTVRAMUI)
-	ON_COMMAND(IDM_G1024, OnG1024)
-	ON_UPDATE_COMMAND_UI(IDM_G1024, OnG1024UI)
-	ON_COMMAND_RANGE(IDM_G16P0, IDM_G16P3, OnG16)
-	ON_UPDATE_COMMAND_UI_RANGE(IDM_G16P0, IDM_G16P3, OnG16UI)
-	ON_COMMAND_RANGE(IDM_G256P0, IDM_G256P1, OnG256)
-	ON_UPDATE_COMMAND_UI_RANGE(IDM_G256P0, IDM_G256P1, OnG256UI)
-	ON_COMMAND(IDM_G64K, OnG64K)
-	ON_UPDATE_COMMAND_UI(IDM_G64K, OnG64KUI)
-	ON_COMMAND(IDM_PCG, OnPCG)
-	ON_UPDATE_COMMAND_UI(IDM_PCG, OnPCGUI)
-	ON_COMMAND_RANGE(IDM_BG0, IDM_BG1, OnBG)
-	ON_UPDATE_COMMAND_UI_RANGE(IDM_BG0, IDM_BG1, OnBGUI)
-	ON_COMMAND(IDM_PALET, OnPalet)
-	ON_UPDATE_COMMAND_UI(IDM_PALET, OnPaletUI)
-	ON_COMMAND(IDM_REND_TEXT, OnTextBuf)
-	ON_UPDATE_COMMAND_UI(IDM_REND_TEXT, OnTextBufUI)
-	ON_COMMAND_RANGE(IDM_REND_GP0, IDM_REND_GP3, OnGrpBuf)
-	ON_UPDATE_COMMAND_UI_RANGE(IDM_REND_GP0, IDM_REND_GP3, OnGrpBufUI)
-	ON_COMMAND(IDM_REND_PCG, OnPCGBuf)
-	ON_UPDATE_COMMAND_UI(IDM_REND_PCG, OnPCGBufUI)
-	ON_COMMAND(IDM_REND_BGSPRITE, OnBGSpBuf)
-	ON_UPDATE_COMMAND_UI(IDM_REND_BGSPRITE, OnBGSpBufUI)
-	ON_COMMAND(IDM_REND_PALET, OnPaletBuf)
-	ON_UPDATE_COMMAND_UI(IDM_REND_PALET, OnPaletBufUI)
-	ON_COMMAND(IDM_REND_MIX, OnMixBuf)
-	ON_UPDATE_COMMAND_UI(IDM_REND_MIX, OnMixBufUI)
-	ON_COMMAND(IDM_COMPONENT, OnComponent)
-	ON_UPDATE_COMMAND_UI(IDM_COMPONENT, OnComponentUI)
-	ON_COMMAND(IDM_OSINFO, OnOSInfo)
-	ON_UPDATE_COMMAND_UI(IDM_OSINFO, OnOSInfoUI)
-	ON_COMMAND(IDM_SOUND, OnSound)
-	ON_UPDATE_COMMAND_UI(IDM_SOUND, OnSoundUI)
-	ON_COMMAND(IDM_INPUT, OnInput)
-	ON_UPDATE_COMMAND_UI(IDM_INPUT, OnInputUI)
-	ON_COMMAND(IDM_PORT, OnPort)
-	ON_UPDATE_COMMAND_UI(IDM_PORT, OnPortUI)
-	ON_COMMAND(IDM_BITMAP, OnBitmap)
-	ON_UPDATE_COMMAND_UI(IDM_BITMAP, OnBitmapUI)
-	ON_COMMAND(IDM_MIDIDRV, OnMIDIDrv)
-	ON_UPDATE_COMMAND_UI(IDM_MIDIDRV, OnMIDIDrvUI)
-	ON_COMMAND(IDM_CAPTION, OnCaption)
-	ON_UPDATE_COMMAND_UI(IDM_CAPTION, OnCaptionUI)
-	ON_COMMAND(IDM_MENU, OnMenu)
-	ON_UPDATE_COMMAND_UI(IDM_MENU, OnMenuUI)
-	ON_COMMAND(IDM_STATUS, OnStatus)
-	ON_UPDATE_COMMAND_UI(IDM_STATUS, OnStatusUI)
-	ON_COMMAND(IDM_REFRESH, OnRefresh)
-	ON_COMMAND(IDM_STRETCH, OnStretch)
-	ON_UPDATE_COMMAND_UI(IDM_STRETCH, OnStretchUI)
-	ON_COMMAND(IDM_FULLSCREEN, OnFullScreen)
-	ON_UPDATE_COMMAND_UI(IDM_FULLSCREEN, OnFullScreenUI)
+//	ON_COMMAND(IDM_G1024, OnG1024)
+//	ON_UPDATE_COMMAND_UI(IDM_G1024, OnG1024UI)
+//	ON_COMMAND_RANGE(IDM_G16P0, IDM_G16P3, OnG16)
+//	ON_UPDATE_COMMAND_UI_RANGE(IDM_G16P0, IDM_G16P3, OnG16UI)
+//	ON_COMMAND_RANGE(IDM_G256P0, IDM_G256P1, OnG256)
+//	ON_UPDATE_COMMAND_UI_RANGE(IDM_G256P0, IDM_G256P1, OnG256UI)
+//	ON_COMMAND(IDM_G64K, OnG64K)
+//	ON_UPDATE_COMMAND_UI(IDM_G64K, OnG64KUI)
+//	ON_COMMAND(IDM_PCG, OnPCG)
+//	ON_UPDATE_COMMAND_UI(IDM_PCG, OnPCGUI)
+//	ON_COMMAND_RANGE(IDM_BG0, IDM_BG1, OnBG)
+//	ON_UPDATE_COMMAND_UI_RANGE(IDM_BG0, IDM_BG1, OnBGUI)
+//	ON_COMMAND(IDM_PALET, OnPalet)
+//	ON_UPDATE_COMMAND_UI(IDM_PALET, OnPaletUI)
+//	ON_COMMAND(IDM_REND_TEXT, OnTextBuf)
+//	ON_UPDATE_COMMAND_UI(IDM_REND_TEXT, OnTextBufUI)
+//	ON_COMMAND_RANGE(IDM_REND_GP0, IDM_REND_GP3, OnGrpBuf)
+//	ON_UPDATE_COMMAND_UI_RANGE(IDM_REND_GP0, IDM_REND_GP3, OnGrpBufUI)
+//	ON_COMMAND(IDM_REND_PCG, OnPCGBuf)
+//	ON_UPDATE_COMMAND_UI(IDM_REND_PCG, OnPCGBufUI)
+//	ON_COMMAND(IDM_REND_BGSPRITE, OnBGSpBuf)
+//	ON_UPDATE_COMMAND_UI(IDM_REND_BGSPRITE, OnBGSpBufUI)
+//	ON_COMMAND(IDM_REND_PALET, OnPaletBuf)
+//	ON_UPDATE_COMMAND_UI(IDM_REND_PALET, OnPaletBufUI)
+//	ON_COMMAND(IDM_REND_MIX, OnMixBuf)
+//	ON_UPDATE_COMMAND_UI(IDM_REND_MIX, OnMixBufUI)
+//	ON_COMMAND(IDM_COMPONENT, OnComponent)
+//	ON_UPDATE_COMMAND_UI(IDM_COMPONENT, OnComponentUI)
+//	ON_COMMAND(IDM_OSINFO, OnOSInfo)
+//	ON_UPDATE_COMMAND_UI(IDM_OSINFO, OnOSInfoUI)
+//	ON_COMMAND(IDM_SOUND, OnSound)
+//	ON_UPDATE_COMMAND_UI(IDM_SOUND, OnSoundUI)
+//	ON_COMMAND(IDM_INPUT, OnInput)
+//	ON_UPDATE_COMMAND_UI(IDM_INPUT, OnInputUI)
+//	ON_COMMAND(IDM_PORT, OnPort)
+//	ON_UPDATE_COMMAND_UI(IDM_PORT, OnPortUI)
+//	ON_COMMAND(IDM_BITMAP, OnBitmap)
+//	ON_UPDATE_COMMAND_UI(IDM_BITMAP, OnBitmapUI)
+//	ON_COMMAND(IDM_MIDIDRV, OnMIDIDrv)
+//	ON_UPDATE_COMMAND_UI(IDM_MIDIDRV, OnMIDIDrvUI)
+//	ON_COMMAND(IDM_CAPTION, OnCaption)
+//	ON_UPDATE_COMMAND_UI(IDM_CAPTION, OnCaptionUI)
+//	ON_COMMAND(IDM_MENU, OnMenu)
+//	ON_UPDATE_COMMAND_UI(IDM_MENU, OnMenuUI)
+//	ON_COMMAND(IDM_STATUS, OnStatus)
+//	ON_UPDATE_COMMAND_UI(IDM_STATUS, OnStatusUI)
+//	ON_COMMAND(IDM_REFRESH, OnRefresh)
+//	ON_COMMAND(IDM_STRETCH, OnStretch)
+//	ON_UPDATE_COMMAND_UI(IDM_STRETCH, OnStretchUI)
+//	ON_COMMAND(IDM_FULLSCREEN, OnFullScreen)
+//	ON_UPDATE_COMMAND_UI(IDM_FULLSCREEN, OnFullScreenUI)
 
-	ON_COMMAND(IDM_EXEC, OnExec)
-	ON_UPDATE_COMMAND_UI(IDM_EXEC, OnExecUI)
-	ON_COMMAND(IDM_BREAK, OnBreak)
-	ON_UPDATE_COMMAND_UI(IDM_BREAK, OnBreakUI)
-	ON_COMMAND(IDM_TRACE, OnTrace)
-	ON_UPDATE_COMMAND_UI(IDM_TRACE, OnTraceUI)
+//	ON_COMMAND(IDM_EXEC, OnExec)
+//	ON_UPDATE_COMMAND_UI(IDM_EXEC, OnExecUI)
+//	ON_COMMAND(IDM_BREAK, OnBreak)
+//	ON_UPDATE_COMMAND_UI(IDM_BREAK, OnBreakUI)
+//	ON_COMMAND(IDM_TRACE, OnTrace)
+//	ON_UPDATE_COMMAND_UI(IDM_TRACE, OnTraceUI)
 
-	ON_COMMAND(IDM_MOUSEMODE, OnMouseMode)
-	ON_COMMAND(IDM_SOFTKEY, OnSoftKey)
-	ON_UPDATE_COMMAND_UI(IDM_SOFTKEY, OnSoftKeyUI)
-	ON_COMMAND(IDM_TIMEADJ, OnTimeAdj)
-	ON_COMMAND(IDM_TRAP0, OnTrap)
-	ON_UPDATE_COMMAND_UI(IDM_TRAP0, OnTrapUI)
-	ON_COMMAND(IDM_SAVEWAV, OnSaveWav)
-	ON_UPDATE_COMMAND_UI(IDM_SAVEWAV, OnSaveWavUI)
-	ON_COMMAND(IDM_NEWFD, OnNewFD)
-	ON_COMMAND_RANGE(IDM_NEWSASI, IDM_NEWMO, OnNewDisk)
+//	ON_COMMAND(IDM_MOUSEMODE, OnMouseMode)
+//	ON_COMMAND(IDM_SOFTKEY, OnSoftKey)
+//	ON_UPDATE_COMMAND_UI(IDM_SOFTKEY, OnSoftKeyUI)
+//	ON_COMMAND(IDM_TIMEADJ, OnTimeAdj)
+//	ON_COMMAND(IDM_TRAP0, OnTrap)
+//	ON_UPDATE_COMMAND_UI(IDM_TRAP0, OnTrapUI)
+//	ON_COMMAND(IDM_SAVEWAV, OnSaveWav)
+//	ON_UPDATE_COMMAND_UI(IDM_SAVEWAV, OnSaveWavUI)
+//	ON_COMMAND(IDM_NEWFD, OnNewFD)
+//	ON_COMMAND_RANGE(IDM_NEWSASI, IDM_NEWMO, OnNewDisk)
 	ON_COMMAND(IDM_OPTIONS, OnOptions)
 
-	ON_COMMAND(IDM_CASCADE, OnCascade)
-	ON_UPDATE_COMMAND_UI(IDM_CASCADE, OnCascadeUI)
-	ON_COMMAND(IDM_TILE, OnTile)
-	ON_UPDATE_COMMAND_UI(IDM_TILE, OnTileUI)
-	ON_COMMAND(IDM_ICONIC, OnIconic)
-	ON_UPDATE_COMMAND_UI(IDM_ICONIC, OnIconicUI)
-	ON_COMMAND(IDM_ARRANGEICON, OnArrangeIcon)
-	ON_UPDATE_COMMAND_UI(IDM_ARRANGEICON, OnArrangeIconUI)
-	ON_COMMAND(IDM_HIDE, OnHide)
-	ON_UPDATE_COMMAND_UI(IDM_HIDE, OnHideUI)
-	ON_COMMAND(IDM_RESTORE, OnRestore)
-	ON_UPDATE_COMMAND_UI(IDM_RESTORE, OnRestoreUI)
-	ON_COMMAND_RANGE(IDM_SWND_START, IDM_SWND_END, OnWindow)
+//	ON_COMMAND(IDM_CASCADE, OnCascade)
+//	ON_UPDATE_COMMAND_UI(IDM_CASCADE, OnCascadeUI)
+//	ON_COMMAND(IDM_TILE, OnTile)
+//	ON_UPDATE_COMMAND_UI(IDM_TILE, OnTileUI)
+//	ON_COMMAND(IDM_ICONIC, OnIconic)
+//	ON_UPDATE_COMMAND_UI(IDM_ICONIC, OnIconicUI)
+//	ON_COMMAND(IDM_ARRANGEICON, OnArrangeIcon)
+//	ON_UPDATE_COMMAND_UI(IDM_ARRANGEICON, OnArrangeIconUI)
+//	ON_COMMAND(IDM_HIDE, OnHide)
+//	ON_UPDATE_COMMAND_UI(IDM_HIDE, OnHideUI)
+//	ON_COMMAND(IDM_RESTORE, OnRestore)
+//	ON_UPDATE_COMMAND_UI(IDM_RESTORE, OnRestoreUI)
+//	ON_COMMAND_RANGE(IDM_SWND_START, IDM_SWND_END, OnWindow)
 
-	ON_COMMAND(IDM_ABOUT, OnAbout)
+//	ON_COMMAND(IDM_ABOUT, OnAbout)
 END_MESSAGE_MAP()
 
 //---------------------------------------------------------------------------
@@ -506,19 +499,19 @@ BOOL FASTCALL CFrmWnd::InitChild()
 	}
 
 	// ステータスバーワーク初期化
-	ResetStatus();
-
-	// ステータスバー作成
-	if (!m_StatusBar.Create(this, WS_CHILD | WS_VISIBLE | CBRS_BOTTOM,
-							AFX_IDW_STATUS_BAR)) {
-		return FALSE;
-	}
-	m_bStatusBar = TRUE;
+//	ResetStatus();
+//
+//	// ステータスバー作成
+//	if (!m_StatusBar.Create(this, WS_CHILD | WS_VISIBLE | CBRS_BOTTOM,
+//							AFX_IDW_STATUS_BAR)) {
+//		return FALSE;
+//	}
+//	m_bStatusBar = TRUE;
 	uIndicator[0] = ID_SEPARATOR;
 	for (i=1; i<6; i++) {
 		uIndicator[i] = (UINT)i;
 	}
-	m_StatusBar.SetIndicators(uIndicator, 6);
+//	m_StatusBar.SetIndicators(uIndicator, 6);
 
 	// テキストメトリックを取得
 	hDC = ::GetDC(m_hWnd);
@@ -530,7 +523,7 @@ BOOL FASTCALL CFrmWnd::InitChild()
 	::ReleaseDC(m_hWnd, hDC);
 
 	// サイズ設定ループ
-	m_StatusBar.SetPaneInfo(0, 0, SBPS_NOBORDERS | SBPS_STRETCH, 0);
+//	m_StatusBar.SetPaneInfo(0, 0, SBPS_NOBORDERS | SBPS_STRETCH, 0);
 	nWidth = 0;
 	for (i=1; i<6; i++) {
 		switch (i) {
@@ -555,7 +548,7 @@ BOOL FASTCALL CFrmWnd::InitChild()
 				nWidth = tm.tmAveCharWidth * 9;
 				break;
 		}
-		m_StatusBar.SetPaneInfo(i, i, SBPS_NORMAL | SBPS_OWNERDRAW, nWidth);
+//		m_StatusBar.SetPaneInfo(i, i, SBPS_NORMAL | SBPS_OWNERDRAW, nWidth);
 	}
 
 	// 再レイアウト
@@ -604,7 +597,7 @@ void FASTCALL CFrmWnd::InitPos(BOOL bStart)
 	rect.right = 824;
 	rect.bottom = 560;
 	::AdjustWindowRectEx(&rect, GetView()->GetStyle(), FALSE, GetView()->GetExStyle());
-	m_StatusBar.GetWindowRect(&rectStatus);
+//	m_StatusBar.GetWindowRect(&rectStatus);
 	rect.bottom += rectStatus.Height();
 	::AdjustWindowRectEx(&rect, GetStyle(), TRUE, GetExStyle());
 
@@ -717,11 +710,11 @@ BOOL FASTCALL CFrmWnd::InitComponent()
 	ASSERT(!m_pSch);
 	ASSERT(!m_pSound);
 	ASSERT(!m_pInput);
-	ASSERT(!m_pPort);
-	ASSERT(!m_pMIDI);
-	ASSERT(!m_pTKey);
+//	ASSERT(!m_pPort);
+//	ASSERT(!m_pMIDI);
+//	ASSERT(!m_pTKey);
 	ASSERT(!m_pHost);
-	ASSERT(!m_pInfo);
+//	ASSERT(!m_pInfo);
 	ASSERT(!m_pConfig);
 
 	// コンストラクト(順番を考慮する必要あり。最初Config、最後Scheduler)
@@ -731,16 +724,14 @@ BOOL FASTCALL CFrmWnd::InitComponent()
 	m_pFirstComponent->AddComponent(m_pSound);
 	m_pInput = new CInput(this);
 	m_pFirstComponent->AddComponent(m_pInput);
-	m_pPort = new CPort(this);
-	m_pFirstComponent->AddComponent(m_pPort);
-	m_pMIDI = new CMIDI(this);
-	m_pFirstComponent->AddComponent(m_pMIDI);
-	m_pTKey = new CTKey(this);
-	m_pFirstComponent->AddComponent(m_pTKey);
+//	m_pPort = new CPort(this);
+//	m_pFirstComponent->AddComponent(m_pPort);
+//	m_pMIDI = new CMIDI(this);
+//	m_pFirstComponent->AddComponent(m_pMIDI);
+//	m_pTKey = new CTKey(this);
+//	m_pFirstComponent->AddComponent(m_pTKey);
 	m_pHost = new CHost(this);
 	m_pFirstComponent->AddComponent(m_pHost);
-	m_pInfo = new CInfo(this, &m_StatusBar);
-	m_pFirstComponent->AddComponent(m_pInfo);
 	m_pSch = new CScheduler(this);
 	m_pFirstComponent->AddComponent(m_pSch);
 
@@ -949,7 +940,7 @@ BOOL FASTCALL CFrmWnd::InitCmdSub(int nDrive, LPCTSTR lpszPath)
 		if (!m_pSASI->Open(path)) {
 			// MO割り当て失敗
 			GetScheduler()->Reset();
-			ResetCaption();
+//			ResetCaption();
 			::UnlockVM();
 			return FALSE;
 		}
@@ -963,7 +954,7 @@ BOOL FASTCALL CFrmWnd::InitCmdSub(int nDrive, LPCTSTR lpszPath)
 			if (!OnOpenPrep(path, FALSE)) {
 				// ファイルがないか、バージョンなどが正しくない
 				GetScheduler()->Reset();
-				ResetCaption();
+//				ResetCaption();
 				::UnlockVM();
 				return FALSE;
 			}
@@ -981,7 +972,7 @@ BOOL FASTCALL CFrmWnd::InitCmdSub(int nDrive, LPCTSTR lpszPath)
 			if (!m_pFDD->Open(nDrive, path)) {
 				// FD割り当て失敗
 				GetScheduler()->Reset();
-				ResetCaption();
+//				ResetCaption();
 				::UnlockVM();
 				return FALSE;
 			}
@@ -991,7 +982,7 @@ BOOL FASTCALL CFrmWnd::InitCmdSub(int nDrive, LPCTSTR lpszPath)
 
 	// VMリセット、ロック解除
 	GetScheduler()->Reset();
-	ResetCaption();
+//	ResetCaption();
 	::UnlockVM();
 
 	// 成功。ディレクトリ保存＆MRU追加
@@ -1211,8 +1202,8 @@ void FASTCALL CFrmWnd::ApplyCfg()
 
 	// フレームウィンドウ(ポップアップ)
 	if (config.popup_swnd != m_bPopup) {
-		// サブウィンドウをすべてクリア
-		GetView()->ClrSWnd();
+//		// サブウィンドウをすべてクリア
+//		GetView()->ClrSWnd();
 
 		// 変更
 		m_bPopup = config.popup_swnd;
@@ -1223,9 +1214,9 @@ void FASTCALL CFrmWnd::ApplyCfg()
 	m_bAutoMouse = config.auto_mouse;
 	if (config.mouse_port == 0) {
 		// マウス接続なしなら、マウスモードOFF
-		if (GetInput()->GetMouseMode()) {
-			OnMouseMode();
-		}
+//		if (GetInput()->GetMouseMode()) {
+//			OnMouseMode();
+//		}
 	}
 }
 
@@ -1234,10 +1225,10 @@ void FASTCALL CFrmWnd::ApplyCfg()
 //	キック
 //
 //---------------------------------------------------------------------------
-LONG CFrmWnd::OnKick(UINT /*uParam*/, LONG /*lParam*/)
+LONG CFrmWnd::OnKick(UINT , LONG )
 {
 	CComponent *pComponent;
-	CInfo *pInfo;
+//	CInfo *pInfo;
 	Config config;
 	CString strMsg;
 	MSG msg;
@@ -1361,16 +1352,16 @@ LONG CFrmWnd::OnKick(UINT /*uParam*/, LONG /*lParam*/)
 			Sleep(20);
 
 			// Infoを毎回取り直す
-			pInfo = GetInfo();
-			if (!pInfo) {
-				continue;
-			}
+//			pInfo = GetInfo();
+//			if (!pInfo) {
+//				continue;
+//			}
 
 			// 更新カウンタUp
 			nIdle++;
 
 			// ステータス・実行は20ms
-			pInfo->UpdateStatus();
+//			pInfo->UpdateStatus();
 			UpdateExec();
 
 			if ((nIdle & 1) == 0) {
@@ -1380,8 +1371,8 @@ LONG CFrmWnd::OnKick(UINT /*uParam*/, LONG /*lParam*/)
 
 			if ((nIdle & 3) == 0) {
 				// キャプション、情報は80ms
-				pInfo->UpdateCaption();
-				pInfo->UpdateInfo();
+//				pInfo->UpdateCaption();
+//				pInfo->UpdateInfo();
 			}
 		}
 	}
@@ -1394,24 +1385,24 @@ LONG CFrmWnd::OnKick(UINT /*uParam*/, LONG /*lParam*/)
 //	ウィンドウクラス名取得
 //
 //---------------------------------------------------------------------------
-LPCTSTR FASTCALL CFrmWnd::GetWndClassName() const
-{
-	ASSERT(this);
-	ASSERT(m_strWndClsName.GetLength() != 0);
-
-	return (LPCTSTR)m_strWndClsName;
-}
+//	LPCTSTR FASTCALL CFrmWnd::GetWndClassName() const
+//	{
+//		ASSERT(this);
+//		ASSERT(m_strWndClsName.GetLength() != 0);
+//	
+//		return (LPCTSTR)m_strWndClsName;
+//	}
 
 //---------------------------------------------------------------------------
 //
 //	ポップアップか
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL CFrmWnd::IsPopupSWnd() const
-{
-	ASSERT(this);
-	return m_bPopup;
-}
+//	BOOL FASTCALL CFrmWnd::IsPopupSWnd() const
+//	{
+//		ASSERT(this);
+//		return m_bPopup;
+//	}
 
 //---------------------------------------------------------------------------
 //
@@ -1472,18 +1463,18 @@ void CFrmWnd::OnClose()
 		m_bSaved = TRUE;
 	}
 
-	// フルスクリーン時は解除
-	if (m_bFullScreen) {
-		ASSERT(m_nStatus == 0);
-		OnFullScreen();
-	}
+//	// フルスクリーン時は解除
+//	if (m_bFullScreen) {
+//		ASSERT(m_nStatus == 0);
+//		OnFullScreen();
+//	}
 
 	// 初期化済みなら
 	if (m_nStatus == 0) {
 		// マウス解除
-		if (GetInput()->GetMouseMode()) {
-			OnMouseMode();
-		}
+//		if (GetInput()->GetMouseMode()) {
+//			OnMouseMode();
+//		}
 	}
 
 	// 基本クラス
@@ -1507,11 +1498,11 @@ void CFrmWnd::OnDestroy()
 		m_bSaved = TRUE;
 	}
 
-	// フルスクリーン時は解除
-	if (m_bFullScreen) {
-		ASSERT(m_nStatus == 0);
-		OnFullScreen();
-	}
+//	// フルスクリーン時は解除
+//	if (m_bFullScreen) {
+//		ASSERT(m_nStatus == 0);
+//		OnFullScreen();
+//	}
 
 	// クリーンアップ(WM_ENDSESSIONと共通)
 	CleanSub();
@@ -1572,11 +1563,11 @@ void FASTCALL CFrmWnd::CleanSub()
 	}
 
 	// マウス解除
-	if (m_nStatus == 0) {
-		if (GetInput()->GetMouseMode()) {
-			OnMouseMode();
-		}
-	}
+//	if (m_nStatus == 0) {
+//		if (GetInput()->GetMouseMode()) {
+//			OnMouseMode();
+//		}
+//	}
 
 	// スケジューラが実行をやめるまで待つ
 	for (i=0; i<8; i++) {
@@ -1635,9 +1626,9 @@ void CFrmWnd::SaveFrameWnd()
 	GetConfig()->GetConfig(&config);
 
 	// キャプション・メニュー・ステータスバー
-	config.caption = m_bCaption;
+//	config.caption = m_bCaption;
 	config.menu_bar = m_bMenuBar;
-	config.status_bar = m_bStatusBar;
+//	config.status_bar = m_bStatusBar;
 
 	// ウィンドウ矩形
 	if (m_bFullScreen) {
@@ -1746,16 +1737,16 @@ BOOL CFrmWnd::RestoreFrameWnd(BOOL bFullScreen)
 	}
 
 	// キャプション
-	m_bCaption = config.caption;
-	ShowCaption();
+//	m_bCaption = config.caption;
+//	ShowCaption();
 
 	// メニュー
 	m_bMenuBar = config.menu_bar;
 	ShowMenu();
 
 	// ステータスバー
-	m_bStatusBar = config.status_bar;
-	ShowStatus();
+//	m_bStatusBar = config.status_bar;
+//	ShowStatus();
 
 	// 仮想画面のサイズと原点を取得
 	nWidth = ::GetSystemMetrics(SM_CXVIRTUALSCREEN);
@@ -1965,7 +1956,7 @@ LRESULT CFrmWnd::OnDisplayChange(UINT uParam, LONG lParam)
 //	ウィンドウ背景描画
 //
 //---------------------------------------------------------------------------
-BOOL CFrmWnd::OnEraseBkgnd(CDC * /* pDC */)
+BOOL CFrmWnd::OnEraseBkgnd(CDC * )
 {
 	// 背景描画を抑制
 	return TRUE;
@@ -1987,8 +1978,8 @@ void CFrmWnd::OnPaint()
 
 	// VMが有効ならキャプション、ステータスバーをリセット
 	if (m_nStatus == 0) {
-		ResetCaption();
-		ResetStatus();
+//		ResetCaption();
+//		ResetStatus();
 	}
 
 	EndPaint(&ps);
@@ -2044,10 +2035,10 @@ void CFrmWnd::OnActivate(UINT nState, CWnd *pWnd, BOOL bMinimized)
 				pInput->Activate(FALSE);
 				pScheduler->Activate(FALSE);
 
-				// マウスモードOFF(POPUPウィンドウ対策)
-				if (pInput->GetMouseMode()) {
-					OnMouseMode();
-				}
+//				// マウスモードOFF(POPUPウィンドウ対策)
+//				if (pInput->GetMouseMode()) {
+//					OnMouseMode();
+//				}
 			}
 			else {
 				// 入力受け付ける、通常実行
@@ -2079,7 +2070,7 @@ void CFrmWnd::OnActivateApp(BOOL bActive, HTASK hTask)
 			if (bActive) {
 				// これからアクティブになる
 				HideTaskBar(TRUE, TRUE);
-				RecalcStatusView();
+//				RecalcStatusView();
 			}
 			else {
 				// アクティブから外れた
@@ -2107,7 +2098,7 @@ void CFrmWnd::OnEnterMenuLoop(BOOL bTrackPopup)
 	CScheduler *pScheduler;
 
 	// キャプションリセット
-	ResetCaption();
+//	ResetCaption();
 
 	::LockVM();
 
@@ -2117,10 +2108,10 @@ void CFrmWnd::OnEnterMenuLoop(BOOL bTrackPopup)
 		pInput->Menu(TRUE);
 	}
 
-	// マウスモードFALSE(マウスでメニューが操作できるように)
-	if (pInput->GetMouseMode()) {
-		OnMouseMode();
-	}
+//	// マウスモードFALSE(マウスでメニューが操作できるように)
+//	if (pInput->GetMouseMode()) {
+//		OnMouseMode();
+//	}
 
 	// スケジューラへ通知
 	pScheduler = GetScheduler();
@@ -2161,7 +2152,7 @@ void CFrmWnd::OnExitMenuLoop(BOOL bTrackPopup)
 	::UnlockVM();
 
 	// キャプションリセット
-	ResetCaption();
+//	ResetCaption();
 
 	// 基本クラスへ
 	CFrameWnd::OnExitMenuLoop(bTrackPopup);
@@ -2183,10 +2174,10 @@ void CFrmWnd::OnParentNotify(UINT message, LPARAM lParam)
 		if (pInput) {
 			// マウス無効なら有効にする。逆はしない
 			if (!pInput->GetMouseMode()) {
-				// 設定で"中ボタン禁止"にされていないことが条件
-				if (m_bMouseMid) {
-					OnMouseMode();
-				}
+//				// 設定で"中ボタン禁止"にされていないことが条件
+//				if (m_bMouseMid) {
+//					OnMouseMode();
+//				}
 			}
 		}
 	}
@@ -2200,7 +2191,7 @@ void CFrmWnd::OnParentNotify(UINT message, LPARAM lParam)
 //	コンテキストメニュー
 //
 //---------------------------------------------------------------------------
-void CFrmWnd::OnContextMenu(CWnd * /*pWnd*/, CPoint pos)
+void CFrmWnd::OnContextMenu(CWnd * , CPoint pos)
 {
 	CMenu *pMenu;
 	SHORT sF10;
@@ -2224,10 +2215,10 @@ void CFrmWnd::OnContextMenu(CWnd * /*pWnd*/, CPoint pos)
 			}
 		}
 
-		// マウスモードであれば、解除(キーボードからのメニュー起動)
-		if (GetInput()->GetMouseMode()) {
-			OnMouseMode();
-		}
+//		// マウスモードであれば、解除(キーボードからのメニュー起動)
+//		if (GetInput()->GetMouseMode()) {
+//			OnMouseMode();
+//		}
 	}
 	else {
 		// マウスモードであれば、無視(マウスからのメニュー起動)
@@ -2249,7 +2240,7 @@ void CFrmWnd::OnContextMenu(CWnd * /*pWnd*/, CPoint pos)
 //	電力変更通知
 //
 //---------------------------------------------------------------------------
-LONG CFrmWnd::OnPowerBroadCast(UINT /*uParam*/, LONG /*lParam*/)
+LONG CFrmWnd::OnPowerBroadCast(UINT , LONG )
 {
 	// 初期化済みなら
 	if (m_nStatus == 0) {
@@ -2294,9 +2285,9 @@ void CFrmWnd::OnSysCommand(UINT nID, LPARAM lParam)
 //
 //---------------------------------------------------------------------------
 #if _MFC_VER >= 0x700
-afx_msg BOOL CFrmWnd::OnCopyData(CWnd* /*pWnd*/, COPYDATASTRUCT* pCopyDataStruct)
+afx_msg BOOL CFrmWnd::OnCopyData(CWnd* , COPYDATASTRUCT* pCopyDataStruct)
 #else
-LONG CFrmWnd::OnCopyData(UINT /*uParam*/, LONG pCopyDataStruct)
+LONG CFrmWnd::OnCopyData(UINT , LONG pCopyDataStruct)
 #endif
 {
 	PCOPYDATASTRUCT pCDS;
@@ -2411,7 +2402,7 @@ void CFrmWnd::GetMessageString(UINT nID, CString& rMessage) const
 	int nMRU;
 	int nDisk;
 	BOOL bValid;
-	CInfo *pInfo;
+//	CInfo *pInfo;
 
 	// フラグFALSE
 	bValid = FALSE;
@@ -2528,15 +2519,15 @@ void CFrmWnd::GetMessageString(UINT nID, CString& rMessage) const
 	}
 
 	// 結果をInfoへ提供(内部保持用)
-	pInfo = GetInfo();
-	if (pInfo) {
-		pInfo->SetMessageString(rMessage);
-	}
+//	pInfo = GetInfo();
+//	if (pInfo) {
+//		pInfo->SetMessageString(rMessage);
+//	}
 
-	// 結果をステータスビューへ提供
-	if (m_pStatusView) {
-		m_pStatusView->SetMenuString(rMessage);
-	}
+//	// 結果をステータスビューへ提供
+//	if (m_pStatusView) {
+//		m_pStatusView->SetMenuString(rMessage);
+//	}
 }
 
 //---------------------------------------------------------------------------
@@ -2573,209 +2564,212 @@ void FASTCALL CFrmWnd::HideTaskBar(BOOL bHide, BOOL bFore)
 //	ステータスバー表示
 //
 //---------------------------------------------------------------------------
-void FASTCALL CFrmWnd::ShowStatus()
-{
-	ASSERT(this);
-
-	// 必要ならVMをロック
-	if (m_nStatus == 0) {
-		::LockVM();
-	}
-
-	// フルスクリーンか
-	if (m_bFullScreen) {
-		// ステータスバーは常に非表示
-		ShowControlBar(&m_StatusBar, FALSE, FALSE);
-
-		// ステータスバー表示か
-		if (m_bStatusBar) {
-			// ステータスビューが存在しなければ
-			if (!m_pStatusView) {
-				// 作成して
-				CreateStatusView();
-
-				// 再配置
-				if (m_bStatusBar) {
-					RecalcStatusView();
-				}
-			}
-		}
-		else {
-			// ステータスビューが存在していれば
-			if (m_pStatusView) {
-				// 削除して
-				DestroyStatusView();
-
-				// 再配置
-				RecalcStatusView();
-			}
-		}
-
-		// 必要があればアンロック
-		if (m_nStatus == 0) {
-			::UnlockVM();
-		}
-		return;
-	}
-
-	// ステータスビューはフルスクリーン専用なので、削除
-	if (m_pStatusView) {
-		DestroyStatusView();
-		RecalcLayout();
-	}
-
-	// ウィンドウなので、ShowControlBarで制御
-	ShowControlBar(&m_StatusBar, m_bStatusBar, FALSE);
-
-	// 必要があればアンロック
-	if (m_nStatus == 0) {
-		::UnlockVM();
-	}
-}
-
-//---------------------------------------------------------------------------
-//
-//	ステータスビュー作成(フルスクリーン時)
-//
-//---------------------------------------------------------------------------
-void FASTCALL CFrmWnd::CreateStatusView()
-{
-	CInfo *pInfo;
-
-	ASSERT(!m_pStatusView);
-
-	if (m_bStatusBar) {
-		// ステータスビュー作成(再配置は行わない)
-		m_pStatusView = new CStatusView;
-		if (m_pStatusView->Init(this)) {
-			// 作成成功
-			pInfo = GetInfo();
-			if (pInfo) {
-				// Infoが存在するので、ステータスビュー作成を通知
-				pInfo->SetStatusView(m_pStatusView);
-			}
-		}
-		else {
-			// 作成失敗
-			m_bStatusBar = FALSE;
-		}
-	}
-}
-
-//---------------------------------------------------------------------------
-//
-//	ステータスビュー終了(フルスクリーン時)
-//
-//---------------------------------------------------------------------------
-void FASTCALL CFrmWnd::DestroyStatusView()
-{
-	CInfo *pInfo;
-
-	// 有効なステータスビューが存在する場合のみ
-	if (m_pStatusView) {
-		// Info取得
-		pInfo = GetInfo();
-		if (pInfo) {
-			// Infoが存在するので、ステータスビュー削除を通知
-			pInfo->SetStatusView(NULL);
-		}
-
-		// ステータスビュー削除(再配置は行わない)
-		m_pStatusView->DestroyWindow();
-		m_pStatusView = NULL;
-	}
-}
-
-//---------------------------------------------------------------------------
-//
-//	ステータスビュー再配置
-//
-//---------------------------------------------------------------------------
-void FASTCALL CFrmWnd::RecalcStatusView()
-{
-	CRect rectFrame;
-	CRect rectDraw;
-	CRect rectStatus;
-	LONG lDraw;
-	LONG lStatus;
-	BOOL bMove;
-
-	// フレームのサイズを取得
-	GetClientRect(&rectFrame);
-
-	// ステータスビューの有無で分ける
-	if (m_pStatusView) {
-		// ステータスビューあり。ステータスビューの位置を優先
-		m_pStatusView->GetWindowRect(&rectStatus);
-		lStatus = rectStatus.Height();
-		lDraw = rectFrame.Height() - lStatus;
-
-		// Drawビューの位置を取得
-		m_pDrawView->GetWindowRect(&rectDraw);
-		ScreenToClient(&rectDraw);
-
-		// 変更チェック
-		bMove = FALSE;
-		if ((rectDraw.left != 0) || (rectDraw.top != 0)) {
-			bMove = TRUE;
-		}
-		if ((rectDraw.Width () != rectFrame.Width()) || (rectDraw.Height() != lDraw)) {
-			bMove = TRUE;
-		}
-		if (bMove) {
-			m_pDrawView->SetWindowPos(&wndTop, 0, 0, rectFrame.Width(), lDraw, SWP_NOZORDER);
-		}
-
-		// Statusビューの位置を取得
-		m_pStatusView->GetWindowRect(&rectStatus);
-		ScreenToClient(&rectStatus);
-
-		// 変更チェック
-		bMove = FALSE;
-		if ((rectStatus.left != 0) || (rectStatus.top != lDraw)) {
-			bMove = TRUE;
-		}
-		if ((rectStatus.Width() != rectFrame.Width()) || (rectStatus.Height() != lStatus)) {
-			bMove = TRUE;
-		}
-		if (bMove) {
-			m_pStatusView->SetWindowPos(&wndTop, 0, lDraw, rectFrame.Width(), lStatus, SWP_NOZORDER);
-		}
-	}
-	else {
-		// ステータスビューなし。Drawビューのみ
-		m_pDrawView->GetWindowRect(&rectDraw);
-		ScreenToClient(&rectDraw);
-
-		// 変更チェック
-		bMove = FALSE;
-		if ((rectDraw.left != 0) || (rectDraw.top != 0)) {
-			bMove = TRUE;
-		}
-		if ((rectDraw.Width () != rectFrame.Width()) || (rectDraw.Height() != rectFrame.Height())) {
-			bMove = TRUE;
-		}
-		if (bMove) {
-			m_pDrawView->SetWindowPos(&wndTop, 0, 0, rectFrame.Width(), rectFrame.Height(), SWP_NOZORDER);
-		}
-	}
-}
-
-//---------------------------------------------------------------------------
-//
-//	ステータスバーリセット
-//
-//---------------------------------------------------------------------------
-void FASTCALL CFrmWnd::ResetStatus()
-{
-	CInfo *pInfo;
-
-	// Infoがあればリセット
-	pInfo = GetInfo();
-	if (pInfo) {
-		pInfo->ResetStatus();
-	}
-}
+//	void FASTCALL CFrmWnd::ShowStatus()
+//	{
+//		ASSERT(this);
+//	
+//		// 必要ならVMをロック
+//		if (m_nStatus == 0) {
+//			::LockVM();
+//		}
+//	
+//		// フルスクリーンか
+//		if (m_bFullScreen) {
+//			// ステータスバーは常に非表示
+//	//		ShowControlBar(&m_StatusBar, FALSE, FALSE);
+//	
+//			// ステータスバー表示か
+//	//		if (m_bStatusBar)
+//	//		{
+//	//			// ステータスビューが存在しなければ
+//	//			if (!m_pStatusView) {
+//	//				// 作成して
+//	//				CreateStatusView();
+//	//
+//	//				// 再配置
+//	//				if (m_bStatusBar) {
+//	//					RecalcStatusView();
+//	//				}
+//	//			}
+//	//		}
+//	//		else {
+//	//			// ステータスビューが存在していれば
+//	//			if (m_pStatusView) {
+//	//				// 削除して
+//	//				DestroyStatusView();
+//	//
+//	//				// 再配置
+//	//				RecalcStatusView();
+//	//			}
+//	//		}
+//	
+//			// 必要があればアンロック
+//			if (m_nStatus == 0) {
+//				::UnlockVM();
+//			}
+//			return;
+//		}
+//	
+//		// ステータスビューはフルスクリーン専用なので、削除
+//		if (m_pStatusView) {
+//			DestroyStatusView();
+//			RecalcLayout();
+//		}
+//	
+//		// ウィンドウなので、ShowControlBarで制御
+//	//	ShowControlBar(&m_StatusBar, m_bStatusBar, FALSE);
+//	
+//		// 必要があればアンロック
+//		if (m_nStatus == 0) {
+//			::UnlockVM();
+//		}
+//	}
+//	
+//	//---------------------------------------------------------------------------
+//	//
+//	//	ステータスビュー作成(フルスクリーン時)
+//	//
+//	//---------------------------------------------------------------------------
+//	void FASTCALL CFrmWnd::CreateStatusView()
+//	{
+//	//	CInfo *pInfo;
+//	
+//		ASSERT(!m_pStatusView);
+//	
+//		if (m_bStatusBar) {
+//			m_bStatusBar = FALSE;	//VC2010//
+//	//		// ステータスビュー作成(再配置は行わない)
+//	//		m_pStatusView = new CStatusView;
+//	//		if (m_pStatusView->Init(this)) {
+//	//			// 作成成功
+//	//			pInfo = GetInfo();
+//	//			if (pInfo) {
+//	//				// Infoが存在するので、ステータスビュー作成を通知
+//	//				pInfo->SetStatusView(m_pStatusView);
+//	//			}
+//	//		}
+//	//		else {
+//	//			// 作成失敗
+//	//			m_bStatusBar = FALSE;
+//	//		}
+//		}
+//	}
+//	
+//	//---------------------------------------------------------------------------
+//	//
+//	//	ステータスビュー終了(フルスクリーン時)
+//	//
+//	//---------------------------------------------------------------------------
+//	void FASTCALL CFrmWnd::DestroyStatusView()
+//	{
+//		CInfo *pInfo;
+//	
+//		// 有効なステータスビューが存在する場合のみ
+//		if (m_pStatusView) {
+//			// Info取得
+//			pInfo = GetInfo();
+//			if (pInfo) {
+//				// Infoが存在するので、ステータスビュー削除を通知
+//	//			pInfo->SetStatusView(NULL);
+//			}
+//	
+//			// ステータスビュー削除(再配置は行わない)
+//	//		m_pStatusView->DestroyWindow();
+//	//		m_pStatusView = NULL;
+//		}
+//	}
+//	
+//	//---------------------------------------------------------------------------
+//	//
+//	//	ステータスビュー再配置
+//	//
+//	//---------------------------------------------------------------------------
+//	void FASTCALL CFrmWnd::RecalcStatusView()
+//	{
+//		CRect rectFrame;
+//		CRect rectDraw;
+//		CRect rectStatus;
+//	//	LONG lDraw;
+//	//	LONG lStatus;
+//		BOOL bMove;
+//	
+//		// フレームのサイズを取得
+//		GetClientRect(&rectFrame);
+//	
+//		// ステータスビューの有無で分ける
+//	//	if (m_pStatusView) {
+//	//		// ステータスビューあり。ステータスビューの位置を優先
+//	//		m_pStatusView->GetWindowRect(&rectStatus);
+//	//		lStatus = rectStatus.Height();
+//	//		lDraw = rectFrame.Height() - lStatus;
+//	//
+//	//		// Drawビューの位置を取得
+//	//		m_pDrawView->GetWindowRect(&rectDraw);
+//	//		ScreenToClient(&rectDraw);
+//	//
+//	//		// 変更チェック
+//	//		bMove = FALSE;
+//	//		if ((rectDraw.left != 0) || (rectDraw.top != 0)) {
+//	//			bMove = TRUE;
+//	//		}
+//	//		if ((rectDraw.Width () != rectFrame.Width()) || (rectDraw.Height() != lDraw)) {
+//	//			bMove = TRUE;
+//	//		}
+//	//		if (bMove) {
+//	//			m_pDrawView->SetWindowPos(&wndTop, 0, 0, rectFrame.Width(), lDraw, SWP_NOZORDER);
+//	//		}
+//	//
+//	//		// Statusビューの位置を取得
+//	//		m_pStatusView->GetWindowRect(&rectStatus);
+//	//		ScreenToClient(&rectStatus);
+//	//
+//	//		// 変更チェック
+//	//		bMove = FALSE;
+//	//		if ((rectStatus.left != 0) || (rectStatus.top != lDraw)) {
+//	//			bMove = TRUE;
+//	//		}
+//	//		if ((rectStatus.Width() != rectFrame.Width()) || (rectStatus.Height() != lStatus)) {
+//	//			bMove = TRUE;
+//	//		}
+//	//		if (bMove) {
+//	//			m_pStatusView->SetWindowPos(&wndTop, 0, lDraw, rectFrame.Width(), lStatus, SWP_NOZORDER);
+//	//		}
+//	//	}
+//	//	else
+//		{
+//			// ステータスビューなし。Drawビューのみ
+//			m_pDrawView->GetWindowRect(&rectDraw);
+//			ScreenToClient(&rectDraw);
+//	
+//			// 変更チェック
+//			bMove = FALSE;
+//			if ((rectDraw.left != 0) || (rectDraw.top != 0)) {
+//				bMove = TRUE;
+//			}
+//			if ((rectDraw.Width () != rectFrame.Width()) || (rectDraw.Height() != rectFrame.Height())) {
+//				bMove = TRUE;
+//			}
+//			if (bMove) {
+//				m_pDrawView->SetWindowPos(&wndTop, 0, 0, rectFrame.Width(), rectFrame.Height(), SWP_NOZORDER);
+//			}
+//		}
+//	}
+//	
+//	//	//---------------------------------------------------------------------------
+//	//	//
+//	//	//	ステータスバーリセット
+//	//	//
+//	//	//---------------------------------------------------------------------------
+//	//	void FASTCALL CFrmWnd::ResetStatus()
+//	//	{
+//	//		CInfo *pInfo;
+//	//	
+//	//		// Infoがあればリセット
+//	//		pInfo = GetInfo();
+//	//		if (pInfo) {
+//	//	//		pInfo->ResetStatus();
+//	//		}
+//	//	}
 
 //---------------------------------------------------------------------------
 //
@@ -2787,13 +2781,13 @@ void CFrmWnd::OnDrawItem(int nID, LPDRAWITEMSTRUCT lpDIS)
 	int nPane;
 	HDC hDC;
 	CRect rectDraw;
-	CInfo *pInfo;
+//	CInfo *pInfo;
 
 	// ウィンドウハンドルのチェック
-	if (lpDIS->hwndItem != m_StatusBar.m_hWnd) {
-		CFrameWnd::OnDrawItem(nID, lpDIS);
-		return;
-	}
+//	if (lpDIS->hwndItem != m_StatusBar.m_hWnd) {
+//		CFrameWnd::OnDrawItem(nID, lpDIS);
+//		return;
+//	}
 
 	// 種別、DC、矩形を取得
 	nPane = lpDIS->itemID;
@@ -2805,16 +2799,16 @@ void CFrmWnd::OnDrawItem(int nID, LPDRAWITEMSTRUCT lpDIS)
 	rectDraw = &lpDIS->rcItem;
 
 	// Infoのチェック
-	pInfo = GetInfo();
-	if (!pInfo) {
-		// 黒で塗りつぶす
-		::SetBkColor(hDC, RGB(0, 0, 0));
-		::ExtTextOut(hDC, 0, 0, ETO_OPAQUE, &rectDraw, NULL, 0, NULL);
-		return;
-	}
+//	pInfo = GetInfo();
+//	if (!pInfo) {
+//		// 黒で塗りつぶす
+//		::SetBkColor(hDC, RGB(0, 0, 0));
+//		::ExtTextOut(hDC, 0, 0, ETO_OPAQUE, &rectDraw, NULL, 0, NULL);
+//		return;
+//	}
 
 	// Infoに指示
-	pInfo->DrawStatus(nPane, hDC, rectDraw);
+//	pInfo->DrawStatus(nPane, hDC, rectDraw);
 }
 
 //---------------------------------------------------------------------------
@@ -2875,78 +2869,78 @@ void FASTCALL CFrmWnd::ShowMenu()
 //	キャプション表示
 //
 //---------------------------------------------------------------------------
-void FASTCALL CFrmWnd::ShowCaption()
-{
-	DWORD dwStyle;
-
-	ASSERT(this);
-
-	// 必要であればVMをロック
-	if (m_nStatus == 0) {
-		::LockVM();
-	}
-
-	// 現在のキャプション状態を取得
-	dwStyle = GetStyle() & WS_CAPTION;
-
-	// キャプションが不必要な場合
-	if (m_bFullScreen || !m_bCaption) {
-		// キャプションが存在するか
-		if (dwStyle) {
-			// キャプションを消去
-			ModifyStyle(WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX,
-							0, SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
-		}
-		if (m_nStatus == 0) {
-			::UnlockVM();
-		}
-		return;
-	}
-
-	// キャプションが必要な場合
-	if (!dwStyle) {
-		// キャプションをセット
-		ModifyStyle(0, WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX,
-							SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
-	}
-
-	// 必要ならVMをアンロック
-	if (m_nStatus == 0) {
-		::UnlockVM();
-	}
-}
+//	void FASTCALL CFrmWnd::ShowCaption()
+//	{
+//		DWORD dwStyle;
+//	
+//		ASSERT(this);
+//	
+//		// 必要であればVMをロック
+//		if (m_nStatus == 0) {
+//			::LockVM();
+//		}
+//	
+//		// 現在のキャプション状態を取得
+//		dwStyle = GetStyle() & WS_CAPTION;
+//	
+//		// キャプションが不必要な場合
+//		if (m_bFullScreen) {
+//			// キャプションが存在するか
+//			if (dwStyle) {
+//				// キャプションを消去
+//				ModifyStyle(WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX,
+//								0, SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
+//			}
+//			if (m_nStatus == 0) {
+//				::UnlockVM();
+//			}
+//			return;
+//		}
+//	
+//		// キャプションが必要な場合
+//		if (!dwStyle) {
+//			// キャプションをセット
+//			ModifyStyle(0, WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX,
+//								SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
+//		}
+//	
+//		// 必要ならVMをアンロック
+//		if (m_nStatus == 0) {
+//			::UnlockVM();
+//		}
+//	}
 
 //---------------------------------------------------------------------------
 //
 //	キャプションリセット
 //
 //---------------------------------------------------------------------------
-void FASTCALL CFrmWnd::ResetCaption()
-{
-	CInfo *pInfo;
-
-	// Infoがあればリセット
-	pInfo = GetInfo();
-	if (pInfo) {
-		pInfo->ResetCaption();
-	}
-}
+//void FASTCALL CFrmWnd::ResetCaption()
+//{
+//	CInfo *pInfo;
+//
+//	// Infoがあればリセット
+//	pInfo = GetInfo();
+//	if (pInfo) {
+//		pInfo->ResetCaption();
+//	}
+//}
 
 //---------------------------------------------------------------------------
 //
 //	情報設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL CFrmWnd::SetInfo(CString& strInfo)
-{
-	CInfo *pInfo;
-
-	// Infoがあれば設定
-	pInfo = GetInfo();
-	if (pInfo) {
-		pInfo->SetInfo(strInfo);
-	}
-}
+//void FASTCALL CFrmWnd::SetInfo(CString& strInfo)
+//{
+//	CInfo *pInfo;
+//
+//	// Infoがあれば設定
+//	pInfo = GetInfo();
+//	if (pInfo) {
+//		pInfo->SetInfo(strInfo);
+//	}
+//}
 
 //---------------------------------------------------------------------------
 //
@@ -2986,18 +2980,6 @@ CScheduler* FASTCALL CFrmWnd::GetScheduler() const
 
 //---------------------------------------------------------------------------
 //
-//	サウンド取得
-//
-//---------------------------------------------------------------------------
-CSound* FASTCALL CFrmWnd::GetSound() const
-{
-	ASSERT(this);
-	ASSERT(m_pSound);
-	return m_pSound;
-}
-
-//---------------------------------------------------------------------------
-//
 //	インプット取得
 //
 //---------------------------------------------------------------------------
@@ -3010,42 +2992,6 @@ CInput* FASTCALL CFrmWnd::GetInput() const
 
 //---------------------------------------------------------------------------
 //
-//	ポート取得
-//
-//---------------------------------------------------------------------------
-CPort* FASTCALL CFrmWnd::GetPort() const
-{
-	ASSERT(this);
-	ASSERT(m_pPort);
-	return m_pPort;
-}
-
-//---------------------------------------------------------------------------
-//
-//	MIDI取得
-//
-//---------------------------------------------------------------------------
-CMIDI* FASTCALL CFrmWnd::GetMIDI() const
-{
-	ASSERT(this);
-	ASSERT(m_pMIDI);
-	return m_pMIDI;
-}
-
-//---------------------------------------------------------------------------
-//
-//	TrueKey取得
-//
-//---------------------------------------------------------------------------
-CTKey* FASTCALL CFrmWnd::GetTKey() const
-{
-	ASSERT(this);
-	ASSERT(m_pTKey);
-	return m_pTKey;
-}
-
-//---------------------------------------------------------------------------
-//
 //	Host取得
 //
 //---------------------------------------------------------------------------
@@ -3054,29 +3000,6 @@ CHost* FASTCALL CFrmWnd::GetHost() const
 	ASSERT(this);
 	ASSERT(m_pHost);
 	return m_pHost;
-}
-
-//---------------------------------------------------------------------------
-//
-//	Info取得
-//
-//---------------------------------------------------------------------------
-CInfo* FASTCALL CFrmWnd::GetInfo() const
-{
-	ASSERT(this);
-
-	// Infoが存在しなければNULL
-	if (!m_pInfo) {
-		return NULL;
-	}
-
-	// 停止中ならNULL
-	if (!m_pInfo->IsEnable()) {
-		return NULL;
-	}
-
-	// 動作中。Infoを返す
-	return m_pInfo;
 }
 
 //---------------------------------------------------------------------------

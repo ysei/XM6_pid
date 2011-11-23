@@ -265,14 +265,14 @@ protected:
 										// タイマ
 
 private:
-	CSound *m_pSound;
-										// サウンド
+//	CSound *m_pSound;
+//										// サウンド
 	OPMIF *m_pOPMIF;
 										// OPMインタフェース
 	ADPCM *m_pADPCM;
 										// ADPCM
-	CMIDI *m_pMIDI;
-										// MIDI
+//	CMIDI *m_pMIDI;
+//										// MIDI
 #if _MFC_VER >= 0x700
 	UINT_PTR m_nTimerID;
 #else
@@ -375,8 +375,8 @@ private:
 										// ステータスメッセージ
 	CString m_strGuide;
 										// ガイドメッセージ
-	CWnd *m_pDispWnd;
-										// CKeyDispWnd
+//	CWnd *m_pDispWnd;
+//										// CKeyDispWnd
 	CInput *m_pInput;
 										// CInput
 	DWORD *m_pEditMap;
@@ -875,8 +875,8 @@ protected:
 private:
 	void FASTCALL EnableControls(BOOL bEnable);
 										// コントロール状態変更
-	CMIDI *m_pMIDI;
-										// MIDIコンポーネント
+//	CMIDI *m_pMIDI;
+//										// MIDIコンポーネント
 	BOOL m_bEnableCtrl;
 										// コントロール状態
 	int m_nInDelay;
@@ -936,6 +936,7 @@ protected:
 										// データ交換
 };
 
+/*
 //===========================================================================
 //
 //	TrueKey入力ダイアログ
@@ -1045,7 +1046,7 @@ private:
 	DECLARE_MESSAGE_MAP()
 										// メッセージ マップあり
 };
-
+*/
 //===========================================================================
 //
 //	その他ページ
@@ -1125,8 +1126,8 @@ private:
 										// 改造
 	CResumePage m_Resume;
 										// レジューム
-	CTKeyPage m_TKey;
-										// TrueKey
+//	CTKeyPage m_TKey;
+//										// TrueKey
 	CMiscPage m_Misc;
 										// その他
 

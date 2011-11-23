@@ -15,11 +15,9 @@
 #include "render.h"
 #include "crtc.h"
 #include "config.h"
-#include "mfc_sub.h"
 #include "mfc_frm.h"
 #include "mfc_com.h"
 #include "mfc_sch.h"
-#include "mfc_cpu.h"
 #include "mfc_cfg.h"
 #include "mfc_res.h"
 #include "mfc_sch.h"
@@ -41,7 +39,7 @@ CDrawView::CDrawView()
 {
 	// ワーク初期化(基本)
 	m_bEnable = FALSE;
-	m_pSubWnd = NULL;
+//	m_pSubWnd = NULL;
 	m_pFrmWnd = NULL;
 
 	// コンポーネント
@@ -306,14 +304,14 @@ BOOL CDrawView::OnEraseBkgnd(CDC *pDC)
 //	表示環境変更
 //
 //---------------------------------------------------------------------------
-LRESULT CDrawView::OnDisplayChange(WPARAM /* wParam */, LPARAM /* lParam */)
+LRESULT CDrawView::OnDisplayChange(WPARAM , LPARAM )
 {
 	// ビットマップ準備
 	SetupBitmap();
 
 	return 0;
 }
-
+/*
 //---------------------------------------------------------------------------
 //
 //	ファイルドロップ
@@ -371,7 +369,7 @@ void CDrawView::OnDropFiles(HDROP hDropInfo)
 //	マウスホイール
 //
 //---------------------------------------------------------------------------
-BOOL CDrawView::OnMouseWheel(UINT /*nFlags*/, short zDelta, CPoint /*pt*/)
+BOOL CDrawView::OnMouseWheel(UINT , short zDelta, CPoint )
 {
 	CConfig *pConfig;
 
@@ -398,7 +396,7 @@ BOOL CDrawView::OnMouseWheel(UINT /*nFlags*/, short zDelta, CPoint /*pt*/)
 
 	return TRUE;
 }
-
+*/
 //---------------------------------------------------------------------------
 //
 //	キー押下
@@ -407,9 +405,9 @@ BOOL CDrawView::OnMouseWheel(UINT /*nFlags*/, short zDelta, CPoint /*pt*/)
 void CDrawView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	// 除外したいキーを判別
-	if (!KeyUpDown(nChar, nFlags, TRUE)) {
-		return;
-	}
+//	if (!KeyUpDown(nChar, nFlags, TRUE)) {
+//		return;
+//	}
 
 	// 基本クラスへ流す
 	CView::OnKeyDown(nChar, nRepCnt, nFlags);
@@ -423,9 +421,9 @@ void CDrawView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 void CDrawView::OnSysKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	// 除外したいキーを判別
-	if (!KeyUpDown(nChar, nFlags, TRUE)) {
-		return;
-	}
+//	if (!KeyUpDown(nChar, nFlags, TRUE)) {
+//		return;
+//	}
 
 	// 基本クラスへ流す
 	CView::OnSysKeyDown(nChar, nRepCnt, nFlags);
@@ -439,9 +437,9 @@ void CDrawView::OnSysKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 void CDrawView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	// 除外したいキーを判別
-	if (!KeyUpDown(nChar, nFlags, FALSE)) {
-		return;
-	}
+//	if (!KeyUpDown(nChar, nFlags, FALSE)) {
+//		return;
+//	}
 
 	// 基本クラスへ流す
 	CView::OnKeyUp(nChar, nRepCnt, nFlags);
@@ -455,14 +453,14 @@ void CDrawView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 void CDrawView::OnSysKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	// 除外したいキーを判別
-	if (!KeyUpDown(nChar, nFlags, FALSE)) {
-		return;
-	}
+//	if (!KeyUpDown(nChar, nFlags, FALSE)) {
+//		return;
+//	}
 
 	// 基本クラスへ流す
 	CView::OnSysKeyUp(nChar, nRepCnt, nFlags);
 }
-
+/*
 //---------------------------------------------------------------------------
 //
 //	キー判別
@@ -613,7 +611,7 @@ BOOL FASTCALL CDrawView::KeyUpDown(UINT nChar, UINT nFlags, BOOL bDown)
 	// それ以外は、許可
 	return TRUE;
 }
-
+*/
 //---------------------------------------------------------------------------
 //
 //	ウィンドウ移動
@@ -627,7 +625,7 @@ void CDrawView::OnMove(int x, int y)
 	CView::OnMove(x, y);
 
 	// フレームウィンドウの再配置を呼ぶ
-	m_pFrmWnd->RecalcStatusView();
+//	m_pFrmWnd->RecalcStatusView();
 }
 
 //---------------------------------------------------------------------------
@@ -696,8 +694,6 @@ void FASTCALL CDrawView::SetupBitmap()
 //---------------------------------------------------------------------------
 void FASTCALL CDrawView::Enable(BOOL bEnable)
 {
-	CSubWnd *pWnd;
-
 	// フラグ記憶
 	m_bEnable = bEnable;
 
@@ -715,11 +711,12 @@ void FASTCALL CDrawView::Enable(BOOL bEnable)
 	}
 
 	// サブウィンドウに対し、指示
-	pWnd = m_pSubWnd;
-	while (pWnd) {
-		pWnd->Enable(bEnable);
-		pWnd = pWnd->m_pNextWnd;
-	}
+//	CSubWnd *pWnd;
+//	pWnd = m_pSubWnd;
+//	while (pWnd) {
+//		pWnd->Enable(bEnable);
+//		pWnd = pWnd->m_pNextWnd;
+//	}
 }
 
 //---------------------------------------------------------------------------
@@ -739,20 +736,20 @@ BOOL FASTCALL CDrawView::IsEnable() const
 //---------------------------------------------------------------------------
 void FASTCALL CDrawView::Refresh()
 {
-	CSubWnd *pWnd;
 	CClientDC dc(this);
 
 	// Drawビューを再描画
 	OnDraw(&dc);
 
 	// サブウィンドウを再描画
-	pWnd = m_pSubWnd;
-	while (pWnd) {
-		pWnd->Refresh();
-
-		// 次のサブウィンドウ
-		pWnd = pWnd->m_pNextWnd;
-	}
+//	CSubWnd *pWnd;
+//	pWnd = m_pSubWnd;
+//	while (pWnd) {
+//		pWnd->Refresh();
+//
+//		// 次のサブウィンドウ
+//		pWnd = pWnd->m_pNextWnd;
+//	}
 }
 
 //---------------------------------------------------------------------------
@@ -762,7 +759,6 @@ void FASTCALL CDrawView::Refresh()
 //---------------------------------------------------------------------------
 void FASTCALL CDrawView::Draw(int nChildWnd)
 {
-	CSubWnd *pSubWnd;
 	CClientDC *pDC;
 
 	ASSERT(nChildWnd >= -1);
@@ -776,17 +772,18 @@ void FASTCALL CDrawView::Draw(int nChildWnd)
 	}
 
 	// 0以降はサブウィンドウ
-	pSubWnd = m_pSubWnd;
-
-	while (nChildWnd > 0) {
-		// 次のサブウィンドウ
-		pSubWnd = pSubWnd->m_pNextWnd;
-		ASSERT(pSubWnd);
-		nChildWnd--;
-	}
-
-	// リフレッシュ
-	pSubWnd->Refresh();
+//	CSubWnd *pSubWnd;
+//	pSubWnd = m_pSubWnd;
+//
+//	while (nChildWnd > 0) {
+//		// 次のサブウィンドウ
+//		pSubWnd = pSubWnd->m_pNextWnd;
+//		ASSERT(pSubWnd);
+//		nChildWnd--;
+//	}
+//
+//	// リフレッシュ
+//	pSubWnd->Refresh();
 }
 
 //---------------------------------------------------------------------------
@@ -796,14 +793,14 @@ void FASTCALL CDrawView::Draw(int nChildWnd)
 //---------------------------------------------------------------------------
 void FASTCALL CDrawView::Update()
 {
-	CSubWnd *pWnd;
-
-	// サブウィンドウに対し、指示
-	pWnd = m_pSubWnd;
-	while (pWnd) {
-		pWnd->Update();
-		pWnd = pWnd->m_pNextWnd;
-	}
+//	CSubWnd *pWnd;
+//
+//	// サブウィンドウに対し、指示
+//	pWnd = m_pSubWnd;
+//	while (pWnd) {
+//		pWnd->Update();
+//		pWnd = pWnd->m_pNextWnd;
+//	}
 }
 
 //---------------------------------------------------------------------------
@@ -813,19 +810,18 @@ void FASTCALL CDrawView::Update()
 //---------------------------------------------------------------------------
 void FASTCALL CDrawView::ApplyCfg(const Config *pConfig)
 {
-	CSubWnd *pWnd;
-
 	ASSERT(pConfig);
 
 	// ストレッチ
 	Stretch(pConfig->aspect_stretch);
 
 	// サブウィンドウに対し、指示
-	pWnd = m_pSubWnd;
-	while (pWnd) {
-		pWnd->ApplyCfg(pConfig);
-		pWnd = pWnd->m_pNextWnd;
-	}
+//	CSubWnd *pWnd;
+//	pWnd = m_pSubWnd;
+//	while (pWnd) {
+//		pWnd->ApplyCfg(pConfig);
+//		pWnd = pWnd->m_pNextWnd;
+//	}
 }
 
 //---------------------------------------------------------------------------
@@ -1231,7 +1227,7 @@ BOOL FASTCALL CDrawView::CalcRect()
 
 	return TRUE;
 }
-
+/*
 //---------------------------------------------------------------------------
 //
 //	サブウィンドウ新規インデックス取得
@@ -1239,9 +1235,6 @@ BOOL FASTCALL CDrawView::CalcRect()
 //---------------------------------------------------------------------------
 int FASTCALL CDrawView::GetNewSWnd() const
 {
-	CSubWnd *pWnd;
-	int nSubWnd;
-
 	ASSERT(this);
 	ASSERT_VALID(this);
 
@@ -1251,16 +1244,18 @@ int FASTCALL CDrawView::GetNewSWnd() const
 	}
 
 	// 初期化
+	int nSubWnd;
 	nSubWnd = 1;
-	pWnd = m_pSubWnd;
-
-	// ループ
-	while (pWnd->m_pNextWnd) {
-		pWnd = pWnd->m_pNextWnd;
-		nSubWnd++;
-	}
-
-	// インデックスを返す
+//	CSubWnd *pWnd;
+//	pWnd = m_pSubWnd;
+//
+//	// ループ
+//	while (pWnd->m_pNextWnd) {
+//		pWnd = pWnd->m_pNextWnd;
+//		nSubWnd++;
+//	}
+//
+//	// インデックスを返す
 	return nSubWnd;
 }
 
@@ -1272,29 +1267,29 @@ int FASTCALL CDrawView::GetNewSWnd() const
 //---------------------------------------------------------------------------
 void FASTCALL CDrawView::AddSWnd(CSubWnd *pSubWnd)
 {
-	CSubWnd *pWnd;
-
-	ASSERT(this);
-	ASSERT(pSubWnd);
-	ASSERT_VALID(this);
-
-	// 最初のサブウィンドウか
-	if (!m_pSubWnd) {
-		// このウィンドウが最初。登録する
-		m_pSubWnd = pSubWnd;
-		ASSERT(!pSubWnd->m_pNextWnd);
-		return;
-	}
-
-	// 終端を探す
-	pWnd = m_pSubWnd;
-	while (pWnd->m_pNextWnd) {
-		pWnd = pWnd->m_pNextWnd;
-	}
-
-	// pWndの後ろに追加
-	pWnd->m_pNextWnd = pSubWnd;
-	ASSERT(!pSubWnd->m_pNextWnd);
+//	CSubWnd *pWnd;
+//
+//	ASSERT(this);
+//	ASSERT(pSubWnd);
+//	ASSERT_VALID(this);
+//
+//	// 最初のサブウィンドウか
+//	if (!m_pSubWnd) {
+//		// このウィンドウが最初。登録する
+//		m_pSubWnd = pSubWnd;
+//		ASSERT(!pSubWnd->m_pNextWnd);
+//		return;
+//	}
+//
+//	// 終端を探す
+//	pWnd = m_pSubWnd;
+//	while (pWnd->m_pNextWnd) {
+//		pWnd = pWnd->m_pNextWnd;
+//	}
+//
+//	// pWndの後ろに追加
+//	pWnd->m_pNextWnd = pSubWnd;
+//	ASSERT(!pSubWnd->m_pNextWnd);
 }
 
 //---------------------------------------------------------------------------
@@ -1305,39 +1300,39 @@ void FASTCALL CDrawView::AddSWnd(CSubWnd *pSubWnd)
 //---------------------------------------------------------------------------
 void FASTCALL CDrawView::DelSWnd(CSubWnd *pSubWnd)
 {
-	CSubWnd *pWnd;
-
-	// assert
-	ASSERT(pSubWnd);
-
-	// VMをロック
-	::LockVM();
-
-	// 最初のサブウィンドウか
-	if (m_pSubWnd == pSubWnd) {
-		// 次があるなら、次を登録。なければNULL
-		if (pSubWnd->m_pNextWnd) {
-			m_pSubWnd = pSubWnd->m_pNextWnd;
-		}
-		else {
-			m_pSubWnd = NULL;
-		}
-		::UnlockVM();
-		return;
-	}
-
-	// pSubWndを記憶しているサブウィンドウを探す
-	pWnd = m_pSubWnd;
-	while (pWnd->m_pNextWnd != pSubWnd) {
-		ASSERT(pWnd->m_pNextWnd);
-		pWnd = pWnd->m_pNextWnd;
-	}
-
-	// pSubWnd->m_pNextWndを、pWndに結びつけスキップさせる
-	pWnd->m_pNextWnd = pSubWnd->m_pNextWnd;
-
-	// VMをアンロック
-	::UnlockVM();
+//	CSubWnd *pWnd;
+//
+//	// assert
+//	ASSERT(pSubWnd);
+//
+//	// VMをロック
+//	::LockVM();
+//
+//	// 最初のサブウィンドウか
+//	if (m_pSubWnd == pSubWnd) {
+//		// 次があるなら、次を登録。なければNULL
+//		if (pSubWnd->m_pNextWnd) {
+//			m_pSubWnd = pSubWnd->m_pNextWnd;
+//		}
+//		else {
+//			m_pSubWnd = NULL;
+//		}
+//		::UnlockVM();
+//		return;
+//	}
+//
+//	// pSubWndを記憶しているサブウィンドウを探す
+//	pWnd = m_pSubWnd;
+//	while (pWnd->m_pNextWnd != pSubWnd) {
+//		ASSERT(pWnd->m_pNextWnd);
+//		pWnd = pWnd->m_pNextWnd;
+//	}
+//
+//	// pSubWnd->m_pNextWndを、pWndに結びつけスキップさせる
+//	pWnd->m_pNextWnd = pSubWnd->m_pNextWnd;
+//
+//	// VMをアンロック
+//	::UnlockVM();
 }
 
 //---------------------------------------------------------------------------
@@ -1347,25 +1342,25 @@ void FASTCALL CDrawView::DelSWnd(CSubWnd *pSubWnd)
 //---------------------------------------------------------------------------
 void FASTCALL CDrawView::ClrSWnd()
 {
-	CSubWnd *pWnd;
-    CSubWnd *pNext;
-
-	ASSERT(this);
-
-	// 最初のサブウィンドウを取得
-	pWnd = GetFirstSWnd();
-
-	// ループ
-	while (pWnd) {
-		// 次を取得
-		pNext = pWnd->m_pNextWnd;
-
-		// このウィンドウを削除
-		pWnd->DestroyWindow();
-
-		// 移動
-		pWnd = pNext;
-	}
+//	CSubWnd *pWnd;
+//    CSubWnd *pNext;
+//
+//	ASSERT(this);
+//
+//	// 最初のサブウィンドウを取得
+//	pWnd = GetFirstSWnd();
+//
+//	// ループ
+//	while (pWnd) {
+//		// 次を取得
+//		pNext = pWnd->m_pNextWnd;
+//
+//		// このウィンドウを削除
+//		pWnd->DestroyWindow();
+//
+//		// 移動
+//		pWnd = pNext;
+//	}
 }
 
 //---------------------------------------------------------------------------
@@ -1387,21 +1382,21 @@ CSubWnd* FASTCALL CDrawView::GetFirstSWnd() const
 //---------------------------------------------------------------------------
 CSubWnd* FASTCALL CDrawView::SearchSWnd(DWORD dwID) const
 {
-	CSubWnd *pWnd;
-
-	// ウィンドウを初期化
-	pWnd = m_pSubWnd;
-
-	// 検索ループ
-	while (pWnd) {
-		// IDが一致するかチェック
-		if (pWnd->GetID() == dwID) {
-			return pWnd;
-		}
-
-		// 次へ
-		pWnd = pWnd->m_pNextWnd;
-	}
+//	CSubWnd *pWnd;
+//
+//	// ウィンドウを初期化
+//	pWnd = m_pSubWnd;
+//
+//	// 検索ループ
+//	while (pWnd) {
+//		// IDが一致するかチェック
+//		if (pWnd->GetID() == dwID) {
+//			return pWnd;
+//		}
+//
+//		// 次へ
+//		pWnd = pWnd->m_pNextWnd;
+//	}
 
 	// 見つからなかった
 	return NULL;
@@ -1429,8 +1424,8 @@ CSubWnd* FASTCALL CDrawView::NewWindow(BOOL bDis)
 	DWORD dwID;
 	int i;
 	CSubWnd *pWnd;
-	CDisasmWnd *pDisWnd;
-	CMemoryWnd *pMemWnd;
+//	CDisasmWnd *pDisWnd;
+//	CMemoryWnd *pMemWnd;
 
 	// 基準ID作成
 	if (bDis) {
@@ -1445,16 +1440,16 @@ CSubWnd* FASTCALL CDrawView::NewWindow(BOOL bDis)
 		// ウィンドウが見つからなければ、新規作成可能
 		pWnd = SearchSWnd(dwID);
 		if (!pWnd) {
-			if (bDis) {
-				pDisWnd = new CDisasmWnd(i);
-				VERIFY(pDisWnd->Init(this));
-				return pDisWnd;
-			}
-			else {
-				pMemWnd = new CMemoryWnd(i);
-				VERIFY(pMemWnd->Init(this));
-				return pMemWnd;
-			}
+//			if (bDis) {
+//				pDisWnd = new CDisasmWnd(i);
+//				VERIFY(pDisWnd->Init(this));
+//				return pDisWnd;
+//			}
+//			else {
+//				pMemWnd = new CMemoryWnd(i);
+//				VERIFY(pMemWnd->Init(this));
+//				return pMemWnd;
+//			}
 		}
 
 		// 次のウィンドウIDをつくる
@@ -1508,21 +1503,21 @@ BOOL FASTCALL CDrawView::IsNewWindow(BOOL bDis)
 //---------------------------------------------------------------------------
 int FASTCALL CDrawView::GetSubWndNum() const
 {
-	CSubWnd *pWnd;
+//	CSubWnd *pWnd;
 	int num;
 
 	// 初期化
-	pWnd = m_pSubWnd;
+//	pWnd = m_pSubWnd;
 	num = 0;
 
-	// ループ
-	while (pWnd) {
-		// 個数++
-		num++;
-
-		// 次へ
-		pWnd = pWnd->m_pNextWnd;
-	}
+//	// ループ
+//	while (pWnd) {
+//		// 個数++
+//		num++;
+//
+//		// 次へ
+//		pWnd = pWnd->m_pNextWnd;
+//	}
 
 	return num;
 }
@@ -1538,5 +1533,5 @@ LPCTSTR FASTCALL CDrawView::GetWndClassName() const
 	ASSERT(m_pFrmWnd);
 	return m_pFrmWnd->GetWndClassName();
 }
-
+*/
 #endif	// _WIN32

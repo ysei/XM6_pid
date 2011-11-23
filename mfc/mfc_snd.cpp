@@ -65,10 +65,10 @@ CSound::CSound(CFrmWnd *pWnd) : CComponent(pWnd)
 	m_nDeviceNum = 0;
 	m_nSelectDevice = 0;
 
-	// ワーク初期化(WAV録音)
-	m_pWav = NULL;
-	m_nWav = 0;
-	m_dwWav = 0;
+//	// ワーク初期化(WAV録音)
+//	m_pWav = NULL;
+//	m_nWav = 0;
+//	m_dwWav = 0;
 }
 
 //---------------------------------------------------------------------------
@@ -103,6 +103,33 @@ BOOL FASTCALL CSound::Init()
 	EnumDevice();
 
 	// ここでは初期化しない(ApplyCfgに任せる)
+
+	//VC2010//	面倒なのでここで初期化
+	{
+		m_nSelectDevice		= 0;
+		m_uRate				= 44100;
+		m_uTick				= 100;
+
+		InitSub();
+
+		// 常に設定
+		if (m_pOPM) {
+			{
+				int lVolume = 100;	//pConfig->master_volume;
+				lVolume = 100 - lVolume;
+				lVolume *= (DSBVOLUME_MAX - DSBVOLUME_MIN);
+				lVolume /= -200;
+				m_lpDSb->SetVolume(lVolume);
+			}
+			m_pOPMIF->EnableFM(1);	//pConfig->fm_enable);
+			m_pOPM->SetVolume(54);	//pConfig->fm_volume);
+			m_pADPCM->EnableADPCM(1);	//pConfig->adpcm_enable);
+			m_pADPCM->SetVolume(52);	//pConfig->adpcm_volume);
+		}
+		m_nMaster	= 100;	//pConfig->master_volume;
+		m_uPoll		= 5;	//(UINT)pConfig->polling_buffer;
+	}
+
 	return TRUE;
 }
 
@@ -276,7 +303,7 @@ void FASTCALL CSound::CleanupSub()
 	// uRateをクリア
 	m_uRate = 0;
 }
-
+/*
 //---------------------------------------------------------------------------
 //
 //	設定適用
@@ -289,66 +316,47 @@ void FASTCALL CSound::ApplyCfg(const Config *pConfig)
 	ASSERT(this);
 	ASSERT(pConfig);
 
-	// 再初期化チェック
-	bFlag = FALSE;
-	if (m_nSelectDevice != pConfig->sound_device) {
-		bFlag = TRUE;
-	}
-	if (m_uRate != RateTable[pConfig->sample_rate]) {
-		bFlag = TRUE;
-	}
-	if (m_uTick != (UINT)(pConfig->primary_buffer * 10)) {
-		bFlag = TRUE;
-	}
+//	// 再初期化チェック
+//	bFlag = FALSE;
+//	if (m_nSelectDevice != pConfig->sound_device) {
+//		bFlag = TRUE;
+//	}
+//	if (m_uRate != RateTable[pConfig->sample_rate]) {
+//		bFlag = TRUE;
+//	}
+//	if (m_uTick != (UINT)(pConfig->primary_buffer * 10)) {
+//		bFlag = TRUE;
+//	}
+
+	bFlag = TRUE;
 
 	// 再初期化
 	if (bFlag) {
 		CleanupSub();
-		m_nSelectDevice = pConfig->sound_device;
-		m_uRate = RateTable[pConfig->sample_rate];
-		m_uTick = pConfig->primary_buffer * 10;
+		m_nSelectDevice = 0;	//pConfig->sound_device;
+		m_uRate = RateTable[1];	//pConfig->sample_rate];
+		m_uTick = 100;			//pConfig->primary_buffer * 10;
 
-		// 62.5kHzの場合は、一度96kHzにセットしてから(Prodigy7.1対策)
-		if (m_uRate == 62500) {
-			// 96kHzで初期化
-			m_uRate = 96000;
-			InitSub();
-
-			// 初期化できた場合は、少しだけ演奏する
-			if (m_lpDSb) {
-				// スタート
-				if (!m_bEnable) {
-					m_lpDSb->Play(0, 0, DSBPLAY_LOOPING);
-				}
-
-				// 少しだけ
-				::Sleep(20);
-
-				// 止める
-				if (!m_bEnable) {
-					m_lpDSb->Stop();
-				}
-			}
-
-			// 62.5kHzで初期化
-			CleanupSub();
-			m_uRate = 62500;
-		}
 		InitSub();
 	}
 
 	// 常に設定
 	if (m_pOPM) {
-		SetVolume(pConfig->master_volume);
-		m_pOPMIF->EnableFM(pConfig->fm_enable);
-		SetFMVol(pConfig->fm_volume);
-		m_pADPCM->EnableADPCM(pConfig->adpcm_enable);
-		SetADPCMVol(pConfig->adpcm_volume);
+		{
+			int lVolume = 100;	//pConfig->master_volume;
+			lVolume = 100 - lVolume;
+			lVolume *= (DSBVOLUME_MAX - DSBVOLUME_MIN);
+			lVolume /= -200;
+			m_lpDSb->SetVolume(lVolume);
+		}
+		m_pOPMIF->EnableFM(1);	//pConfig->fm_enable);
+		m_pOPM->SetVolume(54);	//pConfig->fm_volume);
+		m_pADPCM->EnableADPCM(1);	//pConfig->adpcm_enable);
+		m_pADPCM->SetVolume(52);	//pConfig->adpcm_volume);
 	}
 	m_nMaster = pConfig->master_volume;
 	m_uPoll = (UINT)pConfig->polling_buffer;
 }
-
 //---------------------------------------------------------------------------
 //
 //	サンプリングレートテーブル
@@ -362,7 +370,7 @@ const UINT CSound::RateTable[] = {
 	96000,
 	62500
 };
-
+*/
 //---------------------------------------------------------------------------
 //
 //	有効フラグ設定
@@ -422,9 +430,9 @@ void FASTCALL CSound::Stop()
 	}
 
 	// WAVセーブ終了
-	if (m_pWav) {
-		EndSaveWav();
-	}
+//	if (m_pWav) {
+//		EndSaveWav();
+//	}
 
 	// ポインタが有効なら演奏停止
 	if (m_pOPM) {
@@ -436,6 +444,7 @@ void FASTCALL CSound::Stop()
 //---------------------------------------------------------------------------
 //
 //	進行
+//VC2010//	mfc_sch.cpp : CScheduler::Run() から呼ばれる。実行時は bRun=TRUE、停止時は bRun=FALSE で呼び出しが行われる
 //
 //---------------------------------------------------------------------------
 void FASTCALL CSound::Process(BOOL bRun)
@@ -569,11 +578,52 @@ void FASTCALL CSound::Process(BOOL bRun)
 	ASSERT(m_dwWrite < m_uBufSize);
 
 	// 動作中ならWAV更新
-	if (bRun && m_pWav) {
-		ProcessSaveWav((int*)m_lpBuf, (dwSize1 + dwSize2));
-	}
+//	if (bRun && m_pWav) {
+//		ProcessSaveWav((int*)m_lpBuf, (dwSize1 + dwSize2));
+//	}
 }
 
+//---------------------------------------------------------------------------
+//
+//	デバイス列挙
+//
+//---------------------------------------------------------------------------
+void FASTCALL CSound::EnumDevice()
+{
+	// 初期化
+	m_nDeviceNum = 0;
+
+	// 列挙開始
+	DirectSoundEnumerate(EnumCallback, this);
+}
+
+//---------------------------------------------------------------------------
+//
+//	デバイス列挙コールバック
+//
+//---------------------------------------------------------------------------
+BOOL CALLBACK CSound::EnumCallback(LPGUID lpGuid, LPCTSTR lpDescr, LPCTSTR , LPVOID lpContext)
+{
+	CSound *pSound;
+	int index;
+
+	// thisポインタ受け取り
+	pSound = (CSound*)lpContext;
+	ASSERT(pSound);
+
+	// カレントが16未満なら記憶
+	if (pSound->m_nDeviceNum < 16) {
+		index = pSound->m_nDeviceNum;
+
+		// 登録
+		pSound->m_lpGUID[index] = lpGuid;
+//		pSound->m_DeviceDescr[index] = lpDescr;
+		pSound->m_nDeviceNum++;
+	}
+
+	return TRUE;
+}
+/*
 //---------------------------------------------------------------------------
 //
 //	音量セット
@@ -671,47 +721,6 @@ void FASTCALL CSound::SetADPCMVol(int nVol)
 	// 設定
 	ASSERT(m_pADPCM);
 	m_pADPCM->SetVolume(m_nADPCMVol);
-}
-
-//---------------------------------------------------------------------------
-//
-//	デバイス列挙
-//
-//---------------------------------------------------------------------------
-void FASTCALL CSound::EnumDevice()
-{
-	// 初期化
-	m_nDeviceNum = 0;
-
-	// 列挙開始
-	DirectSoundEnumerate(EnumCallback, this);
-}
-
-//---------------------------------------------------------------------------
-//
-//	デバイス列挙コールバック
-//
-//---------------------------------------------------------------------------
-BOOL CALLBACK CSound::EnumCallback(LPGUID lpGuid, LPCTSTR lpDescr, LPCTSTR /*lpModule*/, LPVOID lpContext)
-{
-	CSound *pSound;
-	int index;
-
-	// thisポインタ受け取り
-	pSound = (CSound*)lpContext;
-	ASSERT(pSound);
-
-	// カレントが16未満なら記憶
-	if (pSound->m_nDeviceNum < 16) {
-		index = pSound->m_nDeviceNum;
-
-		// 登録
-		pSound->m_lpGUID[index] = lpGuid;
-		pSound->m_DeviceDescr[index] = lpDescr;
-		pSound->m_nDeviceNum++;
-	}
-
-	return TRUE;
 }
 
 //---------------------------------------------------------------------------
@@ -1120,5 +1129,5 @@ void FASTCALL CSound::EndSaveWav()
 	delete[] m_pWav;
 	m_pWav = NULL;
 }
-
+*/
 #endif	// _WIN32
