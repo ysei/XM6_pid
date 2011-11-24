@@ -50,12 +50,12 @@ public:
 
 private:
 	// 初期設定
-	BOOL FASTCALL InitSub();			// 初期化サブ
-	void FASTCALL CleanupSub();			// クリーンアップサブ
+//	BOOL FASTCALL InitSub();			// 初期化サブ
+//	void FASTCALL CleanupSub();			// クリーンアップサブ
 	void FASTCALL Play();				// 演奏開始
 	void FASTCALL Stop();				// 演奏停止
 	void FASTCALL EnumDevice();			// デバイス列挙
-	static BOOL CALLBACK EnumCallback(LPGUID lpGuid, LPCSTR lpDescr, LPCSTR lpModule, void *lpContext);	// デバイス列挙コールバック
+//	static BOOL CALLBACK EnumCallback(LPGUID lpGuid, LPCSTR lpDescr, LPCSTR lpModule, void *lpContext);	// デバイス列挙コールバック
 	int m_nSelectDevice;				// 選択したデバイス
 
 //	// WAVセーブ

@@ -1793,7 +1793,7 @@ void CHostEntry::Clean()
 		if (nResult != WAIT_OBJECT_0) {
 			// ‹­§’â~
 			ASSERT(FALSE);	// ”O‚Ì‚½‚ß
-			::TerminateThread(m_hThread, -1);
+			::TerminateThread(m_hThread, ~0U);
 			nResult = ::WaitForSingleObject(m_hThread, 100);
 		}
 
@@ -4561,7 +4561,7 @@ int FASTCALL CWinFileSys::IoControl(CWindrv* ps, Human68k::ioctrl_t* pIoctrl, DW
 
 	case 1:
 		// Human68kŒİŠ·‚Ì‚½‚ß‚Ìƒ_ƒ~[
-		pIoctrl->param = -1;
+		pIoctrl->param = ~0U;
 		return 0;
 
 	case 2:
