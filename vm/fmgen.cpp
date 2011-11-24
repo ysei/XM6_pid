@@ -213,7 +213,7 @@ void MakeLFOTable()
 			double pmb = pms[type][i];
 			for (int j=0; j<FM_LFOENTS; j++)
 			{
-				double v = pow(2.0, pmb * (2 * j - FM_LFOENTS+1) / (FM_LFOENTS-1));
+//-XM6_pid//	double v = pow(2.0, pmb * (2 * j - FM_LFOENTS+1) / (FM_LFOENTS-1));
 				double w = 0.6 * pmb * sin(2 * j * 3.14159265358979323846 / FM_LFOENTS) + 1;
 //				pmtable[type][i][j] = int(0x10000 * (v - 1));
 //				if (type == 0)
@@ -400,7 +400,8 @@ void Operator::Prepare()
 		// SSG-EG
 		if (ssg_type_ && (eg_phase_ != release))
 		{
-			int m = ar_ >= ((ssg_type_ == 8 || ssg_type_ == 12) ? 56 : 60);
+//			int m = ar_ >= ((ssg_type_ == 8 || ssg_type_ == 12) ? 56 : 60);		//-XM6_pid//
+			int m = ar_ >= ((ssg_type_ == 8 || ssg_type_ == 12) ? 56U : 60U);	//+XM6_pid//
 
 			assert(0 <= ssg_phase_ && ssg_phase_ <= 2);
 			const int* table = ssgenvtable[ssg_type_ & 7][m][ssg_phase_];
@@ -428,7 +429,8 @@ void Operator::ShiftPhase(EGPhase nextphase)
 			if (ssg_phase_ > 2)
 				ssg_phase_ = 1;
 			
-			int m = ar_ >= ((ssg_type_ == 8 || ssg_type_ == 12) ? 56 : 60);
+//			int m = ar_ >= ((ssg_type_ == 8 || ssg_type_ == 12) ? 56 : 60);		//-XM6_pid//
+			int m = ar_ >= ((ssg_type_ == 8 || ssg_type_ == 12) ? 56U : 60U);	//+XM6_pid//
 
 			assert(0 <= ssg_phase_ && ssg_phase_ <= 2);
 			const int* table = ssgenvtable[ssg_type_ & 7][m][ssg_phase_];
@@ -859,6 +861,9 @@ ISample Channel4::Calc()
 		r += op[3].Calc(0);
 		r += op[0].CalcFB(fb);
 		break;
+	default:		//+XM6_pid//
+		r = 0;		//+XM6_pid//
+		break;		//+XM6_pid//
 	}
 	return r;
 }
@@ -919,6 +924,9 @@ ISample Channel4::CalcL()
 		r += op[3].CalcL(0);
 		r += op[0].CalcFBL(fb);
 		break;
+	default:		//+XM6_pid//
+		r = 0;		//+XM6_pid//
+		break;		//+XM6_pid//
 	}
 	return r;
 }

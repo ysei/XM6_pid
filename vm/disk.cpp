@@ -2717,7 +2717,8 @@ BOOL FASTCALL SCSICD::Open(const Filepath& path, BOOL attn)
 	fio.Close();
 
 	// FILEで始まっていれば、CUEシートとみなす
-	if (strnicmp(file, "FILE", 4) == 0) {
+//	if (strnicmp(file, "FILE", 4) == 0) {	//-XM6_pid//
+	if (_strnicmp(file, "FILE", 4) == 0) {	//+XM6_pid//
 		// CUEとしてオープン
 		if (!OpenCue(path)) {
 			return FALSE;

@@ -4499,7 +4499,7 @@ _RendBG8:
 		mov	[ebp+16],edx
 		jmp	short .param
 ; ループしない。1回目ecx、[ebp+16]は0
-.normal;
+.normal:
 		pop	ecx
 		xor	eax,eax
 		mov	[ebp+16],eax
@@ -4718,7 +4718,7 @@ _RendBG8C:
 		mov	[ebp+16],edx
 		jmp	short .param
 ; ループしない。1回目ecx、[ebp+16]は0
-.normal;
+.normal:
 		pop	ecx
 		xor	eax,eax
 		mov	[ebp+16],eax
@@ -5030,7 +5030,7 @@ _RendBG16:
 		mov	[ebp+16],edx
 		jmp	short .param
 ; ループしない。1回目ecx、[ebp+16]は0
-.normal;
+.normal:
 		pop	ecx
 		xor	eax,eax
 		mov	[ebp+16],eax
@@ -5267,7 +5267,7 @@ _RendBG16C:
 		mov	[ebp+16],edx
 		jmp	short .param
 ; ループしない。1回目ecx、[ebp+16]は0
-.normal;
+.normal:
 		pop	ecx
 		xor	eax,eax
 		mov	[ebp+16],eax
@@ -6755,7 +6755,7 @@ _RendMix04:
 		jc	.dot72
 		test	eax,ecx
 		jnz	.dot73
-.dot72
+.dot72:
 		mov	eax,[edx+28]
 .dot73:
 		cmp	eax,[edi+28]
@@ -7740,4 +7740,4 @@ _RendGrp04:
 ;
 ; プログラム終了
 ;
-		end
+;		end

@@ -24,7 +24,8 @@ int OPM::pmtable[4][OPM_LFOENTS];
 OPM::OPM()
 {
 	lfo_count_ = 0;
-	lfo_count_prev_ = ~0;
+//	lfo_count_prev_ = ~0;		//-XM6_pid//
+	lfo_count_prev_ = ~0U;		//+XM6_pid//
 	BuildLFOTable();
 	for (int i=0; i<8; i++)
 	{
@@ -195,9 +196,11 @@ void OPM::SetReg(uint addr, uint data)
 		if (data & 2)
 		{
 			lfo_count_ = 0; 
-			lfo_count_prev_ = ~0;
+//			lfo_count_prev_ = ~0;	//-XM6_pid//
+			lfo_count_prev_ = ~0U;	//+XM6_pid//
 		}
-		reg01 = data;
+//		reg01 = data;				//-XM6_pid//
+		reg01 = (uint8)data;		//+XM6_pid//
 		break;
 		
 	case 0x08:					// KEYON
@@ -226,7 +229,8 @@ void OPM::SetReg(uint addr, uint data)
 		break;
 	
 	case 0x18:					// LFRQ(lfo freq)
-		lfofreq = data;
+//		lfofreq = data;			//-XM6_pid//
+		lfofreq = (uint8)data;	//+XM6_pid//
 
 		assert(16-4-FM_RATIOBITS >= 0);
 		lfo_count_diff_ = 
@@ -255,14 +259,16 @@ void OPM::SetReg(uint addr, uint data)
 								// KC
 	case 0x28: case 0x29: case 0x2a: case 0x2b:
 	case 0x2c: case 0x2d: case 0x2e: case 0x2f:
-		kc[c] = data;
+//		kc[c] = data;			//-XM6_pid//
+		kc[c] = (uint8)data;	//+XM6_pid//
 		ch[c].SetKCKF(kc[c], kf[c]);
 		break;
 		
 								// KF
 	case 0x30: case 0x31: case 0x32: case 0x33:
 	case 0x34: case 0x35: case 0x36: case 0x37:
-		kf[c] = data >> 2;
+//		kf[c] = data >> 2;			//-XM6_pid//
+		kf[c] = (uint8)(data >> 2);	//+XM6_pid//
 		ch[c].SetKCKF(kc[c], kf[c]);
 		break;
 		
@@ -369,6 +375,10 @@ void OPM::BuildLFOTable()
 				a = r;
 				p = r - 0x80;
 				break;
+			default:		//+XM6_pid//
+				p = 0;		//+XM6_pid//
+				a = 0;		//+XM6_pid//
+				break;		//+XM6_pid//
 			}
 
 			amtable[type][c] = a;

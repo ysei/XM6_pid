@@ -247,7 +247,8 @@ BOOL FASTCALL Sprite::Load(Fileio *fio, int /*ver*/)
 		}
 		if (addr >= 0xc000) {
 			data = *(WORD*)(&sprite[addr]);
-			render->BGMem(addr, data);
+//			render->BGMem(addr, data);			//-XM6_pid//
+			render->BGMem(addr, (WORD)data);	//+XM6_pid//
 		}
 		render->PCGMem(addr);
 	}
@@ -425,7 +426,8 @@ void FASTCALL Sprite::WriteByte(DWORD addr, DWORD data)
 	}
 	if (addr >= 0xc000) {
 		ctrl = *(WORD*)(&sprite[addr]);
-		render->BGMem(addr, ctrl);
+//		render->BGMem(addr, ctrl);			//-XM6_pid//
+		render->BGMem(addr, (WORD)ctrl);	//+XM6_pid//
 	}
 }
 
@@ -451,7 +453,8 @@ void FASTCALL Sprite::WriteWord(DWORD addr, DWORD data)
 
 	// 800～811はコントロールレジスタ
 	if ((addr >= 0x800) && (addr < 0x812)) {
-		*(WORD *)(&sprite[addr]) = data;
+//		*(WORD *)(&sprite[addr]) = data;		//-XM6_pid//
+		*(WORD *)(&sprite[addr]) = (WORD)data;	//+XM6_pid//
 		Control(addr, data);
 		return;
 	}
@@ -485,7 +488,8 @@ void FASTCALL Sprite::WriteWord(DWORD addr, DWORD data)
 		render->PCGMem(addr);
 	}
 	if (addr >= 0xc000) {
-		render->BGMem(addr, data);
+//		render->BGMem(addr, data);			//-XM6_pid//
+		render->BGMem(addr, (WORD)data);	//+XM6_pid//
 	}
 }
 

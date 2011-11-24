@@ -288,7 +288,8 @@ BOOL FASTCALL CWindrv::Terminate()
 		if (nResult != WAIT_OBJECT_0) {
 			// ã≠êßí‚é~
 			ASSERT(FALSE);	// îOÇÃÇΩÇﬂ
-			::TerminateThread(m_hThread, -1);
+//			::TerminateThread(m_hThread, -1);	//-XM6_pid//
+			::TerminateThread(m_hThread, ~0U);	//+XM6_pid//
 			nResult = ::WaitForSingleObject(m_hThread, 100);
 			bResult = FALSE;
 		}
