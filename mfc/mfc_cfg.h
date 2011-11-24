@@ -291,154 +291,6 @@ private:
 	DECLARE_MESSAGE_MAP()
 										// メッセージ マップあり
 };
-
-//===========================================================================
-//
-//	キーボードページ
-//
-//===========================================================================
-class CKbdPage : public CConfigPage
-{
-public:
-	CKbdPage();
-										// コンストラクタ
-	BOOL OnInitDialog();
-										// 初期化
-	void OnOK();
-										// 決定
-	void OnCancel();
-										// キャンセル
-
-protected:
-	afx_msg void OnEdit();
-										// 編集
-	afx_msg void OnDefault();
-										// デフォルト
-	afx_msg void OnClick(NMHDR *pNMHDR, LRESULT *pResult);
-										// カラムクリック
-	afx_msg void OnRClick(NMHDR *pNMHDR, LRESULT *pResult);
-										// カラム右クリック
-	afx_msg void OnConnect();
-										// 接続
-
-private:
-	void FASTCALL UpdateReport();
-										// レポート更新
-	void FASTCALL EnableControls(BOOL bEnable);
-										// コントロール状態変更
-	DWORD m_dwEdit[0x100];
-										// エディット
-	DWORD m_dwBackup[0x100];
-										// バックアップ
-	CInput *m_pInput;
-										// CInput
-	BOOL m_bEnableCtrl;
-										// コントロール状態
-	static const UINT ControlTable[];
-										// コントロールテーブル
-
-	DECLARE_MESSAGE_MAP()
-										// メッセージ マップあり
-};
-
-//===========================================================================
-//
-//	キーボードマップ編集ダイアログ
-//
-//===========================================================================
-class CKbdMapDlg : public CDialog
-{
-public:
-	CKbdMapDlg(CWnd *pParent, DWORD *pMap);
-										// コンストラクタ
-	BOOL OnInitDialog();
-										// 初期化
-	void OnOK();
-										// OK
-	void OnCancel();
-										// キャンセル
-
-protected:
-	afx_msg void OnPaint();
-										// ダイアログ描画
-	afx_msg LONG OnKickIdle(UINT uParam, LONG lParam);
-										// アイドル処理
-	afx_msg LONG OnApp(UINT uParam, LONG lParam);
-										// ユーザ(下位ウィンドウからの通知)
-
-private:
-	void FASTCALL OnDraw(CDC *pDC);
-										// 描画サブ
-	CRect m_rectStat;
-										// ステータス矩形
-	CString m_strStat;
-										// ステータスメッセージ
-	CString m_strGuide;
-										// ガイドメッセージ
-//	CWnd *m_pDispWnd;
-//										// CKeyDispWnd
-	CInput *m_pInput;
-										// CInput
-	DWORD *m_pEditMap;
-										// 編集中のマップ
-
-	DECLARE_MESSAGE_MAP()
-										// メッセージ マップあり
-};
-
-//===========================================================================
-//
-//	キー入力ダイアログ
-//
-//===========================================================================
-class CKeyinDlg : public CDialog
-{
-public:
-	CKeyinDlg(CWnd *pParent);
-										// コンストラクタ
-	BOOL OnInitDialog();
-										// 初期化
-	void OnOK();
-										// OK
-	UINT m_nTarget;
-										// ターゲットキー
-	UINT m_nKey;
-										// 割り当てキー
-
-protected:
-	afx_msg void OnPaint();
-										// 描画
-	afx_msg UINT OnGetDlgCode();
-										// ダイアログコード取得
-	afx_msg LONG OnKickIdle(UINT uParam, LONG lParam);
-										// アイドル処理
-	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
-										// 右クリック
-
-private:
-	void FASTCALL OnDraw(CDC *pDC);
-										// 描画サブ
-	CInput *m_pInput;
-										// CInput
-	BOOL m_bKey[0x100];
-										// キー記憶用
-	CRect m_GuideRect;
-										// ガイド矩形
-	CString m_GuideString;
-										// ガイド文字列
-	CRect m_AssignRect;
-										// キー割り当て矩形
-	CString m_AssignString;
-										// キー割り当て文字列
-	CRect m_KeyRect;
-										// キー矩形
-	CString m_KeyString;
-										// キー文字列
-
-	DECLARE_MESSAGE_MAP()
-										// メッセージ マップあり
-};
-
 //===========================================================================
 //
 //	マウスページ
@@ -936,117 +788,6 @@ protected:
 										// データ交換
 };
 
-/*
-//===========================================================================
-//
-//	TrueKey入力ダイアログ
-//
-//===========================================================================
-class CTKeyDlg : public CDialog
-{
-public:
-	CTKeyDlg(CWnd *pParent);
-										// コンストラクタ
-	BOOL OnInitDialog();
-										// 初期化
-	void OnOK();
-										// OK
-	void OnCancel();
-										// キャンセル
-	int m_nTarget;
-										// ターゲットキー
-	int m_nKey;
-										// 割り当てキー
-
-protected:
-	afx_msg void OnPaint();
-										// 描画
-	afx_msg UINT OnGetDlgCode();
-										// ダイアログコード取得
-#if _MFC_VER >= 0x700
-	afx_msg void OnTimer(UINT_PTR nTimerID);
-										// タイマ
-#else
-	afx_msg void OnTimer(UINT nTimerID);
-										// タイマ
-#endif
-	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
-										// 右クリック
-
-private:
-	void FASTCALL OnDraw(CDC *pDC);
-										// 描画メイン
-#if _MFC_VER >= 0x700
-	UINT_PTR m_nTimerID;
-										// タイマID
-#else
-	UINT m_nTimerID;
-										// タイマID
-#endif
-	BYTE m_KeyState[0x100];
-										// VKキー状態
-	CTKey *m_pTKey;
-										// TrueKey
-	CRect m_rectGuide;
-										// ガイド矩形
-	CString m_strGuide;
-										// ガイド文字列
-	CRect m_rectAssign;
-										// キー割り当て矩形
-	CString m_strAssign;
-										// キー割り当て文字列
-	CRect m_rectKey;
-										// キー矩形
-	CString m_strKey;
-										// キー文字列
-
-	DECLARE_MESSAGE_MAP()
-										// メッセージ マップあり
-};
-
-//===========================================================================
-//
-//	TrueKeyページ
-//
-//===========================================================================
-class CTKeyPage : public CConfigPage
-{
-public:
-	CTKeyPage();
-										// コンストラクタ
-	BOOL OnInitDialog();
-										// 初期化
-	void OnOK();
-										// 決定
-
-protected:
-	afx_msg void OnSelChange();
-										// コンボボックス変更
-	afx_msg void OnClick(NMHDR *pNMHDR, LRESULT *pResult);
-										// カラムクリック
-	afx_msg void OnRClick(NMHDR *pNMHDR, LRESULT *pResult);
-										// カラム右クリック
-
-private:
-	void FASTCALL EnableControls(BOOL bEnable);
-										// コントロール状態変更
-	void FASTCALL UpdateReport();
-										// レポート更新
-	BOOL m_bEnableCtrl;
-										// コントロール有効フラグ
-	CInput *m_pInput;
-										// CInput
-	CTKey *m_pTKey;
-										// TrueKey
-	int m_nKey[0x73];
-										// 編集中の変換テーブル
-	static const UINT ControlTable[];
-										// コントロールテーブル
-
-	DECLARE_MESSAGE_MAP()
-										// メッセージ マップあり
-};
-*/
 //===========================================================================
 //
 //	その他ページ
@@ -1100,36 +841,19 @@ private:
 #endif
 										// タイマID
 
-	CBasicPage m_Basic;
-										// 基本
-	CSoundPage m_Sound;
-										// サウンド
-	CVolPage m_Vol;
-										// 音量
-	CKbdPage m_Kbd;
-										// キーボード
-	CMousePage m_Mouse;
-										// マウス
-	CJoyPage m_Joy;
-										// ジョイスティック
-	CSASIPage m_SASI;
-										// SASI
-	CSxSIPage m_SxSI;
-										// SxSI
-	CSCSIPage m_SCSI;
-										// SCSI
-	CPortPage m_Port;
-										// ポート
-	CMIDIPage m_MIDI;
-										// MIDI
-	CAlterPage m_Alter;
-										// 改造
-	CResumePage m_Resume;
-										// レジューム
-//	CTKeyPage m_TKey;
-//										// TrueKey
-	CMiscPage m_Misc;
-										// その他
+	CBasicPage m_Basic;					// 基本
+	CSoundPage m_Sound;					// サウンド
+	CVolPage m_Vol;						// 音量
+	CMousePage m_Mouse;					// マウス
+	CJoyPage m_Joy;						// ジョイスティック
+	CSASIPage m_SASI;					// SASI
+	CSxSIPage m_SxSI;					// SxSI
+	CSCSIPage m_SCSI;					// SCSI
+	CPortPage m_Port;					// ポート
+	CMIDIPage m_MIDI;					// MIDI
+	CAlterPage m_Alter;					// 改造
+	CResumePage m_Resume;				// レジューム
+	CMiscPage m_Misc;					// その他
 
 	DECLARE_MESSAGE_MAP()
 										// メッセージ マップあり

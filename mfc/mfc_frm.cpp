@@ -2195,8 +2195,6 @@ void CFrmWnd::OnParentNotify(UINT message, LPARAM lParam)
 void CFrmWnd::OnContextMenu(CWnd * , CPoint pos)
 {
 	CMenu *pMenu;
-	SHORT sF10;
-	SHORT sShift;
 
 	// キーボードからの入力のとき
 	if ((pos.x == -1) && (pos.y == -1)) {
@@ -2206,6 +2204,8 @@ void CFrmWnd::OnContextMenu(CWnd * , CPoint pos)
 				// DIK_APPSがマップされているか
 //				if (GetInput()->IsKeyMapped(DIK_APPS)) {
 //					// SHIFT+F10が押されているか
+//					SHORT sF10;
+//					SHORT sShift;
 //					sF10 = ::GetAsyncKeyState(VK_F10);
 //					sShift = ::GetAsyncKeyState(VK_SHIFT);
 //					if (((sF10 & 0x8000) == 0) || ((sShift & 0x8000) == 0)) {

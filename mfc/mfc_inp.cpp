@@ -322,7 +322,7 @@ void CInput::AssertValid() const
 //	ÉZÅ[Éu
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL CInput::Save(Fileio *pFio, int /*nVer*/)
+BOOL FASTCALL CInput::Save(Fileio *pFio, int)
 {
 	BOOL bResult;
 
