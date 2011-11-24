@@ -2204,15 +2204,15 @@ void CFrmWnd::OnContextMenu(CWnd * , CPoint pos)
 		if (GetScheduler()->IsEnable()) {
 			if (GetInput()->IsActive() && !GetInput()->IsMenu()) {
 				// DIK_APPS‚ªƒ}ƒbƒv‚³‚ê‚Ä‚¢‚é‚©
-				if (GetInput()->IsKeyMapped(DIK_APPS)) {
-					// SHIFT+F10‚ª‰Ÿ‚³‚ê‚Ä‚¢‚é‚©
-					sF10 = ::GetAsyncKeyState(VK_F10);
-					sShift = ::GetAsyncKeyState(VK_SHIFT);
-					if (((sF10 & 0x8000) == 0) || ((sShift & 0x8000) == 0)) {
-						// VK_APPS‚ª‰Ÿ‚³‚ê‚½‚½‚ß‚Æ”»’è
-						return;
-					}
-				}
+//				if (GetInput()->IsKeyMapped(DIK_APPS)) {
+//					// SHIFT+F10‚ª‰Ÿ‚³‚ê‚Ä‚¢‚é‚©
+//					sF10 = ::GetAsyncKeyState(VK_F10);
+//					sShift = ::GetAsyncKeyState(VK_SHIFT);
+//					if (((sF10 & 0x8000) == 0) || ((sShift & 0x8000) == 0)) {
+//						// VK_APPS‚ª‰Ÿ‚³‚ê‚½‚½‚ß‚Æ”»’è
+//						return;
+//					}
+//				}
 			}
 		}
 

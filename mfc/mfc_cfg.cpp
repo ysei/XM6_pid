@@ -792,7 +792,7 @@ void FASTCALL CConfig::LoadKey() const
 
 	// フラグが立っていれば、マップデータ設定
 	if (bFlag) {
-		pInput->SetKeyMap(dwMap);
+//		pInput->SetKeyMap(dwMap);
 	}
 }
 
@@ -816,7 +816,7 @@ void FASTCALL CConfig::SaveKey() const
 	ASSERT(pInput);
 
 	// マップデータ取得
-	pInput->GetKeyMap(dwMap);
+//	pInput->GetKeyMap(dwMap);
 
 	// ループ
 	for (i=0; i<0x100; i++) {
@@ -2231,7 +2231,7 @@ BOOL CKbdPage::OnInitDialog()
 	CConfigPage::OnInitDialog();
 
 	// キーマップのバックアップを取る
-	m_pInput->GetKeyMap(m_dwBackup);
+//	m_pInput->GetKeyMap(m_dwBackup);
 	memcpy(m_dwEdit, m_dwBackup, sizeof(m_dwBackup));
 
 	// テキストメトリックを得る
@@ -2270,7 +2270,8 @@ BOOL CKbdPage::OnInitDialog()
 	cx = 0;
 	for (nKey=0; nKey<=0x73; nKey++) {
 		// CKeyDispWndからキー名称を得る
-		lpszName = m_pInput->GetKeyName(nKey);
+//		lpszName = m_pInput->GetKeyName(nKey);
+		lpszName = 0;
 		if (lpszName) {
 			// このキーは有効
 			strText.Format(_T("%02X"), nKey);
@@ -2308,7 +2309,7 @@ void CKbdPage::OnOK()
 	CButton *pButton;
 
 	// キーマップ設定
-	m_pInput->SetKeyMap(m_dwEdit);
+//	m_pInput->SetKeyMap(m_dwEdit);
 
 	// 接続
 	pButton = (CButton*)GetDlgItem(IDC_KBD_NOCONB);
@@ -2327,7 +2328,7 @@ void CKbdPage::OnOK()
 void CKbdPage::OnCancel()
 {
 	// バックアップからキーマップ復元
-	m_pInput->SetKeyMap(m_dwBackup);
+//	m_pInput->SetKeyMap(m_dwBackup);
 
 	// 基本クラス
 	CConfigPage::OnCancel();
@@ -2358,7 +2359,8 @@ void FASTCALL CKbdPage::UpdateReport()
 	nItem = 0;
 	for (nX68=0; nX68<=0x73; nX68++) {
 		// CKeyDispWndからキー名称を得る
-		lpszName = m_pInput->GetKeyName(nX68);
+//		lpszName = m_pInput->GetKeyName(nX68);
+		lpszName = 0;
 		if (lpszName) {
 			// 有効なキーがある。初期化
 			strNext.Empty();
@@ -2367,7 +2369,7 @@ void FASTCALL CKbdPage::UpdateReport()
 			for (nWin=0; nWin<0x100; nWin++) {
 				if (nX68 == (int)m_dwEdit[nWin]) {
 					// 名称を取得
-					lpszName = m_pInput->GetKeyID(nWin);
+//					lpszName = m_pInput->GetKeyID(nWin);
 					strNext = lpszName;
 					break;
 				}
@@ -2413,8 +2415,8 @@ void CKbdPage::OnDefault()
 	ASSERT(this);
 
 	// 自分のバッファに106マップを入れて、それをセット
-	m_pInput->SetDefaultKeyMap(m_dwEdit);
-	m_pInput->SetKeyMap(m_dwEdit);
+//	m_pInput->SetDefaultKeyMap(m_dwEdit);
+//	m_pInput->SetKeyMap(m_dwEdit);
 
 	// 表示を更新
 	UpdateReport();
@@ -2471,12 +2473,12 @@ void CKbdPage::OnClick(NMHDR * , LRESULT * )
 	}
 
 	// ダイアログ実行
-	m_pInput->EnableKey(FALSE);
+//	m_pInput->EnableKey(FALSE);
 	if (dlg.DoModal() != IDOK) {
-		m_pInput->EnableKey(TRUE);
+//		m_pInput->EnableKey(TRUE);
 		return;
 	}
-	m_pInput->EnableKey(TRUE);
+//	m_pInput->EnableKey(TRUE);
 
 	// キーマップを設定
 	if (nPrev >= 0) {
@@ -2548,7 +2550,7 @@ void CKbdPage::OnRClick(NMHDR * , LRESULT * )
 
 	// メッセージボックスで、削除の有無をチェック
 	::GetMsg(IDS_KBD_DELMSG, strText);
-	strMsg.Format(strText, nKey, m_pInput->GetKeyID(nWin));
+//	strMsg.Format(strText, nKey, m_pInput->GetKeyID(nWin));
 	::GetMsg(IDS_KBD_DELTITLE, strText);
 	if (MessageBox(strMsg, strText, MB_ICONQUESTION | MB_YESNO) != IDYES) {
 		return;
@@ -2747,7 +2749,7 @@ BOOL CKbdMapDlg::OnInitDialog()
 
 	// キー入力を禁止
 	ASSERT(m_pInput);
-	m_pInput->EnableKey(FALSE);
+//	m_pInput->EnableKey(FALSE);
 
 	// ガイドメッセージをロード
 	::GetMsg(IDS_KBDMAP_GUIDE, m_strGuide);
@@ -2776,7 +2778,7 @@ void CKbdMapDlg::OnOK()
 void CKbdMapDlg::OnCancel()
 {
 	// キー有効
-	m_pInput->EnableKey(TRUE);
+//	m_pInput->EnableKey(TRUE);
 
 	// 基本クラス
 	CDialog::OnCancel();
@@ -2838,7 +2840,7 @@ LONG CKbdMapDlg::OnKickIdle(UINT , LONG )
 
 	// キー状態を得る
 	ASSERT(m_pInput);
-	m_pInput->GetKeyBuf(bBuf);
+//	m_pInput->GetKeyBuf(bBuf);
 
 	// キーフラグを一旦クリア
 	memset(bFlg, 0, sizeof(bFlg));
@@ -2942,7 +2944,7 @@ LONG CKbdMapDlg::OnApp(UINT uParam, LONG lParam)
 
 			// メッセージボックスで、削除の有無をチェック
 			::GetMsg(IDS_KBD_DELMSG, strName);
-			strText.Format(strName, uParam, m_pInput->GetKeyID(nWin));
+//			strText.Format(strName, uParam, m_pInput->GetKeyID(nWin));
 			::GetMsg(IDS_KBD_DELTITLE, strName);
 			if (MessageBox(strText, strName, MB_ICONQUESTION | MB_YESNO) != IDYES) {
 				break;
@@ -2970,13 +2972,13 @@ LONG CKbdMapDlg::OnApp(UINT uParam, LONG lParam)
 			if (uParam != 0) {
 				// まずX68000キーを表示
 				strText.Format(_T("Key%02X  "), uParam);
-				strText += m_pInput->GetKeyName(uParam);
+//				strText += m_pInput->GetKeyName(uParam);
 
 				// 該当するWindowsキーがあれば追加
 				for (nWin=0; nWin<0x100; nWin++) {
 					if (m_pEditMap[nWin] == uParam) {
 						// Windowsキーがあった
-						strName = m_pInput->GetKeyID(nWin);
+//						strName = m_pInput->GetKeyID(nWin);
 						strText += _T("    (");
 						strText += strName;
 						strText += _T(")");
@@ -3062,7 +3064,7 @@ BOOL CKeyinDlg::OnInitDialog()
 
 	// 現状キーをバッファへ
 	ASSERT(m_pInput);
-	m_pInput->GetKeyBuf(m_bKey);
+//	m_pInput->GetKeyBuf(m_bKey);
 
 	// ガイド矩形の処理
 	pStatic = (CStatic*)GetDlgItem(IDC_KEYIN_LABEL);
@@ -3086,7 +3088,7 @@ BOOL CKeyinDlg::OnInitDialog()
 	ASSERT(pStatic);
 	pStatic->GetWindowText(m_KeyString);
 	if (m_nKey != 0) {
-		m_KeyString = m_pInput->GetKeyID(m_nKey);
+//		m_KeyString = m_pInput->GetKeyID(m_nKey);
 	}
 	pStatic->GetWindowRect(&m_KeyRect);
 	ScreenToClient(&m_KeyRect);
@@ -3202,7 +3204,7 @@ LONG CKeyinDlg::OnKickIdle(UINT , LONG )
 	nOld = m_nKey;
 
 	// DirectInput経由で、キーを受け取る
-	m_pInput->GetKeyBuf(bKey);
+//	m_pInput->GetKeyBuf(bKey);
 
 	// キー検索
 	for (i=0; i<0x100; i++) {
@@ -3226,7 +3228,7 @@ LONG CKeyinDlg::OnKickIdle(UINT , LONG )
 	}
 
 	// キー名称を表示
-	m_KeyString = m_pInput->GetKeyID(m_nKey);
+//	m_KeyString = m_pInput->GetKeyID(m_nKey);
 	Invalidate(FALSE);
 
 	return 0;

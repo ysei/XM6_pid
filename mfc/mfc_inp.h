@@ -61,18 +61,6 @@ public:
 	DWORD FASTCALL GetProcessCount() const	{ return m_dwProcessCount; }				// 進行カウンタ取得
 	DWORD FASTCALL GetAcquireCount(int nType) const;									// 獲得カウンタ取得
 
-	// キーボード
-	void FASTCALL GetKeyBuf(BOOL *pKeyBuf) const;										// キー入力情報取得
-	void FASTCALL EnableKey(BOOL bEnable);												// キー有効化・無効化
-	void FASTCALL SetDefaultKeyMap(DWORD *pKeyMap);										// デフォルトマップ設定
-	int FASTCALL Key2DirectX(int nKey);													// キー変換
-	int FASTCALL Key2X68k(int nDXKey);													// キー変換
-	static LPCTSTR FASTCALL GetKeyName(int nKey);										// キー名称取得
-	static LPCTSTR FASTCALL GetKeyID(int nID);											// キーID取得
-	void FASTCALL GetKeyMap(DWORD *pKeyMap);											// キーマップ取得
-	void FASTCALL SetKeyMap(const DWORD *pKeyMap);										// キーマップ設定
-	BOOL FASTCALL IsKeyMapped(int nID) const;											// キーマップ有無チェック
-
 	// マウス
 	void FASTCALL SetMouseMode(BOOL bMode);												// マウスモード設定
 	BOOL FASTCALL GetMouseMode() const	{ return m_bMouseMode; }						// マウスモード取得
@@ -103,17 +91,8 @@ private:
 	BOOL FASTCALL Load201(Fileio *pFio);					// ロード本体 (version2.01)
 
 	// キーボード
-	BOOL FASTCALL InitKey();								// キーボード初期化
 	void FASTCALL InputKey(BOOL bEnable);					// キーボード入力
 	Keyboard *m_pKeyboard;									// キーボード
-	LPDIRECTINPUTDEVICE m_lpDIKey;							// キーボードデバイス
-	DWORD m_dwKeyAcquire;									// キーボード獲得カウンタ
-	BOOL m_bKeyEnable;										// キーボード有効フラグ
-	BOOL m_KeyBuf[0x100];									// キーボードバッファ
-	DWORD m_KeyMap[0x100];									// キー変換マップ
-	static const DWORD m_KeyMap106[];						// デフォルトマップ(106)
-	static LPCTSTR KeyNameTable[];							// キー名称テーブル
-	static LPCSTR KeyIDTable[];								// DirectXキーIDテーブル
 
 	// マウス
 	BOOL FASTCALL InitMouse();								// マウス初期化
