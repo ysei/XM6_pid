@@ -2000,14 +2000,6 @@ void CFrmWnd::OnMove(int x, int y)
 
 	// 初期化済みなら
 	if (m_nStatus == 0) {
-		// マウスモードチェック
-		if (GetInput()->GetMouseMode()) {
-			// クリップ範囲を変更
-			ClipCursor(NULL);
-			GetWindowRect(&rect);
-			SetCursorPos((rect.left + rect.right) / 2, (rect.top + rect.bottom) / 2);
-			ClipCursor(&rect);
-		}
 	}
 
 	// 基本クラス
@@ -2035,11 +2027,6 @@ void CFrmWnd::OnActivate(UINT nState, CWnd *pWnd, BOOL bMinimized)
 				// 入力受け付けない、低速実行
 				pInput->Activate(FALSE);
 				pScheduler->Activate(FALSE);
-
-//				// マウスモードOFF(POPUPウィンドウ対策)
-//				if (pInput->GetMouseMode()) {
-//					OnMouseMode();
-//				}
 			}
 			else {
 				// 入力受け付ける、通常実行
@@ -2109,11 +2096,6 @@ void CFrmWnd::OnEnterMenuLoop(BOOL bTrackPopup)
 		pInput->Menu(TRUE);
 	}
 
-//	// マウスモードFALSE(マウスでメニューが操作できるように)
-//	if (pInput->GetMouseMode()) {
-//		OnMouseMode();
-//	}
-
 	// スケジューラへ通知
 	pScheduler = GetScheduler();
 	if (pScheduler) {
@@ -2173,13 +2155,6 @@ void CFrmWnd::OnParentNotify(UINT message, LPARAM lParam)
 		// インプットを取得
 		pInput = GetInput();
 		if (pInput) {
-			// マウス無効なら有効にする。逆はしない
-			if (!pInput->GetMouseMode()) {
-//				// 設定で"中ボタン禁止"にされていないことが条件
-//				if (m_bMouseMid) {
-//					OnMouseMode();
-//				}
-			}
 		}
 	}
 
@@ -2201,31 +2176,10 @@ void CFrmWnd::OnContextMenu(CWnd * , CPoint pos)
 		// スケジューラチェック、入力チェック
 		if (GetScheduler()->IsEnable()) {
 			if (GetInput()->IsActive() && !GetInput()->IsMenu()) {
-				// DIK_APPSがマップされているか
-//				if (GetInput()->IsKeyMapped(DIK_APPS)) {
-//					// SHIFT+F10が押されているか
-//					SHORT sF10;
-//					SHORT sShift;
-//					sF10 = ::GetAsyncKeyState(VK_F10);
-//					sShift = ::GetAsyncKeyState(VK_SHIFT);
-//					if (((sF10 & 0x8000) == 0) || ((sShift & 0x8000) == 0)) {
-//						// VK_APPSが押されたためと判定
-//						return;
-//					}
-//				}
 			}
 		}
-
-//		// マウスモードであれば、解除(キーボードからのメニュー起動)
-//		if (GetInput()->GetMouseMode()) {
-//			OnMouseMode();
-//		}
 	}
 	else {
-		// マウスモードであれば、無視(マウスからのメニュー起動)
-		if (GetInput()->GetMouseMode()) {
-			return;
-		}
 	}
 
 	// ポップアップメニュー
@@ -2518,17 +2472,6 @@ void CFrmWnd::GetMessageString(UINT nID, CString& rMessage) const
 	if (!bValid) {
 		CFrameWnd::GetMessageString(nID, rMessage);
 	}
-
-	// 結果をInfoへ提供(内部保持用)
-//	pInfo = GetInfo();
-//	if (pInfo) {
-//		pInfo->SetMessageString(rMessage);
-//	}
-
-//	// 結果をステータスビューへ提供
-//	if (m_pStatusView) {
-//		m_pStatusView->SetMenuString(rMessage);
-//	}
 }
 
 //---------------------------------------------------------------------------
@@ -2559,218 +2502,6 @@ void FASTCALL CFrmWnd::HideTaskBar(BOOL bHide, BOOL bFore)
 		SetForegroundWindow();
 	}
 }
-
-//---------------------------------------------------------------------------
-//
-//	ステータスバー表示
-//
-//---------------------------------------------------------------------------
-//	void FASTCALL CFrmWnd::ShowStatus()
-//	{
-//		ASSERT(this);
-//	
-//		// 必要ならVMをロック
-//		if (m_nStatus == 0) {
-//			::LockVM();
-//		}
-//	
-//		// フルスクリーンか
-//		if (m_bFullScreen) {
-//			// ステータスバーは常に非表示
-//	//		ShowControlBar(&m_StatusBar, FALSE, FALSE);
-//	
-//			// ステータスバー表示か
-//	//		if (m_bStatusBar)
-//	//		{
-//	//			// ステータスビューが存在しなければ
-//	//			if (!m_pStatusView) {
-//	//				// 作成して
-//	//				CreateStatusView();
-//	//
-//	//				// 再配置
-//	//				if (m_bStatusBar) {
-//	//					RecalcStatusView();
-//	//				}
-//	//			}
-//	//		}
-//	//		else {
-//	//			// ステータスビューが存在していれば
-//	//			if (m_pStatusView) {
-//	//				// 削除して
-//	//				DestroyStatusView();
-//	//
-//	//				// 再配置
-//	//				RecalcStatusView();
-//	//			}
-//	//		}
-//	
-//			// 必要があればアンロック
-//			if (m_nStatus == 0) {
-//				::UnlockVM();
-//			}
-//			return;
-//		}
-//	
-//		// ステータスビューはフルスクリーン専用なので、削除
-//		if (m_pStatusView) {
-//			DestroyStatusView();
-//			RecalcLayout();
-//		}
-//	
-//		// ウィンドウなので、ShowControlBarで制御
-//	//	ShowControlBar(&m_StatusBar, m_bStatusBar, FALSE);
-//	
-//		// 必要があればアンロック
-//		if (m_nStatus == 0) {
-//			::UnlockVM();
-//		}
-//	}
-//	
-//	//---------------------------------------------------------------------------
-//	//
-//	//	ステータスビュー作成(フルスクリーン時)
-//	//
-//	//---------------------------------------------------------------------------
-//	void FASTCALL CFrmWnd::CreateStatusView()
-//	{
-//	//	CInfo *pInfo;
-//	
-//		ASSERT(!m_pStatusView);
-//	
-//		if (m_bStatusBar) {
-//			m_bStatusBar = FALSE;	//VC2010//
-//	//		// ステータスビュー作成(再配置は行わない)
-//	//		m_pStatusView = new CStatusView;
-//	//		if (m_pStatusView->Init(this)) {
-//	//			// 作成成功
-//	//			pInfo = GetInfo();
-//	//			if (pInfo) {
-//	//				// Infoが存在するので、ステータスビュー作成を通知
-//	//				pInfo->SetStatusView(m_pStatusView);
-//	//			}
-//	//		}
-//	//		else {
-//	//			// 作成失敗
-//	//			m_bStatusBar = FALSE;
-//	//		}
-//		}
-//	}
-//	
-//	//---------------------------------------------------------------------------
-//	//
-//	//	ステータスビュー終了(フルスクリーン時)
-//	//
-//	//---------------------------------------------------------------------------
-//	void FASTCALL CFrmWnd::DestroyStatusView()
-//	{
-//		CInfo *pInfo;
-//	
-//		// 有効なステータスビューが存在する場合のみ
-//		if (m_pStatusView) {
-//			// Info取得
-//			pInfo = GetInfo();
-//			if (pInfo) {
-//				// Infoが存在するので、ステータスビュー削除を通知
-//	//			pInfo->SetStatusView(NULL);
-//			}
-//	
-//			// ステータスビュー削除(再配置は行わない)
-//	//		m_pStatusView->DestroyWindow();
-//	//		m_pStatusView = NULL;
-//		}
-//	}
-//	
-//	//---------------------------------------------------------------------------
-//	//
-//	//	ステータスビュー再配置
-//	//
-//	//---------------------------------------------------------------------------
-//	void FASTCALL CFrmWnd::RecalcStatusView()
-//	{
-//		CRect rectFrame;
-//		CRect rectDraw;
-//		CRect rectStatus;
-//	//	LONG lDraw;
-//	//	LONG lStatus;
-//		BOOL bMove;
-//	
-//		// フレームのサイズを取得
-//		GetClientRect(&rectFrame);
-//	
-//		// ステータスビューの有無で分ける
-//	//	if (m_pStatusView) {
-//	//		// ステータスビューあり。ステータスビューの位置を優先
-//	//		m_pStatusView->GetWindowRect(&rectStatus);
-//	//		lStatus = rectStatus.Height();
-//	//		lDraw = rectFrame.Height() - lStatus;
-//	//
-//	//		// Drawビューの位置を取得
-//	//		m_pDrawView->GetWindowRect(&rectDraw);
-//	//		ScreenToClient(&rectDraw);
-//	//
-//	//		// 変更チェック
-//	//		bMove = FALSE;
-//	//		if ((rectDraw.left != 0) || (rectDraw.top != 0)) {
-//	//			bMove = TRUE;
-//	//		}
-//	//		if ((rectDraw.Width () != rectFrame.Width()) || (rectDraw.Height() != lDraw)) {
-//	//			bMove = TRUE;
-//	//		}
-//	//		if (bMove) {
-//	//			m_pDrawView->SetWindowPos(&wndTop, 0, 0, rectFrame.Width(), lDraw, SWP_NOZORDER);
-//	//		}
-//	//
-//	//		// Statusビューの位置を取得
-//	//		m_pStatusView->GetWindowRect(&rectStatus);
-//	//		ScreenToClient(&rectStatus);
-//	//
-//	//		// 変更チェック
-//	//		bMove = FALSE;
-//	//		if ((rectStatus.left != 0) || (rectStatus.top != lDraw)) {
-//	//			bMove = TRUE;
-//	//		}
-//	//		if ((rectStatus.Width() != rectFrame.Width()) || (rectStatus.Height() != lStatus)) {
-//	//			bMove = TRUE;
-//	//		}
-//	//		if (bMove) {
-//	//			m_pStatusView->SetWindowPos(&wndTop, 0, lDraw, rectFrame.Width(), lStatus, SWP_NOZORDER);
-//	//		}
-//	//	}
-//	//	else
-//		{
-//			// ステータスビューなし。Drawビューのみ
-//			m_pDrawView->GetWindowRect(&rectDraw);
-//			ScreenToClient(&rectDraw);
-//	
-//			// 変更チェック
-//			bMove = FALSE;
-//			if ((rectDraw.left != 0) || (rectDraw.top != 0)) {
-//				bMove = TRUE;
-//			}
-//			if ((rectDraw.Width () != rectFrame.Width()) || (rectDraw.Height() != rectFrame.Height())) {
-//				bMove = TRUE;
-//			}
-//			if (bMove) {
-//				m_pDrawView->SetWindowPos(&wndTop, 0, 0, rectFrame.Width(), rectFrame.Height(), SWP_NOZORDER);
-//			}
-//		}
-//	}
-//	
-//	//	//---------------------------------------------------------------------------
-//	//	//
-//	//	//	ステータスバーリセット
-//	//	//
-//	//	//---------------------------------------------------------------------------
-//	//	void FASTCALL CFrmWnd::ResetStatus()
-//	//	{
-//	//		CInfo *pInfo;
-//	//	
-//	//		// Infoがあればリセット
-//	//		pInfo = GetInfo();
-//	//		if (pInfo) {
-//	//	//		pInfo->ResetStatus();
-//	//		}
-//	//	}
 
 //---------------------------------------------------------------------------
 //
@@ -2864,84 +2595,6 @@ void FASTCALL CFrmWnd::ShowMenu()
 		::UnlockVM();
 	}
 }
-
-//---------------------------------------------------------------------------
-//
-//	キャプション表示
-//
-//---------------------------------------------------------------------------
-//	void FASTCALL CFrmWnd::ShowCaption()
-//	{
-//		DWORD dwStyle;
-//	
-//		ASSERT(this);
-//	
-//		// 必要であればVMをロック
-//		if (m_nStatus == 0) {
-//			::LockVM();
-//		}
-//	
-//		// 現在のキャプション状態を取得
-//		dwStyle = GetStyle() & WS_CAPTION;
-//	
-//		// キャプションが不必要な場合
-//		if (m_bFullScreen) {
-//			// キャプションが存在するか
-//			if (dwStyle) {
-//				// キャプションを消去
-//				ModifyStyle(WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX,
-//								0, SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
-//			}
-//			if (m_nStatus == 0) {
-//				::UnlockVM();
-//			}
-//			return;
-//		}
-//	
-//		// キャプションが必要な場合
-//		if (!dwStyle) {
-//			// キャプションをセット
-//			ModifyStyle(0, WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX,
-//								SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
-//		}
-//	
-//		// 必要ならVMをアンロック
-//		if (m_nStatus == 0) {
-//			::UnlockVM();
-//		}
-//	}
-
-//---------------------------------------------------------------------------
-//
-//	キャプションリセット
-//
-//---------------------------------------------------------------------------
-//void FASTCALL CFrmWnd::ResetCaption()
-//{
-//	CInfo *pInfo;
-//
-//	// Infoがあればリセット
-//	pInfo = GetInfo();
-//	if (pInfo) {
-//		pInfo->ResetCaption();
-//	}
-//}
-
-//---------------------------------------------------------------------------
-//
-//	情報設定
-//
-//---------------------------------------------------------------------------
-//void FASTCALL CFrmWnd::SetInfo(CString& strInfo)
-//{
-//	CInfo *pInfo;
-//
-//	// Infoがあれば設定
-//	pInfo = GetInfo();
-//	if (pInfo) {
-//		pInfo->SetInfo(strInfo);
-//	}
-//}
 
 //---------------------------------------------------------------------------
 //

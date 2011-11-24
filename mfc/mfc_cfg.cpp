@@ -215,40 +215,40 @@ const CConfig::INIKEY CConfig::IniTable[] = {
 	{ &CConfig::m_Config.fm_volume						, NULL				, _T("FM")				, 0, 54, 0, 100 },
 	{ &CConfig::m_Config.adpcm_enable					, NULL				, _T("ADPCMEnable")		, 1, TRUE, 0, 0 },
 	{ &CConfig::m_Config.adpcm_volume					, NULL				, _T("ADPCM")			, 0, 52, 0, 100 },
-	{ &CConfig::m_Config.kbd_connect					, _T("Keyboard")	, _T("Connect")			, 1, TRUE, 0, 0 },
+//	{ &CConfig::m_Config.kbd_connect					, _T("Keyboard")	, _T("Connect")			, 1, TRUE, 0, 0 },
 	{ &CConfig::m_Config.mouse_speed					, _T("Mouse")		, _T("Speed")			, 0, 205, 0, 512 },
 	{ &CConfig::m_Config.mouse_port						, NULL				, _T("Port")			, 0, 1, 0, 2 },
 	{ &CConfig::m_Config.mouse_swap						, NULL				, _T("Swap")			, 1, FALSE, 0, 0 },
 	{ &CConfig::m_Config.mouse_mid						, NULL				, _T("MidBtn")			, 1, TRUE, 0, 0 },
 	{ &CConfig::m_Config.mouse_trackb					, NULL				, _T("TrackBall")		, 1, FALSE, 0, 0 },
-	{ &CConfig::m_Config.joy_type[0]					, _T("Joystick")	, _T("Port1")			, 0, 1, 0, 15 },
-	{ &CConfig::m_Config.joy_type[1]					, NULL				, _T("Port2")			, 0, 1, 0, 15 },
-	{ &CConfig::m_Config.joy_dev[0]						, NULL				, _T("Device1")			, 0, 1, 0, 15 },
-	{ &CConfig::m_Config.joy_dev[1]						, NULL				, _T("Device2")			, 0, 2, 0, 15 },
-	{ &CConfig::m_Config.joy_button0[0]					, NULL				, _T("Button11")		, 0, 1, 0, 131071 },
-	{ &CConfig::m_Config.joy_button0[1]					, NULL				, _T("Button12")		, 0, 2, 0, 131071 },
-	{ &CConfig::m_Config.joy_button0[2]					, NULL				, _T("Button13")		, 0, 3, 0, 131071 },
-	{ &CConfig::m_Config.joy_button0[3]					, NULL				, _T("Button14")		, 0, 4, 0, 131071 },
-	{ &CConfig::m_Config.joy_button0[4]					, NULL				, _T("Button15")		, 0, 5, 0, 131071 },
-	{ &CConfig::m_Config.joy_button0[5]					, NULL				, _T("Button16")		, 0, 6, 0, 131071 },
-	{ &CConfig::m_Config.joy_button0[6]					, NULL				, _T("Button17")		, 0, 7, 0, 131071 },
-	{ &CConfig::m_Config.joy_button0[7]					, NULL				, _T("Button18")		, 0, 8, 0, 131071 },
-	{ &CConfig::m_Config.joy_button0[8]					, NULL				, _T("Button19")		, 0, 0, 0, 131071 },
-	{ &CConfig::m_Config.joy_button0[9]					, NULL				, _T("Button1A")		, 0, 0, 0, 131071 },
-	{ &CConfig::m_Config.joy_button0[10]				, NULL				, _T("Button1B")		, 0, 0, 0, 131071 },
-	{ &CConfig::m_Config.joy_button0[11]				, NULL				, _T("Button1C")		, 0, 0, 0, 131071 },
-	{ &CConfig::m_Config.joy_button1[0]					, NULL				, _T("Button21")		, 0, 65537, 0, 131071 },
-	{ &CConfig::m_Config.joy_button1[1]					, NULL				, _T("Button22")		, 0, 65538, 0, 131071 },
-	{ &CConfig::m_Config.joy_button1[2]					, NULL				, _T("Button23")		, 0, 65539, 0, 131071 },
-	{ &CConfig::m_Config.joy_button1[3]					, NULL				, _T("Button24")		, 0, 65540, 0, 131071 },
-	{ &CConfig::m_Config.joy_button1[4]					, NULL				, _T("Button25")		, 0, 65541, 0, 131071 },
-	{ &CConfig::m_Config.joy_button1[5]					, NULL				, _T("Button26")		, 0, 65542, 0, 131071 },
-	{ &CConfig::m_Config.joy_button1[6]					, NULL				, _T("Button27")		, 0, 65543, 0, 131071 },
-	{ &CConfig::m_Config.joy_button1[7]					, NULL				, _T("Button28")		, 0, 65544, 0, 131071 },
-	{ &CConfig::m_Config.joy_button1[8]					, NULL				, _T("Button29")		, 0, 0, 0, 131071 },
-	{ &CConfig::m_Config.joy_button1[9]					, NULL				, _T("Button2A")		, 0, 0, 0, 131071 },
-	{ &CConfig::m_Config.joy_button1[10]				, NULL				, _T("Button2B")		, 0, 0, 0, 131071 },
-	{ &CConfig::m_Config.joy_button1[11]				, NULL				, _T("Button2C")		, 0, 0, 0, 131071 },
+//	{ &CConfig::m_Config.joy_type[0]					, _T("Joystick")	, _T("Port1")			, 0, 1, 0, 15 },
+//	{ &CConfig::m_Config.joy_type[1]					, NULL				, _T("Port2")			, 0, 1, 0, 15 },
+//	{ &CConfig::m_Config.joy_dev[0]						, NULL				, _T("Device1")			, 0, 1, 0, 15 },
+//	{ &CConfig::m_Config.joy_dev[1]						, NULL				, _T("Device2")			, 0, 2, 0, 15 },
+//	{ &CConfig::m_Config.joy_button0[0]					, NULL				, _T("Button11")		, 0, 1, 0, 131071 },
+//	{ &CConfig::m_Config.joy_button0[1]					, NULL				, _T("Button12")		, 0, 2, 0, 131071 },
+//	{ &CConfig::m_Config.joy_button0[2]					, NULL				, _T("Button13")		, 0, 3, 0, 131071 },
+//	{ &CConfig::m_Config.joy_button0[3]					, NULL				, _T("Button14")		, 0, 4, 0, 131071 },
+//	{ &CConfig::m_Config.joy_button0[4]					, NULL				, _T("Button15")		, 0, 5, 0, 131071 },
+//	{ &CConfig::m_Config.joy_button0[5]					, NULL				, _T("Button16")		, 0, 6, 0, 131071 },
+//	{ &CConfig::m_Config.joy_button0[6]					, NULL				, _T("Button17")		, 0, 7, 0, 131071 },
+//	{ &CConfig::m_Config.joy_button0[7]					, NULL				, _T("Button18")		, 0, 8, 0, 131071 },
+//	{ &CConfig::m_Config.joy_button0[8]					, NULL				, _T("Button19")		, 0, 0, 0, 131071 },
+//	{ &CConfig::m_Config.joy_button0[9]					, NULL				, _T("Button1A")		, 0, 0, 0, 131071 },
+//	{ &CConfig::m_Config.joy_button0[10]				, NULL				, _T("Button1B")		, 0, 0, 0, 131071 },
+//	{ &CConfig::m_Config.joy_button0[11]				, NULL				, _T("Button1C")		, 0, 0, 0, 131071 },
+//	{ &CConfig::m_Config.joy_button1[0]					, NULL				, _T("Button21")		, 0, 65537, 0, 131071 },
+//	{ &CConfig::m_Config.joy_button1[1]					, NULL				, _T("Button22")		, 0, 65538, 0, 131071 },
+//	{ &CConfig::m_Config.joy_button1[2]					, NULL				, _T("Button23")		, 0, 65539, 0, 131071 },
+//	{ &CConfig::m_Config.joy_button1[3]					, NULL				, _T("Button24")		, 0, 65540, 0, 131071 },
+//	{ &CConfig::m_Config.joy_button1[4]					, NULL				, _T("Button25")		, 0, 65541, 0, 131071 },
+//	{ &CConfig::m_Config.joy_button1[5]					, NULL				, _T("Button26")		, 0, 65542, 0, 131071 },
+//	{ &CConfig::m_Config.joy_button1[6]					, NULL				, _T("Button27")		, 0, 65543, 0, 131071 },
+//	{ &CConfig::m_Config.joy_button1[7]					, NULL				, _T("Button28")		, 0, 65544, 0, 131071 },
+//	{ &CConfig::m_Config.joy_button1[8]					, NULL				, _T("Button29")		, 0, 0, 0, 131071 },
+//	{ &CConfig::m_Config.joy_button1[9]					, NULL				, _T("Button2A")		, 0, 0, 0, 131071 },
+//	{ &CConfig::m_Config.joy_button1[10]				, NULL				, _T("Button2B")		, 0, 0, 0, 131071 },
+//	{ &CConfig::m_Config.joy_button1[11]				, NULL				, _T("Button2C")		, 0, 0, 0, 131071 },
 	{ &CConfig::m_Config.sasi_drives					, _T("SASI")		, _T("Drives")			, 0, -1, 0, 16 },
 	{ &CConfig::m_Config.sasi_sramsync					, NULL				, _T("AutoMemSw")		, 1, TRUE, 0, 0 },
 	{ CConfig::m_Config.sasi_file[ 0]					, NULL				, _T("File0") 			, 2, FILEPATH_MAX, 0, 0 },
@@ -2089,246 +2089,6 @@ void CVolPage::OnCancel()
 	// 基本クラス
 	CConfigPage::OnCancel();
 }
-//===========================================================================
-//
-//	マウスページ
-//
-//===========================================================================
-
-//---------------------------------------------------------------------------
-//
-//	コンストラクタ
-//
-//---------------------------------------------------------------------------
-CMousePage::CMousePage()
-{
-	// ID,Helpを必ず設定
-	m_dwID = MAKEID('M', 'O', 'U', 'S');
-	m_nTemplate = IDD_MOUSEPAGE;
-	m_uHelpID = IDC_MOUSE_HELP;
-}
-
-//---------------------------------------------------------------------------
-//
-//	メッセージ マップ
-//
-//---------------------------------------------------------------------------
-BEGIN_MESSAGE_MAP(CMousePage, CConfigPage)
-	ON_WM_HSCROLL()
-	ON_BN_CLICKED(IDC_MOUSE_NPORT, OnPort)
-	ON_BN_CLICKED(IDC_MOUSE_FPORT, OnPort)
-	ON_BN_CLICKED(IDC_MOUSE_KPORT, OnPort)
-END_MESSAGE_MAP()
-
-//---------------------------------------------------------------------------
-//
-//	初期化
-//
-//---------------------------------------------------------------------------
-BOOL CMousePage::OnInitDialog()
-{
-	CSliderCtrl *pSlider;
-	CStatic *pStatic;
-	CButton *pButton;
-	CString strText;
-	UINT nID;
-
-	// 基本クラス
-	CConfigPage::OnInitDialog();
-
-	// 速度
-	pSlider = (CSliderCtrl*)GetDlgItem(IDC_MOUSE_SLIDER);
-	ASSERT(pSlider);
-	pSlider->SetRange(0, 512);
-	pSlider->SetPos(m_pConfig->mouse_speed);
-
-	// 速度テキスト
-	strText.Format(_T("%d%%"), (m_pConfig->mouse_speed * 100) >> 8);
-	pStatic = (CStatic*)GetDlgItem(IDC_MOUSE_PARS);
-	pStatic->SetWindowText(strText);
-
-	// 接続先ポート
-	nID = IDC_MOUSE_NPORT;
-	switch (m_pConfig->mouse_port) {
-		// 接続しない
-		case 0:
-			break;
-		// SCC
-		case 1:
-			nID = IDC_MOUSE_FPORT;
-			break;
-		// キーボード
-		case 2:
-			nID = IDC_MOUSE_KPORT;
-			break;
-		// その他(ありえない)
-		default:
-			ASSERT(FALSE);
-			break;
-	}
-	pButton = (CButton*)GetDlgItem(nID);
-	ASSERT(pButton);
-	pButton->SetCheck(1);
-
-	// オプション
-	pButton = (CButton*)GetDlgItem(IDC_MOUSE_SWAPB);
-	ASSERT(pButton);
-	pButton->SetCheck(m_pConfig->mouse_swap);
-	pButton = (CButton*)GetDlgItem(IDC_MOUSE_MIDB);
-	ASSERT(pButton);
-	pButton->SetCheck(!m_pConfig->mouse_mid);
-	pButton = (CButton*)GetDlgItem(IDC_MOUSE_TBG);
-	ASSERT(pButton);
-	pButton->SetCheck(m_pConfig->mouse_trackb);
-
-	// コントロール有効・無効
-	m_bEnableCtrl = TRUE;
-	if (m_pConfig->mouse_port == 0) {
-		EnableControls(FALSE);
-	}
-
-	return TRUE;
-}
-
-//---------------------------------------------------------------------------
-//
-//	決定
-//
-//---------------------------------------------------------------------------
-void CMousePage::OnOK()
-{
-	CSliderCtrl *pSlider;
-	CButton *pButton;
-
-	// 速度
-	pSlider = (CSliderCtrl*)GetDlgItem(IDC_MOUSE_SLIDER);
-	ASSERT(pSlider);
-	m_pConfig->mouse_speed = pSlider->GetPos();
-
-	// 接続ポート
-	pButton = (CButton*)GetDlgItem(IDC_MOUSE_NPORT);
-	ASSERT(pButton);
-	if (pButton->GetCheck()) {
-		m_pConfig->mouse_port = 0;
-	}
-	pButton = (CButton*)GetDlgItem(IDC_MOUSE_FPORT);
-	ASSERT(pButton);
-	if (pButton->GetCheck()) {
-		m_pConfig->mouse_port = 1;
-	}
-	pButton = (CButton*)GetDlgItem(IDC_MOUSE_KPORT);
-	ASSERT(pButton);
-	if (pButton->GetCheck()) {
-		m_pConfig->mouse_port = 2;
-	}
-
-	// オプション
-	pButton = (CButton*)GetDlgItem(IDC_MOUSE_SWAPB);
-	ASSERT(pButton);
-	m_pConfig->mouse_swap = pButton->GetCheck();
-	pButton = (CButton*)GetDlgItem(IDC_MOUSE_MIDB);
-	ASSERT(pButton);
-	m_pConfig->mouse_mid = !(pButton->GetCheck());
-	pButton = (CButton*)GetDlgItem(IDC_MOUSE_TBG);
-	ASSERT(pButton);
-	m_pConfig->mouse_trackb = pButton->GetCheck();
-
-	// 基本クラス
-	CConfigPage::OnOK();
-}
-
-//---------------------------------------------------------------------------
-//
-//	水平スクロール
-//
-//---------------------------------------------------------------------------
-void CMousePage::OnHScroll(UINT , UINT , CScrollBar *pBar)
-{
-	CSliderCtrl *pSlider;
-	CStatic *pStatic;
-	CString strText;
-
-	// 変換、チェック
-	pSlider = (CSliderCtrl*)pBar;
-	if (pSlider->GetDlgCtrlID() != IDC_MOUSE_SLIDER) {
-		return;
-	}
-
-	// 表示
-	strText.Format(_T("%d%%"), (pSlider->GetPos() * 100) >> 8);
-	pStatic = (CStatic*)GetDlgItem(IDC_MOUSE_PARS);
-	pStatic->SetWindowText(strText);
-}
-
-//---------------------------------------------------------------------------
-//
-//	ポート選択
-//
-//---------------------------------------------------------------------------
-void CMousePage::OnPort()
-{
-	CButton *pButton;
-
-	// ボタン取得
-	pButton = (CButton*)GetDlgItem(IDC_MOUSE_NPORT);
-	ASSERT(pButton);
-
-	// 接続しない or 他のポートで判別
-	if (pButton->GetCheck()) {
-		EnableControls(FALSE);
-	}
-	else {
-		EnableControls(TRUE);
-	}
-}
-
-//---------------------------------------------------------------------------
-//
-//	コントロール状態変更
-//
-//---------------------------------------------------------------------------
-void FASTCALL CMousePage::EnableControls(BOOL bEnable) 
-{
-	int i;
-	CWnd *pWnd;
-
-	ASSERT(this);
-
-	// フラグチェック
-	if (m_bEnableCtrl == bEnable) {
-		return;
-	}
-	m_bEnableCtrl = bEnable;
-
-	// ボードID、Help以外の全コントロールを設定
-	for(i=0; ; i++) {
-		// 終了チェック
-		if (ControlTable[i] == NULL) {
-			break;
-		}
-
-		// コントロール取得
-		pWnd = GetDlgItem(ControlTable[i]);
-		ASSERT(pWnd);
-		pWnd->EnableWindow(bEnable);
-	}
-}
-
-//---------------------------------------------------------------------------
-//
-//	コントロールIDテーブル
-//
-//---------------------------------------------------------------------------
-const UINT CMousePage::ControlTable[] = {
-	IDC_MOUSE_SPEEDG,
-	IDC_MOUSE_SLIDER,
-	IDC_MOUSE_PARS,
-	IDC_MOUSE_OPTG,
-	IDC_MOUSE_SWAPB,
-	IDC_MOUSE_MIDB,
-	IDC_MOUSE_TBG,
-	NULL
-};
 //===========================================================================
 //
 //	SASIページ
@@ -5075,7 +4835,7 @@ CConfigSheet::CConfigSheet(CWnd *pParent) : CPropertySheet(IDS_OPTIONS, pParent)
 	m_Sound.Init(this);
 	m_Vol.Init(this);
 //	m_Kbd.Init(this);
-	m_Mouse.Init(this);
+//	m_Mouse.Init(this);
 //	m_Joy.Init(this);
 	m_SASI.Init(this);
 	m_SxSI.Init(this);

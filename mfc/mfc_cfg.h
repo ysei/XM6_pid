@@ -293,38 +293,6 @@ private:
 };
 //===========================================================================
 //
-//	マウスページ
-//
-//===========================================================================
-class CMousePage : public CConfigPage
-{
-public:
-	CMousePage();
-										// コンストラクタ
-	BOOL OnInitDialog();
-										// 初期化
-	void OnOK();
-										// 決定
-
-protected:
-	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pBar);
-										// 横スクロール
-	afx_msg void OnPort();
-										// ポート選択
-
-private:
-	void FASTCALL EnableControls(BOOL bEnable);
-										// コントロール状態変更
-	BOOL m_bEnableCtrl;
-										// コントロール状態
-	static const UINT ControlTable[];
-										// コントロールテーブル
-
-	DECLARE_MESSAGE_MAP()
-										// メッセージ マップあり
-};
-//===========================================================================
-//
 //	SASIページ
 //
 //===========================================================================
@@ -673,8 +641,6 @@ private:
 	CBasicPage m_Basic;					// 基本
 	CSoundPage m_Sound;					// サウンド
 	CVolPage m_Vol;						// 音量
-	CMousePage m_Mouse;					// マウス
-//	CJoyPage m_Joy;						// ジョイスティック
 	CSASIPage m_SASI;					// SASI
 	CSxSIPage m_SxSI;					// SxSI
 	CSCSIPage m_SCSI;					// SCSI

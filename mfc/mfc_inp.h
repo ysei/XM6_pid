@@ -40,12 +40,6 @@ public:
 	void FASTCALL Menu(BOOL bMenu);														// メニュー通知
 	BOOL FASTCALL IsMenu() const		{ return m_bMenu; }								// メニュー状況取得
 	DWORD FASTCALL GetProcessCount() const	{ return m_dwProcessCount; }				// 進行カウンタ取得
-	DWORD FASTCALL GetAcquireCount(int nType) const;									// 獲得カウンタ取得
-
-	// マウス
-	void FASTCALL SetMouseMode(BOOL bMode);												// マウスモード設定
-	BOOL FASTCALL GetMouseMode() const	{ return m_bMouseMode; }						// マウスモード取得
-	void FASTCALL GetMouseInfo(int *pPos, BOOL *pBtn) const;							// マウス情報取得
 
 private:
 	// 共通
@@ -66,17 +60,8 @@ private:
 	Keyboard *m_pKeyboard;									// キーボード
 
 	// マウス
-	BOOL FASTCALL InitMouse();								// マウス初期化
 	void FASTCALL InputMouse(BOOL bEnable);					// マウス入力
 	Mouse *m_pMouse;										// マウス
-	LPDIRECTINPUTDEVICE m_lpDIMouse;						// マウスデバイス
-	DWORD m_dwMouseAcquire;									// マウス獲得カウンタ
-	BOOL m_bMouseMode;										// マウスモードフラグ
-	int m_nMouseX;											// マウスx座標
-	int m_nMouseY;											// マウスy座標
-	BOOL m_bMouseB[2];										// マウス左右ボタン
-	DWORD m_dwMouseMid;										// マウス中央ボタンカウント
-	BOOL m_bMouseMid;										// マウス中央ボタン使用フラグ
 
 	// ジョイスティック
 	void FASTCALL InitJoy();								// ジョイスティック初期化

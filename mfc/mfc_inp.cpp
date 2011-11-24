@@ -55,15 +55,6 @@ CInput::CInput(CFrmWnd *pWnd) : CComponent(pWnd)
 
 	// マウスワーク初期化
 	m_pMouse = NULL;
-	m_lpDIMouse = NULL;
-	m_dwMouseAcquire = 0;
-	m_bMouseMode = FALSE;
-	m_nMouseX = 0;
-	m_nMouseY = 0;
-	m_bMouseB[0] = FALSE;
-	m_bMouseB[1] = FALSE;
-	m_dwMouseMid = 0;
-	m_bMouseMid = TRUE;
 
 	// ジョイスティックワーク初期化
 	m_pPPI = NULL;
@@ -111,13 +102,7 @@ BOOL FASTCALL CInput::Init()
 		return FALSE;
 	}
 
-	// マウス
-	if (!InitMouse()) {
-		return FALSE;
-	}
-
 	// ジョイスティック
-//	EnumJoy();
 	InitJoy();
 
 	return TRUE;
@@ -134,16 +119,6 @@ void FASTCALL CInput::Cleanup()
 
 	ASSERT(this);
 	ASSERT_VALID(this);
-
-	// マウスモード
-	SetMouseMode(FALSE);
-
-	// マウスデバイスを解放
-	if (m_lpDIMouse) {
-		m_lpDIMouse->Unacquire();
-		m_lpDIMouse->Release();
-		m_lpDIMouse = NULL;
-	}
 
 	// DirectInputオブジェクトを解放
 	if (m_lpDI) {
@@ -165,12 +140,6 @@ void FASTCALL CInput::ApplyCfg(const Config* pConfig)
 	ASSERT(this);
 	ASSERT(pConfig);
 	ASSERT_VALID(this);
-
-	// マウス中ボタン
-	m_bMouseMid = 1;	//pConfig->mouse_mid;
-
-	// 中央ボタンカウントを無効化
-	m_dwMouseMid = 5;
 }
 
 #if defined(_DEBUG)
@@ -243,26 +212,6 @@ BOOL CInput::SaveMain(Fileio *pFio)
 		return FALSE;
 	}
 
-	// マウス
-	if (!pFio->Write(&m_nMouseX, sizeof(m_nMouseX))) {
-		return FALSE;
-	}
-	if (!pFio->Write(&m_nMouseY, sizeof(m_nMouseY))) {
-		return FALSE;
-	}
-	if (!pFio->Write(&m_dwMouseMid, sizeof(m_dwMouseMid))) {
-		return FALSE;
-	}
-
-	//
-	//	version2.01
-	//
-
-	// マウス
-	if (!pFio->Write(m_bMouseB, sizeof(m_bMouseB))) {
-		return FALSE;
-	}
-
 	return TRUE;
 }
 
@@ -320,17 +269,6 @@ BOOL FASTCALL CInput::Load200(Fileio *pFio)
 		return FALSE;
 	}
 
-	// マウス
-	if (!pFio->Read(&m_nMouseX, sizeof(m_nMouseX))) {
-		return FALSE;
-	}
-	if (!pFio->Read(&m_nMouseY, sizeof(m_nMouseY))) {
-		return FALSE;
-	}
-	if (!pFio->Read(&m_dwMouseMid, sizeof(m_dwMouseMid))) {
-		return FALSE;
-	}
-
 	return TRUE;
 }
 
@@ -344,11 +282,6 @@ BOOL FASTCALL CInput::Load201(Fileio *pFio)
 	ASSERT(this);
 	ASSERT(pFio);
 	ASSERT_VALID(this);
-
-	// マウス
-	if (!pFio->Read(m_bMouseB, sizeof(m_bMouseB))) {
-		return FALSE;
-	}
 
 	return TRUE;
 }
@@ -437,32 +370,6 @@ void FASTCALL CInput::Menu(BOOL bMenu)
 	// メニューフラグに反映
 	m_bMenu = bMenu;
 }
-
-//---------------------------------------------------------------------------
-//
-//	獲得カウンタ取得
-//
-//---------------------------------------------------------------------------
-DWORD FASTCALL CInput::GetAcquireCount(int nType) const
-{
-	ASSERT(this);
-	ASSERT_VALID(this);
-
-	switch (nType) {
-		// 1:マウス
-		case 1:
-			return m_dwMouseAcquire;
-
-		// その他
-		default:
-			break;
-	}
-
-	// 通常、ここにはこない
-	ASSERT(FALSE);
-	return 0;
-}
-
 //===========================================================================
 //
 //	キーボード
@@ -948,48 +855,6 @@ void FASTCALL CInput::InputKey(BOOL bEnable)
 //	マウス
 //
 //===========================================================================
-
-//---------------------------------------------------------------------------
-//
-//	マウス初期化
-//
-//---------------------------------------------------------------------------
-BOOL FASTCALL CInput::InitMouse()
-{
-	ASSERT(this);
-	ASSERT(m_lpDI);
-	ASSERT(!m_lpDIMouse);
-	ASSERT_VALID(this);
-
-	// マウスデバイスを作成
-	if (FAILED(m_lpDI->CreateDevice(GUID_SysMouse, &m_lpDIMouse, NULL))) {
-		return FALSE;
-	}
-
-	// マウスデータ形式を設定
-	if (FAILED(m_lpDIMouse->SetDataFormat(&c_dfDIMouse))) {
-		return FALSE;
-	}
-
-	// 協調レベルを設定(Win9x/WinNTで挙動が異なるため、分ける)
-	if (::IsWinNT()) {
-		// WindowsNT
-		if (FAILED(m_lpDIMouse->SetCooperativeLevel(m_pFrmWnd->m_hWnd,
-						DISCL_BACKGROUND | DISCL_NONEXCLUSIVE))) {
-			return FALSE;
-		}
-	}
-	else {
-		// Windows9x
-		if (FAILED(m_lpDIMouse->SetCooperativeLevel(m_pFrmWnd->m_hWnd,
-						DISCL_FOREGROUND | DISCL_EXCLUSIVE))) {
-			return FALSE;
-		}
-	}
-
-	return TRUE;
-}
-
 //---------------------------------------------------------------------------
 //
 //	マウス入力
@@ -997,149 +862,29 @@ BOOL FASTCALL CInput::InitMouse()
 //---------------------------------------------------------------------------
 void FASTCALL CInput::InputMouse(BOOL bEnable)
 {
-	HRESULT hr;
-	DIMOUSESTATE dims;
-
 	ASSERT(this);
 	ASSERT(m_pFrmWnd);
-	ASSERT(m_lpDIMouse);
 	ASSERT(m_pMouse);
 	ASSERT_VALID(this);
 
-	// 処理してよいか
-	if (!bEnable) {
-		// マウスモードOFF
-		if (m_bMouseMode) {
-			m_pFrmWnd->PostMessage(WM_COMMAND, IDM_MOUSEMODE, 0);
-		}
-
-		// ボタンUPを通知
-		m_pMouse->SetMouse(m_nMouseX, m_nMouseY, FALSE, FALSE);
-		return;
-	}
+	POINT pt;
+	GetCursorPos(&pt);
+	ScreenToClient(m_pFrmWnd->m_hWnd, &pt);
+	int	nMouseX		= pt.x;
+	int	nMouseY		= pt.y;
+	int bMouseB0	= (GetAsyncKeyState(VK_LBUTTON) & 0x8000) ? 1 : 0;
+	int bMouseB1	= (GetAsyncKeyState(VK_RBUTTON) & 0x8000) ? 1 : 0;
+	int bMouseMode	= GetAsyncKeyState(VK_RSHIFT) & 0x8000;
 
 	// マウスモードONか
-	if (!m_bMouseMode) {
+	if (!bMouseMode) {
 		// ボタンUPを通知
-		m_pMouse->SetMouse(m_nMouseX, m_nMouseY, FALSE, FALSE);
+		m_pMouse->SetMouse(nMouseX, nMouseY, FALSE, FALSE);
 		return;
-	}
-
-	// デバイス状態を取得
-	hr = m_lpDIMouse->GetDeviceState(sizeof(dims), &dims);
-	if (hr != DI_OK) {
-		// Acquireを試みる
-		m_lpDIMouse->Acquire();
-		m_dwMouseAcquire++;
-
-		// マウスリセット
-		m_pMouse->ResetMouse();
-		return;
-	}
-
-	// データをいったん確保
-	m_nMouseX += dims.lX;
-	m_nMouseY += dims.lY;
-	if (dims.rgbButtons[0] & 0x80) {
-		m_bMouseB[0] = TRUE;
-	}
-	else {
-		m_bMouseB[0] = FALSE;
-	}
-	if (dims.rgbButtons[1] & 0x80) {
-		m_bMouseB[1] = TRUE;
-	}
-	else {
-		m_bMouseB[1] = FALSE;
-	}
-
-	// マウスデバイスへ通知
-	m_pMouse->SetMouse(m_nMouseX, m_nMouseY, m_bMouseB[0], m_bMouseB[1]);
-
-	// 中央ボタン機能が禁止されていれば、終了
-	if (!m_bMouseMid) {
-		m_dwMouseMid = 5;
-		return;
-	}
-
-	// 中央ボタンをチェック。連続して押して離されたらマウスモードoff
-	if (dims.rgbButtons[2] & 0x80) {
-		// 押されている
-		if (m_dwMouseMid < 4) {
-			// リセット状態から
-			m_dwMouseMid++;
-			if (m_dwMouseMid == 4) {
-				// 十分押されつづけているので、ホールド
-				m_dwMouseMid = 3;
-			}
-		}
-	}
-	else {
-		// 離されている
-		if ((m_dwMouseMid == 3) || (m_dwMouseMid == 4)) {
-			// 十分押された後か、その後の離しを１回検出した後に限る
-			m_dwMouseMid++;
-			if (m_dwMouseMid == 5) {
-				// 3フレーム以上押されて、その後、2フレーム以上離された
-				m_pFrmWnd->PostMessage(WM_COMMAND, IDM_MOUSEMODE, 0);
-				m_dwMouseMid++;
-			}
-		}
-		else {
-			// 十分押されていないまま離された。リセット
-			m_dwMouseMid = 0;
-		}
+	} else {
+		m_pMouse->SetMouse(nMouseX, nMouseY, bMouseB0, bMouseB1);
 	}
 }
-
-//---------------------------------------------------------------------------
-//
-//	マウスモード設定
-//
-//---------------------------------------------------------------------------
-void FASTCALL CInput::SetMouseMode(BOOL bMode)
-{
-	ASSERT(this);
-	ASSERT_VALID(this);
-
-	// 現在のモードと違っていれば
-	if (m_bMouseMode != bMode) {
-		// モードを確保
-		m_bMouseMode = bMode;
-
-		// とにかくUnacquire
-		if (m_lpDIMouse) {
-			m_lpDIMouse->Unacquire();
-		}
-
-		// 中央ボタンカウントを無効化
-		m_dwMouseMid = 5;
-	}
-}
-
-//---------------------------------------------------------------------------
-//
-//	マウス情報取得
-//
-//---------------------------------------------------------------------------
-void FASTCALL CInput::GetMouseInfo(int *pPos, BOOL *pBtn) const
-{
-	ASSERT(this);
-	ASSERT(pPos);
-	ASSERT(pBtn);
-	ASSERT_VALID(this);
-
-	// それぞれ3要素
-	pPos[0] = m_nMouseX;
-	pPos[1] = m_nMouseY;
-	pPos[2] = (int)m_dwMouseMid;
-
-	// ボタン
-	pBtn[0] = m_bMouseB[0];
-	pBtn[1] = m_bMouseB[1];
-	pBtn[2] = m_bMouseMid;
-}
-
 //===========================================================================
 //
 //	ジョイスティック
