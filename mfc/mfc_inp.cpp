@@ -38,10 +38,6 @@
 //---------------------------------------------------------------------------
 CInput::CInput(CFrmWnd *pWnd) : CComponent(pWnd)
 {
-	int i;
-	int nAxis;
-	int nButton;
-
 	// コンポーネントパラメータ
 	m_dwID = MAKEID('I', 'N', 'P', ' ');
 	m_strDesc = _T("Input Manager");
@@ -71,49 +67,6 @@ CInput::CInput(CFrmWnd *pWnd) : CComponent(pWnd)
 
 	// ジョイスティックワーク初期化
 	m_pPPI = NULL;
-	m_dwJoyDevs = 0;
-	m_bJoyEnable = TRUE;
-	for (i=0; i<JoyDevices; i++) {
-		// デバイス
-		m_lpDIJoy[i] = NULL;
-		m_lpDIDev2[i] = NULL;
-
-		// コンフィグ
-		memset(&m_JoyCfg[i], 0, sizeof(JOYCFG));
-		// nDeviceの設定:
-		// 割り当てデバイス+1 (0は未割り当て)
-		m_JoyCfg[i].nDevice = i + 1;
-		for (nAxis=0; nAxis<JoyAxes; nAxis++) {
-			if (nAxis < 4) {
-				// dwAxisの設定:
-				// 上位ワード 割り当てポート (0x00000 or 0x10000)
-				// 下位ワード 割り当て軸+1 (1～4、0は未割り当て)
-				m_JoyCfg[i].dwAxis[nAxis] = (DWORD)((i << 16) | (nAxis + 1));
-			}
-			m_JoyCfg[i].bAxis[nAxis] = FALSE;
-		}
-		for (nButton=0; nButton<JoyButtons; nButton++) {
-			if (nButton < 8) {
-				// dwButtonの設定:
-				// 上位ワード 割り当てポート (0x00000 or 0x10000)
-				// 下位ワード 割り当てボタン+1 (1～8、0は未割り当て)
-				m_JoyCfg[i].dwButton[nButton] = (DWORD)((i << 16) | (nButton + 1));
-			}
-			// 連射なし、カウンタ初期化
-			m_JoyCfg[i].dwRapid[nButton] = 0;
-			m_JoyCfg[i].dwCount[nButton] = 0;
-		}
-
-		// 軸レンジ
-		memset(m_lJoyAxisMin[i], 0, sizeof(m_lJoyAxisMin[i]));
-		memset(m_lJoyAxisMax[i], 0, sizeof(m_lJoyAxisMax[i]));
-
-		// 獲得カウンタ
-		m_dwJoyAcquire[i] = 0;
-
-		// 入力データ
-		memset(&m_JoyState[i], 0, sizeof(DIJOYSTATE));
-	}
 }
 
 //---------------------------------------------------------------------------
@@ -158,18 +111,13 @@ BOOL FASTCALL CInput::Init()
 		return FALSE;
 	}
 
-	// キーボード
-//	if (!InitKey()) {
-//		return FALSE;
-//	}
-
 	// マウス
 	if (!InitMouse()) {
 		return FALSE;
 	}
 
 	// ジョイスティック
-	EnumJoy();
+//	EnumJoy();
 	InitJoy();
 
 	return TRUE;
@@ -182,27 +130,13 @@ BOOL FASTCALL CInput::Init()
 //---------------------------------------------------------------------------
 void FASTCALL CInput::Cleanup()
 {
-	int i;
+//	int i;
 
 	ASSERT(this);
 	ASSERT_VALID(this);
 
 	// マウスモード
 	SetMouseMode(FALSE);
-
-	// ジョイスティックデバイスを解放
-	for (i=0; i<JoyDevices; i++) {
-		if (m_lpDIDev2[i]) {
-			m_lpDIDev2[i]->Release();
-			m_lpDIDev2[i] = NULL;
-		}
-
-		if (m_lpDIJoy[i]) {
-			m_lpDIJoy[i]->Unacquire();
-			m_lpDIJoy[i]->Release();
-			m_lpDIJoy[i] = NULL;
-		}
-	}
 
 	// マウスデバイスを解放
 	if (m_lpDIMouse) {
@@ -228,11 +162,6 @@ void FASTCALL CInput::Cleanup()
 //---------------------------------------------------------------------------
 void FASTCALL CInput::ApplyCfg(const Config* pConfig)
 {
-	BOOL bFlag;
-	int i;
-	int nButton;
-	int nConfig;
-
 	ASSERT(this);
 	ASSERT(pConfig);
 	ASSERT_VALID(this);
@@ -242,58 +171,6 @@ void FASTCALL CInput::ApplyCfg(const Config* pConfig)
 
 	// 中央ボタンカウントを無効化
 	m_dwMouseMid = 5;
-
-	// ジョイスティックデバイス(デバイス変更系)
-	bFlag = FALSE;
-	for (i=0; i<JoyDevices; i++) {
-		// 使うデバイスNo.が変わっていたら、再初期化が必要
-		if (pConfig->joy_dev[i] != m_JoyCfg[i].nDevice) {
-			m_JoyCfg[i].nDevice = pConfig->joy_dev[i];
-			bFlag = TRUE;
-		}
-	}
-	if (bFlag) {
-		// 再初期化
-		InitJoy();
-	}
-
-	// ジョイスティックデバイス(ボタン系)
-	for (i=0; i<JoyDevices; i++) {
-		for (nButton=0; nButton<JoyButtons; nButton++) {
-			// コンフィグデータ取得(bit16:ポート bit15-8:連射 bit7-0:ボタン)
-			if (i == 0) {
-				nConfig = pConfig->joy_button0[nButton];
-			}
-			else {
-				nConfig = pConfig->joy_button1[nButton];
-			}
-
-			// 初期化
-			m_JoyCfg[i].dwButton[nButton] = 0;
-			m_JoyCfg[i].dwRapid[nButton] = 0;
-			m_JoyCfg[i].dwCount[nButton] = 0;
-
-			// 未割り当てかチェック
-			if ((nConfig & 0xff) == 0) {
-				continue;
-			}
-
-			// ボタン数が制限を超えていないかチェック
-			if ((nConfig & 0xff) > PPI::ButtonMax) {
-				continue;
-			}
-
-			// ボタン割り当て設定
-			m_JoyCfg[i].dwButton[nButton] = (DWORD)(nConfig & 0xff00ff);
-
-			// 連射設定
-			m_JoyCfg[i].dwRapid[nButton] = (DWORD)((nConfig >> 8) & 0xff);
-			if (m_JoyCfg[i].dwRapid[nButton] > JoyRapids) {
-				// 範囲オーバの場合、連射なしとする
-				m_JoyCfg[i].dwRapid[nButton] = 0;
-			}
-		}
-	}
 }
 
 #if defined(_DEBUG)
@@ -377,11 +254,6 @@ BOOL CInput::SaveMain(Fileio *pFio)
 		return FALSE;
 	}
 
-	// ジョイスティック
-	if (!pFio->Write(m_JoyState, sizeof(m_JoyState))) {
-		return FALSE;
-	}
-
 	//
 	//	version2.01
 	//
@@ -459,11 +331,6 @@ BOOL FASTCALL CInput::Load200(Fileio *pFio)
 		return FALSE;
 	}
 
-	// ジョイスティック
-	if (!pFio->Read(m_JoyState, sizeof(m_JoyState))) {
-		return FALSE;
-	}
-
 	return TRUE;
 }
 
@@ -532,7 +399,7 @@ void FASTCALL CInput::Process(BOOL bRun)
 		InputKey(FALSE);
 		InputMouse(FALSE);
 		InputJoy(FALSE);
-		MakeJoy(FALSE);
+//		MakeJoy(FALSE);
 		return;
 	}
 
@@ -540,7 +407,7 @@ void FASTCALL CInput::Process(BOOL bRun)
 	InputKey(TRUE);
 	InputMouse(TRUE);
 	InputJoy(TRUE);
-	MakeJoy(m_bJoyEnable);
+//	MakeJoy(m_bJoyEnable);
 }
 
 //---------------------------------------------------------------------------
@@ -579,21 +446,12 @@ void FASTCALL CInput::Menu(BOOL bMenu)
 DWORD FASTCALL CInput::GetAcquireCount(int nType) const
 {
 	ASSERT(this);
-	ASSERT(JoyDevices >= 2);
 	ASSERT_VALID(this);
 
 	switch (nType) {
 		// 1:マウス
 		case 1:
 			return m_dwMouseAcquire;
-
-		// 2:ジョイスティックA
-		case 2:
-			return m_dwJoyAcquire[0];
-
-		// 3:ジョイスティックB
-		case 3:
-			return m_dwJoyAcquire[1];
 
 		// その他
 		default:
@@ -744,6 +602,110 @@ namespace XM6_pid {
 
 		int			nKeyEntry;
 		KeyEntry	keyEntry[KEY_ENTRY_MAX];
+	};
+
+	class DiJoyStick {
+	public:
+		struct Entry {
+			DIDEVICEINSTANCE		diDeviceInstance;
+			DIDEVCAPS				diDevCaps;
+			LPDIRECTINPUTDEVICE8	diDevice;
+			DIJOYSTATE2				joystate;
+		};
+
+		DiJoyStick() : entry(0), maxEntry(0), nEntry(0) {
+		}
+
+		~DiJoyStick() {
+			clear();
+		}
+
+		void clear() {
+			if(entry) {
+				delete [] entry;
+				entry = 0;
+			}
+			maxEntry	= 0;
+			nEntry		= 0;
+		}
+
+		void enumerate(LPDIRECTINPUT di, DWORD dwDevType = DI8DEVTYPE_JOYSTICK, LPCDIDATAFORMAT lpdf = &c_dfDIJoystick2, DWORD dwFlags = DIEDFL_ATTACHEDONLY, int maxEntry = 16) {
+			clear();
+
+			entry			= new Entry [maxEntry];
+			callback.di		= di;
+			this->maxEntry	= maxEntry;
+			nEntry			= 0;
+			callback.lpdf	= lpdf;
+
+			di->EnumDevices(dwDevType, DIEnumDevicesCallback_static, this, dwFlags);
+
+			callback.di		= 0;
+			callback.lpdf	= 0;
+		}
+
+		int getEntryCount() const {
+			return nEntry;
+		}
+
+		const Entry* getEntry(int index) const {
+			const Entry* e = 0;
+			if(index >= 0 && index < nEntry) {
+				e = &entry[index];
+			}
+			return e;
+		}
+
+		void update() {
+			for(int iEntry = 0; iEntry < nEntry; ++iEntry) {
+				Entry& e = entry[iEntry];
+				LPDIRECTINPUTDEVICE8 d = e.diDevice;
+
+				if(FAILED(d->Poll())) {
+					HRESULT hr = d->Acquire();
+					while(hr == DIERR_INPUTLOST) {
+						hr = d->Acquire();
+					}
+				} else {
+					d->GetDeviceState(sizeof(DIJOYSTATE2), &e.joystate);
+				}
+			}
+		}
+
+	protected:
+		static BOOL CALLBACK DIEnumDevicesCallback_static(LPCDIDEVICEINSTANCE lpddi, LPVOID pvRef) {
+			return reinterpret_cast<DiJoyStick*>(pvRef)->DIEnumDevicesCallback(lpddi, pvRef);
+		}
+
+		BOOL DIEnumDevicesCallback(LPCDIDEVICEINSTANCE lpddi, LPVOID pvRef) {
+			if(nEntry < maxEntry) {
+				Entry e = { 0 };
+
+				memcpy(&e.diDeviceInstance, lpddi, sizeof(e.diDeviceInstance));
+				e.diDevCaps.dwSize = sizeof(e.diDevCaps);
+
+				LPDIRECTINPUTDEVICE8	did = 0;
+
+				if(SUCCEEDED(callback.di->CreateDevice(lpddi->guidInstance, (LPDIRECTINPUTDEVICE*) &did, 0))) {
+					if(SUCCEEDED(did->SetDataFormat(callback.lpdf))) {
+						if(SUCCEEDED(did->GetCapabilities(&e.diDevCaps))) {
+							e.diDevice = did;
+							entry[nEntry++] = e;
+						}
+					}
+				}
+			}
+			return DIENUM_CONTINUE;
+		}
+
+		//
+		Entry*			entry;
+		int				maxEntry;
+		int				nEntry;
+		struct {
+			LPDIRECTINPUT	di;
+			LPCDIDATAFORMAT lpdf;
+		} callback;
 	};
 };
 
@@ -1183,227 +1145,18 @@ void FASTCALL CInput::GetMouseInfo(int *pPos, BOOL *pBtn) const
 //	ジョイスティック
 //
 //===========================================================================
-
-//---------------------------------------------------------------------------
-//
-//	ジョイスティック列挙
-//
-//---------------------------------------------------------------------------
-void FASTCALL CInput::EnumJoy()
-{
-	ASSERT(this);
-	ASSERT(m_lpDI);
-
-	// ジョイスティック数をクリア
-	m_dwJoyDevs = 0;
-
-	// 列挙開始
-//VC2010//	m_lpDI->EnumDevices(DIDEVTYPE_JOYSTICK, (LPDIENUMDEVICESCALLBACK)EnumCb,
-//VC2010//							this, DIEDFL_ATTACHEDONLY);
-	m_lpDI->EnumDevices(DI8DEVTYPE_JOYSTICK, (LPDIENUMDEVICESCALLBACK)EnumCb,	//VC2010//
-							this, DIEDFL_ATTACHEDONLY);							//VC2010//
-}
-
-//---------------------------------------------------------------------------
-//
-//	ジョイスティックコールバック
-//
-//---------------------------------------------------------------------------
-BOOL CALLBACK CInput::EnumCb(LPDIDEVICEINSTANCE pDevInst, LPVOID pvRef)
-{
-	CInput *pInput;
-
-	ASSERT(pDevInst);
-	ASSERT(pvRef);
-
-	// CInputに変換
-	pInput = (CInput*)pvRef;
-
-	// 呼び出し
-	return pInput->EnumDev(pDevInst);
-}
-
-//---------------------------------------------------------------------------
-//
-//	ジョイスティック追加
-//
-//---------------------------------------------------------------------------
-BOOL FASTCALL CInput::EnumDev(LPDIDEVICEINSTANCE pDevInst)
-{
-	LPDIRECTINPUTDEVICE pInputDev;
-
-	ASSERT(this);
-	ASSERT(pDevInst);
-	ASSERT(m_lpDI);
-
-	// 最大数チェック。最大JoyDeviceMaxデバイスのみサポートする
-	if (m_dwJoyDevs >= JoyDeviceMax) {
-		ASSERT(m_dwJoyDevs == JoyDeviceMax);
-		return DIENUM_STOP;
-	}
-
-	// インスタンスを確保
-	memcpy(&m_JoyDevInst[m_dwJoyDevs], pDevInst, sizeof(DIDEVICEINSTANCE));
-
-	// デバイス作成
-	pInputDev = NULL;
-	if (FAILED(m_lpDI->CreateDevice(pDevInst->guidInstance,
-									&pInputDev,
-									NULL))) {
-		return DIENUM_CONTINUE;
-	}
-	ASSERT(pInputDev);
-
-	// データフォーマット指定
-	if (FAILED(pInputDev->SetDataFormat(&c_dfDIJoystick))) {
-		// デバイス解放
-		pInputDev->Unacquire();
-		pInputDev->Release();
-		return DIENUM_CONTINUE;
-	}
-
-	// Caps取得
-	memset(&m_JoyDevCaps[m_dwJoyDevs], 0, sizeof(DIDEVCAPS));
-	m_JoyDevCaps[m_dwJoyDevs].dwSize = sizeof(DIDEVCAPS);
-	if (FAILED(pInputDev->GetCapabilities(&m_JoyDevCaps[m_dwJoyDevs]))) {
-		// デバイス解放
-		pInputDev->Unacquire();
-		pInputDev->Release();
-		return DIENUM_CONTINUE;
-	}
-
-	// デバイスを一旦解放
-	pInputDev->Unacquire();
-	pInputDev->Release();
-
-	// 追加と継続
-	m_dwJoyDevs++;
-	return DIENUM_CONTINUE;
-}
-
 //---------------------------------------------------------------------------
 //
 //	ジョイスティック初期化
 //	※ApplyCfgから呼び出す場合、dwDeviceが違っていた場合のみにすること
 //
 //---------------------------------------------------------------------------
+static DiJoyStick djs;
+
 void FASTCALL CInput::InitJoy()
 {
-	int i;
-	int nDevice;
-	int nAxis;
-	BOOL bError[JoyDevices];
-	DIPROPDWORD dpd;
-	DIPROPRANGE dpr;
-
-	ASSERT(this);
-	ASSERT(m_lpDI);
-
-	// デバイスを一旦解放
-	for (i=0; i<JoyDevices; i++) {
-		if (m_lpDIDev2[i]) {
-			m_lpDIDev2[i]->Release();
-			m_lpDIDev2[i] = NULL;
-		}
-
-		if (m_lpDIJoy[i]) {
-			m_lpDIJoy[i]->Unacquire();
-			m_lpDIJoy[i]->Release();
-			m_lpDIJoy[i] = NULL;
-		}
-	}
-
-	// 入力データをクリア
-	for (i=0; i<JoyDevices; i++) {
-		memset(&m_JoyState[i], 0, sizeof(DIJOYSTATE));
-	}
-
-	// 初期化ループ
-	for (i=0; i<JoyDevices; i++) {
-		// エラーフラグOFF
-		bError[i] = FALSE;
-
-		// 未使用なら、何もしない
-		if (m_JoyCfg[i].nDevice == 0) {
-			continue;
-		}
-
-		// デバイス作成
-		nDevice = m_JoyCfg[i].nDevice - 1;
-		if (FAILED(m_lpDI->CreateDevice(m_JoyDevInst[nDevice].guidInstance,
-										&m_lpDIJoy[i],
-										NULL))) {
-			continue;
-		}
-
-		// エラーフラグON
-		bError[i] = TRUE;
-
-		// データフォーマット指定
-		if (FAILED(m_lpDIJoy[i]->SetDataFormat(&c_dfDIJoystick))) {
-			continue;
-		}
-
-		// 協調レベル設定
-		if (FAILED(m_lpDIJoy[i]->SetCooperativeLevel(m_pFrmWnd->m_hWnd,
-							DISCL_BACKGROUND | DISCL_NONEXCLUSIVE))) {
-			continue;
-		}
-
-		// 値モード設定(絶対値)
-		memset(&dpd, 0, sizeof(dpd));
-		dpd.diph.dwSize = sizeof(DIPROPDWORD); 
-		dpd.diph.dwHeaderSize = sizeof(DIPROPHEADER);
-		dpd.diph.dwHow = DIPH_DEVICE;
-		dpd.dwData = DIPROPAXISMODE_ABS;
-		if (FAILED(m_lpDIJoy[i]->SetProperty(DIPROP_AXISMODE, (LPDIPROPHEADER)&dpd))) {
-			continue;
-		}
-
-		// デッドゾーン指定(デッドゾーンなし)
-		memset(&dpd, 0, sizeof(dpd));
-		dpd.diph.dwSize = sizeof(DIPROPDWORD);
-		dpd.diph.dwHeaderSize = sizeof(DIPROPHEADER);
-		dpd.diph.dwHow = DIPH_DEVICE;
-		dpd.dwData = 0;
-		if (FAILED(m_lpDIJoy[i]->SetProperty(DIPROP_DEADZONE, (LPDIPROPHEADER)&dpd))) {
-			continue;
-		}
-
-		// 軸ごとのレンジを取得(すべての軸について取得を試みる)
-		for (nAxis=0; nAxis<JoyAxes; nAxis++) {
-			// 取得(エラーでもよい)
-			memset(&dpr, 0, sizeof(dpr));
-			dpr.diph.dwSize = sizeof(DIPROPRANGE);
-			dpr.diph.dwHeaderSize = sizeof(DIPROPHEADER);
-			dpr.diph.dwHow = DIPH_BYOFFSET;
-			dpr.diph.dwObj = JoyAxisOffsetTable[nAxis];
-			m_lpDIJoy[i]->GetProperty(DIPROP_RANGE, (LPDIPROPHEADER)&dpr);
-
-			// 確保
-			m_lJoyAxisMin[i][nAxis] = dpr.lMin;
-			m_lJoyAxisMax[i][nAxis] = dpr.lMax;
-		}
-
-		// IDirectInputDevice2を取得
-		if (FAILED(m_lpDIJoy[i]->QueryInterface(IID_IDirectInputDevice2,
-										(LPVOID*)&m_lpDIDev2[i]))) {
-			// IDirectInputDevice2が取得できない場合
-			m_lpDIDev2[i] = NULL;
-		}
-
-		// エラーフラグOFF(成功)
-		bError[i] = FALSE;
-	}
-
-	// エラーが起きたデバイスについて、解放
-	for (i=0; i<JoyDevices; i++) {
-		if (bError[i]) {
-			ASSERT(m_lpDIJoy[i]);
-			m_lpDIJoy[i]->Unacquire();
-			m_lpDIJoy[i]->Release();
-			m_lpDIJoy[i] = NULL;
-		}
+	if(m_lpDI) {
+		djs.enumerate(m_lpDI);
 	}
 }
 
@@ -1414,445 +1167,52 @@ void FASTCALL CInput::InitJoy()
 //---------------------------------------------------------------------------
 void FASTCALL CInput::InputJoy(BOOL bEnable)
 {
-	int i;
-	int nAxis;
-	BYTE *pOffset;
-	LONG *pAxis;
-	LONG lRange;
-	LONG lAxis;
+	PPI::joyinfo_t ji[PPI::PortMax] = { 0 };
 
-	ASSERT(this);
+	djs.update();
 
-	// bEnable=FALSEで、かつm_bJoyEnable=TRUE(VM側)の場合、入力データクリア
-	if (!bEnable && m_bJoyEnable) {
-		for (i=0; i<JoyDevices; i++) {
-			// 入力データクリア
-			memset(&m_JoyState[i], 0, sizeof(DIJOYSTATE));
+	const DiJoyStick::Entry* e = djs.getEntry(0);
+	if(e) {
+		const DIJOYSTATE2* js = &e->joystate;
+
+		int	axisX	= 0;
+		int axisY	= 0;
+		int btn0	= 0;
+		int btn1	= 0;
+
+		{
+			int pov = js->rgdwPOV[0];
+			if(pov >= 0) {
+				static const int V = 0x7ff;
+				switch(pov / 4500) {
+				default:
+				case 0:		axisX	= 0;	axisY	= -V;	break;
+				case 1:		axisX	= +V;	axisY	= -V;	break;
+				case 2:		axisX	= +V;	axisY	= 0;	break;
+				case 3:		axisX	= +V;	axisY	= +V;	break;
+				case 4:		axisX	= 0;	axisY	= +V;	break;
+				case 5:		axisX	= -V;	axisY	= +V;	break;
+				case 6:		axisX	= -V;	axisY	= 0;	break;
+				case 7:		axisX	= -V;	axisY	= -V;	break;
+				}
+			}
 		}
-		return;
+
+		{
+			btn0 = js->rgbButtons[0];
+			btn1 = js->rgbButtons[1];
+		}
+
+		PPI::joyinfo_t* o = &ji[0];
+		o->axis[0]		= axisX;
+		o->axis[1]		= axisY;
+		o->button[0]	= btn0;
+		o->button[1]	= btn1;
 	}
-
-	// デバイスループ
-	for (i=0; i<JoyDevices; i++) {
-		// デバイスがなければスキップ
-		if (!m_lpDIJoy[i]) {
-			continue;
-		}
-
-		// ポーリング
-		if (m_lpDIDev2[i]) {
-			if (FAILED(m_lpDIDev2[i]->Poll())) {
-				// Acquireを試みる
-				m_lpDIJoy[i]->Acquire();
-				m_dwJoyAcquire[i]++;
-				continue;
-			}
-		}
-
-		// データ取得
-		if (FAILED(m_lpDIJoy[i]->GetDeviceState(sizeof(DIJOYSTATE),
-												&m_JoyState[i]))) {
-			// Acquireを試みる
-			m_lpDIJoy[i]->Acquire();
-			m_dwJoyAcquire[i]++;
-			continue;
-		}
-
-		// 軸変換(-800 ～ 7FFに変換)
-		for (nAxis=0; nAxis<JoyAxes; nAxis++) {
-			// ポインタ取得
-			pOffset = (BYTE*)&m_JoyState[i];
-			pOffset += JoyAxisOffsetTable[nAxis];
-			pAxis = (LONG*)pOffset;
-
-			// 無効な軸ならスキップ
-			if (m_lJoyAxisMin[i][nAxis] == m_lJoyAxisMax[i][nAxis]) {
-				continue;
-			}
-
-			// -lMinだけ底上げ(端点を0に揃える)
-			lAxis = *pAxis - m_lJoyAxisMin[i][nAxis];
-
-			// 範囲を出し、オーバーフロー防止変換
-			lRange = m_lJoyAxisMax[i][nAxis] - m_lJoyAxisMin[i][nAxis] + 1;
-			if (lRange >= 0x100000) {
-				lRange >>= 12;
-				lAxis >>= 12;
-			}
-
-			// 変換
-			lAxis <<= 12;
-			lAxis /= lRange;
-			lAxis -= 0x800;
-			*pAxis = lAxis;
-		}
-	}
-}
-
-//---------------------------------------------------------------------------
-//
-//	ジョイスティック合成
-//
-//---------------------------------------------------------------------------
-void FASTCALL CInput::MakeJoy(BOOL bEnable)
-{
-	int i;
-	int nAxis;
-	int nButton;
-	BYTE *pOffset;
-	LONG *pAxis;
-	LONG lAxis;
-	PPI::joyinfo_t ji[PPI::PortMax];
-
-	int dmy;
-
-	ASSERT(this);
-	ASSERT(m_pPPI);
-
-	// 全てクリア
-	memset(ji, 0, sizeof(ji));
-
-	// ディセーブルなら
-	if (!bEnable) {
-		for (i=0; i<PPI::PortMax; i++) {
-			// 入力なしデータを送信
-			m_pPPI->SetJoyInfo(i, &ji[i]);
-
-			// ボタン連射をクリア
-			for (nButton=0; nButton<JoyButtons; nButton++) {
-				m_JoyCfg[i].dwCount[nButton] = 0;
-			}
-		}
-		return;
-	}
-
-	// 入力データを解釈
-	for (i=0; i<JoyDevices; i++) {
-		dmy = -1;
-
-		// 軸
-		for (nAxis=0; nAxis<JoyAxes; nAxis++) {
-#if 0
-			// 無効か
-			if (LOWORD(m_JoyCfg[i].dwAxis[nAxis]) == 0) {
-				continue;
-			}
-#else
-			// 無効な軸ならスキップ
-			if (m_lJoyAxisMin[i][nAxis] == m_lJoyAxisMax[i][nAxis]) {
-				continue;
-			}
-			dmy++;
-			if (dmy >= 4) {
-				break;
-			}
-#endif
-
-			// ポインタ取得
-			pOffset = (BYTE*)&m_JoyState[i];
-			pOffset += JoyAxisOffsetTable[nAxis];
-			pAxis = (LONG*)pOffset;
-
-			// データ取得
-			lAxis = *pAxis;
-
-			// ゼロは無視(最初にクリアしているため)
-			if (lAxis == 0) {
-				continue;
-			}
-
-			// 反転
-			if (m_JoyCfg[i].bAxis[nAxis]) {
-				// 7FF→-800 -800→7FF
-				lAxis = -1 - lAxis;
-			}
-
-#if 0
-			// 目的位置に格納
-			ASSERT(HIWORD(m_JoyCfg[i].dwAxis[nAxis]) >= 0);
-			ASSERT(HIWORD(m_JoyCfg[i].dwAxis[nAxis]) < 2);
-			ASSERT(LOWORD(m_JoyCfg[i].dwAxis[nAxis]) > 0);
-			ASSERT(LOWORD(m_JoyCfg[i].dwAxis[nAxis]) <= 4);
-			ji[HIWORD(m_JoyCfg[i].dwAxis[nAxis])].axis[LOWORD(m_JoyCfg[i].dwAxis[nAxis]) - 1]
-				 = (DWORD)lAxis;
-#else
-			ji[HIWORD(m_JoyCfg[i].dwAxis[nAxis])].axis[dmy] = (DWORD)lAxis;
-#endif
-		}
-
-		// ボタン
-		for (nButton=0; nButton<JoyButtons; nButton++) {
-			// 無効か
-			if (LOWORD(m_JoyCfg[i].dwButton[nButton]) == 0) {
-				continue;
-			}
-
-			// オフか
-			if ((m_JoyState[i].rgbButtons[nButton] & 0x80) == 0) {
-				// 連射カウンタクリアのみ(ボタン押下情報は、最初でクリアしている)
-				m_JoyCfg[i].dwCount[nButton] = 0;
-				continue;
-			}
-
-			ASSERT(HIWORD(m_JoyCfg[i].dwButton[nButton]) >= 0);
-			ASSERT(HIWORD(m_JoyCfg[i].dwButton[nButton]) < PPI::PortMax);
-			ASSERT(LOWORD(m_JoyCfg[i].dwButton[nButton]) > 0);
-			ASSERT(LOWORD(m_JoyCfg[i].dwButton[nButton]) <= PPI::ButtonMax);
-
-			// 連射0か
-			if (m_JoyCfg[i].dwRapid[nButton] == 0) {
-				// 目的位置に格納
-				ji[HIWORD(m_JoyCfg[i].dwButton[nButton])].button[LOWORD(m_JoyCfg[i].dwButton[nButton]) - 1]
-					= TRUE;
-				continue;
-			}
-
-			// 連射あり
-			if (m_JoyCfg[i].dwCount[nButton] == 0) {
-				// 初回なので、ONとカウンタリロード
-				ji[HIWORD(m_JoyCfg[i].dwButton[nButton])].button[LOWORD(m_JoyCfg[i].dwButton[nButton]) - 1]
-					= TRUE;
-				m_JoyCfg[i].dwCount[nButton] = JoyRapidTable[m_JoyCfg[i].dwRapid[nButton]];
-				continue;
-			}
-
-			// 連射カウントダウン。0ならONとカウンタリロード
-			m_JoyCfg[i].dwCount[nButton]--;
-			if (m_JoyCfg[i].dwCount[nButton] == 0) {
-				ji[HIWORD(m_JoyCfg[i].dwButton[nButton])].button[LOWORD(m_JoyCfg[i].dwButton[nButton]) - 1]
-					= TRUE;
-				m_JoyCfg[i].dwCount[nButton] = JoyRapidTable[m_JoyCfg[i].dwRapid[nButton]];
-				continue;
-			}
-
-			// カウンタの前半・後半で、ON/OFFに分ける
-			if (m_JoyCfg[i].dwCount[nButton] > (JoyRapidTable[m_JoyCfg[i].dwRapid[nButton]] >> 1)) {
-				ji[HIWORD(m_JoyCfg[i].dwButton[nButton])].button[LOWORD(m_JoyCfg[i].dwButton[nButton]) - 1]
-					= TRUE;
-			}
-			else {
-				ji[HIWORD(m_JoyCfg[i].dwButton[nButton])].button[LOWORD(m_JoyCfg[i].dwButton[nButton]) - 1]
-					= FALSE;
-			}
-		}
-	}
-
-	// キーボードとの合成
-
 
 	// PPIへ送信
-	for (i=0; i<PPI::PortMax; i++) {
+	for(int i=0; i<PPI::PortMax; i++) {
 		m_pPPI->SetJoyInfo(i, &ji[i]);
 	}
 }
-
-//---------------------------------------------------------------------------
-//
-//	ジョイスティック有効化・無効化
-//
-//---------------------------------------------------------------------------
-void FASTCALL CInput::EnableJoy(BOOL bEnable)
-{
-	PPI::joyinfo_t ji;
-
-	ASSERT(this);
-
-	// 同じなら必要なし
-	if (m_bJoyEnable == bEnable) {
-		return;
-	}
-
-	// 変更
-	m_bJoyEnable = bEnable;
-
-	// FALSEに変更する場合、PPIに対してヌル情報送信
-	if (!bEnable) {
-		memset(&ji, 0, sizeof(ji));
-		m_pPPI->SetJoyInfo(0, &ji);
-		m_pPPI->SetJoyInfo(1, &ji);
-	}
-}
-
-//---------------------------------------------------------------------------
-//
-//	ジョイスティックデバイス取得
-//
-//---------------------------------------------------------------------------
-int FASTCALL CInput::GetJoyDevice(int nJoy) const
-{
-	ASSERT(this);
-	ASSERT((nJoy >= 0) && (nJoy < JoyDevices));
-
-	// 0は割り当てなし
-	if (m_JoyCfg[nJoy].nDevice == 0) {
-		return 0;
-	}
-
-	// デバイスポインタを持っていなければ、初期化エラーとして-1
-	if (!m_lpDIJoy[nJoy]) {
-		return -1;
-	}
-
-	// 初期化成功しているので、デバイス番号
-	return m_JoyCfg[nJoy].nDevice;
-}
-
-//---------------------------------------------------------------------------
-//
-//	ジョイスティック軸取得
-//
-//---------------------------------------------------------------------------
-LONG FASTCALL CInput::GetJoyAxis(int nJoy, int nAxis) const
-{
-	BYTE *pOffset;
-	LONG *pAxis;
-
-	ASSERT(this);
-	ASSERT((nJoy >= 0) && (nJoy < JoyDevices));
-	ASSERT((nAxis >= 0) && (nAxis < JoyAxes));
-
-	// 0は割り当てなし
-	if (m_JoyCfg[nJoy].nDevice == 0) {
-		return 0x10000;
-	}
-
-	// デバイスポインタを持っていなければ、初期化エラー
-	if (!m_lpDIJoy[nJoy]) {
-		return 0x10000;
-	}
-
-	// 軸が存在しなければ、指定エラー
-	if (m_lJoyAxisMin[nJoy][nAxis] == m_lJoyAxisMax[nJoy][nAxis]) {
-		return 0x10000;
-	}
-
-	// 値を返す
-	pOffset = (BYTE*)&m_JoyState[nJoy];
-	pOffset += JoyAxisOffsetTable[nAxis];
-	pAxis = (LONG*)pOffset;
-	return *pAxis;
-}
-
-//---------------------------------------------------------------------------
-//
-//	ジョイスティックボタン取得
-//
-//---------------------------------------------------------------------------
-DWORD FASTCALL CInput::GetJoyButton(int nJoy, int nButton) const
-{
-	ASSERT(this);
-	ASSERT((nJoy >= 0) && (nJoy < JoyDevices));
-	ASSERT((nButton >= 0) && (nButton < JoyButtons));
-
-	// 0は割り当てなし
-	if (m_JoyCfg[nJoy].nDevice == 0) {
-		return 0x10000;
-	}
-
-	// デバイスポインタを持っていなければ、初期化エラー
-	if (!m_lpDIJoy[nJoy]) {
-		return 0x10000;
-	}
-
-	// ボタン数が合わなければ、指定エラー
-	if (nButton >= (int)m_JoyDevCaps[m_JoyCfg[nJoy].nDevice - 1].dwButtons) {
-		return 0x10000;
-	}
-
-	// 値を返す
-	return (DWORD)m_JoyState[nJoy].rgbButtons[nButton];
-}
-
-//---------------------------------------------------------------------------
-//
-//	ジョイスティックCaps取得
-//
-//---------------------------------------------------------------------------
-BOOL FASTCALL CInput::GetJoyCaps(int nDevice, CString& strDesc, DIDEVCAPS *pCaps) const
-{
-	ASSERT(this);
-	ASSERT(nDevice >= 0);
-	ASSERT(pCaps);
-
-	// ジョイスティックデバイス数と比較
-	if (nDevice >= (int)m_dwJoyDevs) {
-		// 指定インデックスのデバイスは存在しない
-		return FALSE;
-	}
-
-	// Desc設定
-	ASSERT(nDevice < JoyDeviceMax);
-	strDesc = m_JoyDevInst[nDevice].tszInstanceName;
-
-	// Capsコピー
-	*pCaps = m_JoyDevCaps[nDevice];
-
-	// 成功
-	return TRUE;
-}
-
-//---------------------------------------------------------------------------
-//
-//	ジョイスティック設定取得
-//
-//---------------------------------------------------------------------------
-void FASTCALL CInput::GetJoyCfg(int nJoy, LPJOYCFG lpJoyCfg) const
-{
-	ASSERT(this);
-	ASSERT((nJoy >= 0) && (nJoy < JoyDevices));
-
-	// 設定をコピー
-	*lpJoyCfg = m_JoyCfg[nJoy];
-}
-
-//---------------------------------------------------------------------------
-//
-//	ジョイスティック設定セット
-//
-//---------------------------------------------------------------------------
-void FASTCALL CInput::SetJoyCfg(int nJoy, const LPJOYCFG lpJoyCfg)
-{
-	ASSERT(this);
-	ASSERT((nJoy >= 0) && (nJoy < JoyDevices));
-
-	// 設定をコピー
-	m_JoyCfg[nJoy] = *lpJoyCfg;
-}
-
-//---------------------------------------------------------------------------
-//
-//	ジョイスティック軸テーブル
-//
-//---------------------------------------------------------------------------
-const DWORD CInput::JoyAxisOffsetTable[JoyAxes] = {
-	DIJOFS_X,
-	DIJOFS_Y,
-	DIJOFS_Z,
-	DIJOFS_RX,
-	DIJOFS_RY,
-	DIJOFS_RZ,
-	DIJOFS_SLIDER(0),
-	DIJOFS_SLIDER(1)
-};
-
-//---------------------------------------------------------------------------
-//
-//	ジョイスティック連射テーブル
-//	※連射速度は60フレーム/secと仮定した場合の値
-//
-//---------------------------------------------------------------------------
-const DWORD CInput::JoyRapidTable[JoyRapids + 1] = {
-	0,									// (未使用エリア)
-	30,									// 2発
-	20,									// 3発
-	15,									// 4発
-	12,									// 5発
-	8,									// 7.5発
-	6,									// 10発
-	5,									// 12発
-	4,									// 15発
-	3,									// 20発
-	2									// 30発
-};
-
 #endif	// _WIN32

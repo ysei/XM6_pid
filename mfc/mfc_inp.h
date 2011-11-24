@@ -20,25 +20,6 @@
 class CInput : public CComponent
 {
 public:
-	// ジョイスティック定数
-	enum {
-		JoyDeviceMax = 16,				// サポートデバイス最大数
-		JoyDevices = 2,					// 使用デバイス最大数
-		JoyAxes = 8,					// 軸最大数
-		JoyButtons = 12,				// ボタン最大数
-		JoyRapids = 10,					// 連射レベル数
-	};
-	// ジョイスティック設定
-	typedef struct _JOYCFG {
-		int nDevice;					// デバイス番号(1～)、未使用=0
-		DWORD dwAxis[JoyAxes];			// 軸変換 (1～)、未使用=0
-		BOOL bAxis[JoyAxes];			// 軸反転
-		DWORD dwButton[JoyButtons];		// ボタン変換 (1～)、未使用=0
-		DWORD dwRapid[JoyButtons];		// 連射間隔 連射なし=0
-		DWORD dwCount[JoyButtons];		// 連射カウンタ
-	} JOYCFG, *LPJOYCFG;
-
-public:
 	// 基本ファンクション
 	CInput(CFrmWnd *pWnd);																// コンストラクタ
 	BOOL FASTCALL Init();																// 初期化
@@ -65,16 +46,6 @@ public:
 	void FASTCALL SetMouseMode(BOOL bMode);												// マウスモード設定
 	BOOL FASTCALL GetMouseMode() const	{ return m_bMouseMode; }						// マウスモード取得
 	void FASTCALL GetMouseInfo(int *pPos, BOOL *pBtn) const;							// マウス情報取得
-
-	// ジョイスティック
-	static BOOL CALLBACK EnumCb(LPDIDEVICEINSTANCE pDevInst, LPVOID pvRef);				// ジョイスティックコールバック
-	void FASTCALL EnableJoy(BOOL bEnable);												// ジョイスティック有効化・無効化
-	int FASTCALL GetJoyDevice(int nJoy) const;											// ジョイスティックデバイス取得
-	LONG FASTCALL GetJoyAxis(int nJoy, int nAxis) const;								// ジョイスティック軸取得
-	DWORD FASTCALL GetJoyButton(int nJoy, int nButton) const;							// ジョイスティックボタン取得
-	BOOL FASTCALL GetJoyCaps(int nDevice, CString& strDesc, DIDEVCAPS *pCaps) const;	// ジョイスティックCaps取得
-	void FASTCALL GetJoyCfg(int nJoy, LPJOYCFG lpJoyCfg) const;							// ジョイスティック設定取得
-	void FASTCALL SetJoyCfg(int nJoy, const LPJOYCFG lpJoyCfg);							// ジョイスティック設定セット
 
 private:
 	// 共通
@@ -108,25 +79,9 @@ private:
 	BOOL m_bMouseMid;										// マウス中央ボタン使用フラグ
 
 	// ジョイスティック
-	void FASTCALL EnumJoy();								// ジョイスティック列挙
-	BOOL FASTCALL EnumDev(LPDIDEVICEINSTANCE pDevInst);		// ジョイスティック追加
 	void FASTCALL InitJoy();								// ジョイスティック初期化
 	void FASTCALL InputJoy(BOOL bEnable);					// ジョイスティック入力
-	void FASTCALL MakeJoy(BOOL bEnable);					// ジョイスティック合成
 	PPI *m_pPPI;											// PPI
-	BOOL m_bJoyEnable;										// ジョイスティック有効・無効
-	LPDIRECTINPUTDEVICE m_lpDIJoy[JoyDevices];				// ジョイスティックデバイス
-	LPDIRECTINPUTDEVICE2 m_lpDIDev2[JoyDevices];			// フォースフィードバックデバイス
-	JOYCFG m_JoyCfg[JoyDevices];							// ジョイスティックコンフィグ
-	LONG m_lJoyAxisMin[JoyDevices][JoyAxes];				// ジョイスティック軸最小値
-	LONG m_lJoyAxisMax[JoyDevices][JoyAxes];				// ジョイスティック軸最大値
-	DWORD m_dwJoyAcquire[JoyDevices];						// ジョイスティック獲得カウンタ
-	DIJOYSTATE m_JoyState[JoyDevices];						// ジョイスティック状態
-	DWORD m_dwJoyDevs;										// ジョイスティックデバイス数
-	DIDEVCAPS m_JoyDevCaps[JoyDeviceMax];					// ジョイスティックCaps
-	DIDEVICEINSTANCE m_JoyDevInst[JoyDeviceMax];			// ジョイスティックインスタンス
-	static const DWORD JoyAxisOffsetTable[JoyAxes];			// ジョイスティック軸オフセットテーブル
-	static const DWORD JoyRapidTable[JoyRapids + 1];		// ジョイスティック連射テーブル
 };
 
 #endif	// mfc_inp_h
