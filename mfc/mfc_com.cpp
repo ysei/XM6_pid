@@ -125,7 +125,7 @@ void CComponent::AssertValid() const
 	ASSERT(m_pFrmWnd);
 	ASSERT(m_dwID != 0);
 	ASSERT(m_strDesc.GetLength() > 0);
-	ASSERT(m_pPrev || m_pNext);
+//	ASSERT(m_pPrev || m_pNext);
 	ASSERT(!m_pPrev || (m_pPrev->GetNextComponent() == (CComponent*)this));
 	ASSERT(!m_pNext || (m_pNext->GetPrevComponent() == (CComponent*)this));
 }

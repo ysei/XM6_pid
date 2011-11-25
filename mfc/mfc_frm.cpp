@@ -35,6 +35,8 @@
 //
 //===========================================================================
 
+CFrmWnd*	globalFrmWnd	= 0;
+
 //---------------------------------------------------------------------------
 //
 //	シェル定数定義
@@ -52,6 +54,8 @@
 //---------------------------------------------------------------------------
 CFrmWnd::CFrmWnd()
 {
+	globalFrmWnd = this;
+
 	// VM・ステータスコード
 	::pVM = NULL;
 	m_nStatus = -1;
@@ -550,7 +554,7 @@ BOOL FASTCALL CFrmWnd::InitComponent()
 //	m_pHost = new CHost(this);
 //	m_pFirstComponent->AddComponent(m_pHost);
 	m_pSch = new CScheduler(this);
-	m_pFirstComponent->AddComponent(m_pSch);
+//	m_pFirstComponent->AddComponent(m_pSch);
 
 	// 初期化
 	pComponent = m_pFirstComponent;
@@ -563,6 +567,8 @@ BOOL FASTCALL CFrmWnd::InitComponent()
 		}
 		pComponent = pComponent->GetNextComponent();
 	}
+
+	m_pSch->Init();
 
 	return bSuccess;
 }
@@ -1123,6 +1129,8 @@ LONG CFrmWnd::OnKick(UINT , LONG )
 		pComponent = pComponent->GetNextComponent();
 	}
 
+	m_pSch->Enable(TRUE);
+
 	// リセット(ステータスバーのため)
 	if (!config.power_off) {
 		OnReset();
@@ -1322,6 +1330,7 @@ void FASTCALL CFrmWnd::CleanSub()
 		pComponent->Enable(FALSE);
 		pComponent = pComponent->GetNextComponent();
 	}
+	m_pSch->Enable(FALSE);
 
 	// スケジューラが実行をやめるまで待つ
 	for (i=0; i<8; i++) {

@@ -49,15 +49,18 @@ static DWORD FASTCALL GetTime() {
 //	コンストラクタ
 //
 //---------------------------------------------------------------------------
-CScheduler::CScheduler(CFrmWnd *pFrmWnd) : CComponent(pFrmWnd)
+CScheduler::CScheduler(CFrmWnd *pFrmWnd)	// : CComponent(pFrmWnd)
 {
 	// コンポーネントパラメータ
-	m_dwID = MAKEID('S', 'C', 'H', 'E');
-	m_strDesc = _T("Scheduler");
+//	m_dwID = MAKEID('S', 'C', 'H', 'E');
+//	m_strDesc = _T("Scheduler");
 
 	// ワーク初期化
 	m_pThread		= NULL;
 	m_bExitReq		= FALSE;
+
+	mm_bEnable = FALSE;
+
 }
 
 //---------------------------------------------------------------------------
@@ -70,9 +73,9 @@ BOOL FASTCALL CScheduler::Init()
 	ASSERT(this);
 
 	// 基本クラス
-	if (!CComponent::Init()) {
-		return FALSE;
-	}
+//	if (!CComponent::Init()) {
+//		return FALSE;
+//	}
 
 	// マルチメディアタイマーの時間間隔を1msに設定
 	::timeBeginPeriod(1);
@@ -95,12 +98,12 @@ BOOL FASTCALL CScheduler::Init()
 void FASTCALL CScheduler::Cleanup()
 {
 	ASSERT(this);
-	ASSERT_VALID(this);
+//	ASSERT_VALID(this);
 
 	// 停止
 	{
 		ASSERT(this);
-		ASSERT_VALID(this);
+//		ASSERT_VALID(this);
 
 		// スレッドが上がっている場合のみ終了処理
 		if (m_pThread) {
@@ -119,7 +122,7 @@ void FASTCALL CScheduler::Cleanup()
 	::timeEndPeriod(1);
 
 	// 基本クラス
-	CComponent::Cleanup();
+//	CComponent::Cleanup();
 }
 
 //---------------------------------------------------------------------------
@@ -132,9 +135,9 @@ UINT CScheduler::ThreadFunc(LPVOID pParam)
 	// パラメータを受け取る
 	CScheduler *pSch = (CScheduler*)pParam;
 	ASSERT(pSch);
-#if defined(_DEBUG)
-	pSch->AssertValid();
-#endif	// _DEBUG
+//#if defined(_DEBUG)
+//	pSch->AssertValid();
+//#endif	// _DEBUG
 
 	// 実行
 	pSch->Run();
@@ -1137,6 +1140,9 @@ static void processSound(BOOL bRun, HWND hWnd) {
 //---------------------------------------------------------------------------
 void FASTCALL CScheduler::Run()
 {
+	extern CFrmWnd*	globalFrmWnd;
+	CFrmWnd*	m_pFrmWnd	= globalFrmWnd;
+
 	VM*			pVM			= ::GetVM();
 	Render*		pRender		= (Render*)pVM->SearchDevice(MAKEID('R', 'E', 'N', 'D'));
 	HWND		hFrmWnd		= m_pFrmWnd->m_hWnd;
@@ -1158,7 +1164,7 @@ void FASTCALL CScheduler::Run()
 		::LockVM();
 
 		// 有効フラグが上がっていなければ、停止中
-		if(!m_bEnable) {
+		if(! IsEnable()) {
 			// 描画
 			requestRefresh = true;
 			dwExecCount = 0;
@@ -1201,7 +1207,7 @@ void FASTCALL CScheduler::Run()
 		}
 
 		if(requestRefresh) {
-			if(!m_bEnable || pRender->IsReady()) {
+			if(! IsEnable() || pRender->IsReady()) {
 				pDrawView->Draw(-1);
 				pRender->Complete();
 			}
