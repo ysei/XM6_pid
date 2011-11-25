@@ -11,85 +11,10 @@
 		section	.text align=16
 		bits	32
 
-		global	_IsMMXSupport
-		global	_IsCMOVSupport
 		global	_SoundMMX
 		global	_SoundEMMS
 
 ;
-; MMXサポートチェック
-;
-; BOOL IsMMXSupport(void)
-;
-_IsMMXSupport:
-		pushad
-; CPUIDの有無をチェック
-		pushfd
-		pop	eax
-		xor	eax,00200000h
-		push	eax
-		popfd
-		pushfd
-		pop	ebx
-		cmp	eax,ebx
-		jnz	.error
-; CPUIDの機能フラグサポートをチェック
-		xor	eax,eax
-		cpuid
-		cmp	eax,0
-		jz	.error
-; MMXテクノロジのサポートをチェック
-		mov	eax,1
-		cpuid
-		and	edx,00800000h
-		jz	.error
-; MMXあり
-		popad
-		mov	eax,1
-		ret
-; MMXなし
-.error:
-		popad
-		xor	eax,eax
-		ret
-
-;
-; CMOVサポートチェック
-;
-; BOOL IsCMOVSupport(void)
-;
-_IsCMOVSupport:
-		pushad
-; CPUIDの有無をチェック
-		pushfd
-		pop	eax
-		xor	eax,00200000h
-		push	eax
-		popfd
-		pushfd
-		pop	ebx
-		cmp	eax,ebx
-		jnz	.error
-; CPUIDの機能フラグサポートをチェック
-		xor	eax,eax
-		cpuid
-		cmp	eax,0
-		jz	.error
-; CMOVのサポートをチェック
-		mov	eax,1
-		cpuid
-		and	edx,00008000h
-		jz	.error
-; CMOVあり
-		popad
-		mov	eax,1
-		ret
-; CMOVなし
-.error:
-		popad
-		xor	eax,eax
-		ret
-
 ;
 ; サウンドサンプルサイジング(MMX)
 ;

@@ -255,7 +255,7 @@ BOOL FASTCALL Render::Init()
 
 	// その他ワークエリア
 	render.contlevel = 0;
-	cmov = ::IsCMOV();
+	cmov = TRUE;	//::IsCMOV();
 
 	return TRUE;
 }

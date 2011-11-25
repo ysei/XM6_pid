@@ -21,15 +21,8 @@ extern "C" {
 //	プロトタイプ宣言
 //
 //---------------------------------------------------------------------------
-BOOL IsMMXSupport(void);
-										// MMXサポートチェック
-BOOL IsCMOVSupport(void);
-										// CMOVサポートチェック
-
-void SoundMMX(DWORD *pSrc, WORD *pDst, int nBytes);
-										// サウンドサンプルサイジング(MMX)
-void SoundEMMS();
-										// サウンドサンプルサイジング(EMMS)
+void SoundMMX(DWORD *pSrc, WORD *pDst, int nBytes);	// サウンドサンプルサイジング(MMX)
+void SoundEMMS();									// サウンドサンプルサイジング(EMMS)
 
 #if defined(__cplusplus)
 }

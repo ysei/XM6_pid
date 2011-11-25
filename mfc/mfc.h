@@ -73,41 +73,20 @@ class VM;								// 仮想マシン
 class CApp;								// アプリケーション
 class CFrmWnd;							// フレームウィンドウ
 class CDrawView;						// 描画ビュー
-class CScheduler;						// スケジュールコンポーネント
 
 //---------------------------------------------------------------------------
 //
 //	グローバル
 //
 //---------------------------------------------------------------------------
-extern VM *pVM;
-										// 仮想マシン
-BOOL FASTCALL IsJapanese(void);
-										// 日本語環境の判定
-BOOL FASTCALL IsWinNT(void);
-										// WindowsNT環境の判定
-BOOL FASTCALL Support932(void);
-										// CP932サポート有無の判定
-BOOL FASTCALL IsMMX(void);
-										// MMX環境の判定
-BOOL FASTCALL IsCMOV(void);
-										// CMOVサポートの判定
-void FASTCALL GetMsg(UINT uID, CString& string);
-										// メッセージ取得
-VM* FASTCALL GetVM(void);
-										// 仮想マシンを取得
-void FASTCALL LockVM(void);
-										// 仮想マシンをロック
-void FASTCALL UnlockVM(void);
-										// 仮想マシンをアンロック
-BOOL FASTCALL FileOpenDlg(CWnd *pParent, LPTSTR lpszPath, UINT nFilterID);
-										// ファイルオープンダイアログ
-BOOL FASTCALL FileSaveDlg(CWnd *pParent, LPTSTR lpszPath, LPCTSTR lpszExt, UINT nFilterID);
-										// ファイルセーブダイアログ
-void FASTCALL SetInfoMsg(LPCTSTR lpszBuf, BOOL bRec);
-										// 情報メッセージ保持サブ
-int FASTCALL DrawTextWide(HDC hDC, LPCWSTR lpString, int nCount, LPRECT lpRect, UINT uFormat);
-										// DrawTextWラッパ
+void FASTCALL GetMsg(UINT uID, CString& string);													// メッセージ取得
+BOOL FASTCALL FileOpenDlg(CWnd *pParent, LPTSTR lpszPath, UINT nFilterID);							// ファイルオープンダイアログ
+
+VM* FASTCALL CreateVM(void);
+void FASTCALL DestroyVM(void);
+VM* FASTCALL GetVM(void);																			// 仮想マシンを取得
+void FASTCALL LockVM(void);																			// 仮想マシンをロック
+void FASTCALL UnlockVM(void);																		// 仮想マシンをアンロック
 
 void schedulerInit();
 BOOL schedulerIsEnable();

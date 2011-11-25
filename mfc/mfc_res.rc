@@ -50,109 +50,109 @@ BEGIN
 		MENUITEM "強制イジェクト(&F)",					IDM_D1FORCE
 		MENUITEM "誤挿入(&I)",							IDM_D1INVALID
 	END
-	POPUP "&MOディスク"
-	BEGIN
-		MENUITEM "開く(&O)...",							IDM_MOOPEN
-		MENUITEM "イジェクト(&E)",						IDM_MOEJECT
-		MENUITEM "書き込み保護(&W)",					IDM_MOWRITEP
-		MENUITEM SEPARATOR
-		MENUITEM "強制イジェクト(&F)",					IDM_MOFORCE
-	END
-	POPUP "&CD-ROM"
-	BEGIN
-		MENUITEM "開く(&O)...",							IDM_CDOPEN
-		MENUITEM "イジェクト(&E)",						IDM_CDEJECT
-		MENUITEM SEPARATOR
-		MENUITEM "強制イジェクト(&F)",					IDM_CDFORCE
-	END
-	POPUP "表示(&V)"
-	BEGIN
-		POPUP "システム(&S)"
-		BEGIN
-			MENUITEM "ログ(&L)",						IDM_LOG
-			MENUITEM "スケジューラ(&S)",				IDM_SCHEDULER
-			MENUITEM "デバイス(&D)",					IDM_DEVICE
-		END
-		POPUP "プロセッサ(&P)"
-		BEGIN
-			MENUITEM "MPUレジスタ(&R)",					IDM_CPUREG
-			MENUITEM "割り込み(&I)",					IDM_INT
-			MENUITEM "逆アセンブル(&D)",				IDM_DISASM
-			MENUITEM "メモリ(&M)",						IDM_MEMORY
-			MENUITEM "ブレークポイント(&B)",			IDM_BREAKP
-		END
-		POPUP "デバイス(&D)"
-		BEGIN
-			MENUITEM "マルチファンクションペリフェラル(&P)", IDM_MFP
-			MENUITEM "ダイレクトメモリアクセス(&D)",	IDM_DMAC
-			MENUITEM "CRTコントローラ(&R)",				IDM_CRTC
-			MENUITEM "ビデオコントローラ(&V)",			IDM_VC
-			MENUITEM "リアルタイムクロック(&T)",		IDM_RTC
-			MENUITEM "FM音源(&O)",						IDM_OPM
-			MENUITEM "キーボード(&K)",					IDM_KEYBOARD
-			MENUITEM "フロッピーディスクドライブ(&I)",	IDM_FDD
-			MENUITEM "フロッピーディスクコントローラ(&F)", IDM_FDC
-			MENUITEM "シリアルコミュニケーションコントローラ(&C)", IDM_SCC
-			MENUITEM "BG/スプライトコントローラ(&B)",	IDM_CYNTHIA
-			MENUITEM "SASIハードディスク(&H)",			IDM_SASI
-			MENUITEM "MIDIコントローラ(&M)",			IDM_MIDI
-			MENUITEM "SCSIプロトコルコントローラ(&S)",	IDM_SCSI
-		END
-		POPUP "ビデオ(&V)"
-		BEGIN
-			MENUITEM "テキスト(&T)",                    IDM_TVRAM
-			MENUITEM SEPARATOR
-			MENUITEM "グラフィック 16色モード・1024×1024(&X)",	IDM_G1024
-			MENUITEM "グラフィック 16色モード・ページ0(&0)",	IDM_G16P0
-			MENUITEM "グラフィック 16色モード・ページ1(&1)",	IDM_G16P1
-			MENUITEM "グラフィック 16色モード・ページ2(&2)",	IDM_G16P2
-			MENUITEM "グラフィック 16色モード・ページ3(&3)",	IDM_G16P3
-			MENUITEM "グラフィック 256色モード・ページ0(&4)",	IDM_G256P0
-			MENUITEM "グラフィック 256色モード・ページ1(&5)",	IDM_G256P1
-			MENUITEM "グラフィック 65536色モード(&6)",			IDM_G64K
-			MENUITEM SEPARATOR
-			MENUITEM "P&CG",							IDM_PCG
-			MENUITEM "BG ページ0(&B)",					IDM_BG0
-			MENUITEM "BG ページ1(&G)",					IDM_BG1
-//			MENUITEM "スプライト(&S)",					IDM_SPRITE
-			MENUITEM SEPARATOR
-			MENUITEM "パレット(&P)",					IDM_PALET
-		END
-		POPUP "レンダラ(&R)"
-		BEGIN
-			MENUITEM "テキストバッファ(&T)", 			IDM_REND_TEXT
-			MENUITEM SEPARATOR
-			MENUITEM "グラフィックバッファ&0",			IDM_REND_GP0
-			MENUITEM "グラフィックバッファ&1",			IDM_REND_GP1
-			MENUITEM "グラフィックバッファ&2",			IDM_REND_GP2
-			MENUITEM "グラフィックバッファ&3",			IDM_REND_GP3
-			MENUITEM SEPARATOR
-			MENUITEM "PCGバッファ(&C)",					IDM_REND_PCG
-			MENUITEM "BG/スプライトバッファ(&S)",		IDM_REND_BGSPRITE
-			MENUITEM SEPARATOR
-			MENUITEM "パレットバッファ(&P)",			IDM_REND_PALET
-			MENUITEM SEPARATOR
-			MENUITEM "合成バッファ(&M)",				IDM_REND_MIX
-		END
-		POPUP "&Win32"
-		BEGIN
-			MENUITEM "コンポーネント(&C)",				IDM_COMPONENT
-			MENUITEM "OS情報(&O)",						IDM_OSINFO
-			MENUITEM "サウンド(&S)",					IDM_SOUND
-			MENUITEM "インプット(&I)",					IDM_INPUT
-			MENUITEM "ポート(&P)",						IDM_PORT
-			MENUITEM "ビットマップ(&B)",				IDM_BITMAP
-			MENUITEM "MIDIドライバ(&M)",				IDM_MIDIDRV
-		END
-		MENUITEM SEPARATOR
-		MENUITEM "キャプション(&C)",					IDM_CAPTION
-		MENUITEM "メニューバー(&M)",					IDM_MENU
-		MENUITEM "ステータスバー(&B)",					IDM_STATUS
-		MENUITEM "最新の情報に更新(&F)",				IDM_REFRESH
-		MENUITEM SEPARATOR
-		MENUITEM "アスペクト比にあわせて拡大(&A)"		IDM_STRETCH
-		MENUITEM "フルスクリーン(&U)\tAlt+Enter",		IDM_FULLSCREEN
-	END
+//	POPUP "&MOディスク"
+//	BEGIN
+//		MENUITEM "開く(&O)...",							IDM_MOOPEN
+//		MENUITEM "イジェクト(&E)",						IDM_MOEJECT
+//		MENUITEM "書き込み保護(&W)",					IDM_MOWRITEP
+//		MENUITEM SEPARATOR
+//		MENUITEM "強制イジェクト(&F)",					IDM_MOFORCE
+//	END
+//	POPUP "&CD-ROM"
+//	BEGIN
+//		MENUITEM "開く(&O)...",							IDM_CDOPEN
+//		MENUITEM "イジェクト(&E)",						IDM_CDEJECT
+//		MENUITEM SEPARATOR
+//		MENUITEM "強制イジェクト(&F)",					IDM_CDFORCE
+//	END
+//	POPUP "表示(&V)"
+//	BEGIN
+//		POPUP "システム(&S)"
+//		BEGIN
+//			MENUITEM "ログ(&L)",						IDM_LOG
+//			MENUITEM "スケジューラ(&S)",				IDM_SCHEDULER
+//			MENUITEM "デバイス(&D)",					IDM_DEVICE
+//		END
+//		POPUP "プロセッサ(&P)"
+//		BEGIN
+//			MENUITEM "MPUレジスタ(&R)",					IDM_CPUREG
+//			MENUITEM "割り込み(&I)",					IDM_INT
+//			MENUITEM "逆アセンブル(&D)",				IDM_DISASM
+//			MENUITEM "メモリ(&M)",						IDM_MEMORY
+//			MENUITEM "ブレークポイント(&B)",			IDM_BREAKP
+//		END
+//		POPUP "デバイス(&D)"
+//		BEGIN
+//			MENUITEM "マルチファンクションペリフェラル(&P)", IDM_MFP
+//			MENUITEM "ダイレクトメモリアクセス(&D)",	IDM_DMAC
+//			MENUITEM "CRTコントローラ(&R)",				IDM_CRTC
+//			MENUITEM "ビデオコントローラ(&V)",			IDM_VC
+//			MENUITEM "リアルタイムクロック(&T)",		IDM_RTC
+//			MENUITEM "FM音源(&O)",						IDM_OPM
+//			MENUITEM "キーボード(&K)",					IDM_KEYBOARD
+//			MENUITEM "フロッピーディスクドライブ(&I)",	IDM_FDD
+//			MENUITEM "フロッピーディスクコントローラ(&F)", IDM_FDC
+//			MENUITEM "シリアルコミュニケーションコントローラ(&C)", IDM_SCC
+//			MENUITEM "BG/スプライトコントローラ(&B)",	IDM_CYNTHIA
+//			MENUITEM "SASIハードディスク(&H)",			IDM_SASI
+//			MENUITEM "MIDIコントローラ(&M)",			IDM_MIDI
+//			MENUITEM "SCSIプロトコルコントローラ(&S)",	IDM_SCSI
+//		END
+//		POPUP "ビデオ(&V)"
+//		BEGIN
+//			MENUITEM "テキスト(&T)",                    IDM_TVRAM
+//			MENUITEM SEPARATOR
+//			MENUITEM "グラフィック 16色モード・1024×1024(&X)",	IDM_G1024
+//			MENUITEM "グラフィック 16色モード・ページ0(&0)",	IDM_G16P0
+//			MENUITEM "グラフィック 16色モード・ページ1(&1)",	IDM_G16P1
+//			MENUITEM "グラフィック 16色モード・ページ2(&2)",	IDM_G16P2
+//			MENUITEM "グラフィック 16色モード・ページ3(&3)",	IDM_G16P3
+//			MENUITEM "グラフィック 256色モード・ページ0(&4)",	IDM_G256P0
+//			MENUITEM "グラフィック 256色モード・ページ1(&5)",	IDM_G256P1
+//			MENUITEM "グラフィック 65536色モード(&6)",			IDM_G64K
+//			MENUITEM SEPARATOR
+//			MENUITEM "P&CG",							IDM_PCG
+//			MENUITEM "BG ページ0(&B)",					IDM_BG0
+//			MENUITEM "BG ページ1(&G)",					IDM_BG1
+////			MENUITEM "スプライト(&S)",					IDM_SPRITE
+//			MENUITEM SEPARATOR
+//			MENUITEM "パレット(&P)",					IDM_PALET
+//		END
+//		POPUP "レンダラ(&R)"
+//		BEGIN
+//			MENUITEM "テキストバッファ(&T)", 			IDM_REND_TEXT
+//			MENUITEM SEPARATOR
+//			MENUITEM "グラフィックバッファ&0",			IDM_REND_GP0
+//			MENUITEM "グラフィックバッファ&1",			IDM_REND_GP1
+//			MENUITEM "グラフィックバッファ&2",			IDM_REND_GP2
+//			MENUITEM "グラフィックバッファ&3",			IDM_REND_GP3
+//			MENUITEM SEPARATOR
+//			MENUITEM "PCGバッファ(&C)",					IDM_REND_PCG
+//			MENUITEM "BG/スプライトバッファ(&S)",		IDM_REND_BGSPRITE
+//			MENUITEM SEPARATOR
+//			MENUITEM "パレットバッファ(&P)",			IDM_REND_PALET
+//			MENUITEM SEPARATOR
+//			MENUITEM "合成バッファ(&M)",				IDM_REND_MIX
+//		END
+//		POPUP "&Win32"
+//		BEGIN
+//			MENUITEM "コンポーネント(&C)",				IDM_COMPONENT
+//			MENUITEM "OS情報(&O)",						IDM_OSINFO
+//			MENUITEM "サウンド(&S)",					IDM_SOUND
+//			MENUITEM "インプット(&I)",					IDM_INPUT
+//			MENUITEM "ポート(&P)",						IDM_PORT
+//			MENUITEM "ビットマップ(&B)",				IDM_BITMAP
+//			MENUITEM "MIDIドライバ(&M)",				IDM_MIDIDRV
+//		END
+//		MENUITEM SEPARATOR
+//		MENUITEM "キャプション(&C)",					IDM_CAPTION
+//		MENUITEM "メニューバー(&M)",					IDM_MENU
+//		MENUITEM "ステータスバー(&B)",					IDM_STATUS
+//		MENUITEM "最新の情報に更新(&F)",				IDM_REFRESH
+//		MENUITEM SEPARATOR
+//		MENUITEM "アスペクト比にあわせて拡大(&A)"		IDM_STRETCH
+//		MENUITEM "フルスクリーン(&U)\tAlt+Enter",		IDM_FULLSCREEN
+//	END
 //	POPUP "デバッグ(&D)"
 //	BEGIN
 //		MENUITEM "実行(&X)",							IDM_EXEC
@@ -413,107 +413,107 @@ BEGIN
 		MENUITEM "&Force Eject",						IDM_D1FORCE
 		MENUITEM "&Invalid Insert",						IDM_D1INVALID
 	END
-	POPUP "&MO Drive"
-	BEGIN
-		MENUITEM "&Open...",							IDM_MOOPEN
-		MENUITEM "&Eject",								IDM_MOEJECT
-		MENUITEM "&Write Protect",						IDM_MOWRITEP
-		MENUITEM SEPARATOR
-		MENUITEM "&Force Eject",						IDM_MOFORCE
-	END
-	POPUP "&CD-ROM"
-	BEGIN
-		MENUITEM "&Open...",							IDM_CDOPEN
-		MENUITEM "&Eject",								IDM_CDEJECT
-		MENUITEM SEPARATOR
-		MENUITEM "&Force Eject",						IDM_CDFORCE
-	END
-	POPUP "&View"
-	BEGIN
-		POPUP "&System"
-		BEGIN
-			MENUITEM "&Log",							IDM_LOG
-			MENUITEM "&Scheduler",						IDM_SCHEDULER
-			MENUITEM "&Device",							IDM_DEVICE
-		END
-		POPUP "&Processor"
-		BEGIN
-			MENUITEM "&Register",						IDM_CPUREG
-			MENUITEM "&Interrupt",						IDM_INT
-			MENUITEM "&Disassemble",					IDM_DISASM
-			MENUITEM "&Memory",							IDM_MEMORY
-			MENUITEM "&Break Point",					IDM_BREAKP
-		END
-		POPUP "&Device"
-		BEGIN
-			MENUITEM "Multi-Function &Peripheral",		IDM_MFP
-			MENUITEM "&Direct Memory Access",			IDM_DMAC
-			MENUITEM "C&RT Control",					IDM_CRTC
-			MENUITEM "&Video Control",					IDM_VC
-			MENUITEM "Real-&Time Clock",				IDM_RTC
-			MENUITEM "FM-Sound Synthesizer (&OPM)",		IDM_OPM
-			MENUITEM "&Keyboard",						IDM_KEYBOARD
-			MENUITEM "Floppy Disk Dr&ive",				IDM_FDD
-			MENUITEM "&Floppy Disk Control",			IDM_FDC
-			MENUITEM "Serial &Communication Control",	IDM_SCC
-			MENUITEM "&BG/Sprite Control",				IDM_CYNTHIA
-			MENUITEM "SASI &Hard Disk",					IDM_SASI
-			MENUITEM "&MIDI Control",					IDM_MIDI
-			MENUITEM "&SCSI Protocol Control",			IDM_SCSI
-		END
-		POPUP "&Video"
-		BEGIN
-			MENUITEM "&Text",							IDM_TVRAM
-			MENUITEM "Graphic 16Color 1024&x1024",		IDM_G1024
-			MENUITEM "Graphic 16Color Page&0",			IDM_G16P0
-			MENUITEM "Graphic 16Color Page&1",			IDM_G16P1
-			MENUITEM "Graphic 16Color Page&2",			IDM_G16P2
-			MENUITEM "Graphic 16Color Page&3",			IDM_G16P3
-			MENUITEM "Graphic 256Color Page0(&4)",		IDM_G256P0
-			MENUITEM "Graphic 256Color Page2(&5)",		IDM_G256P1
-			MENUITEM "Graphic &65536Color",				IDM_G64K
-			MENUITEM SEPARATOR
-			MENUITEM "P&CG",							IDM_PCG
-			MENUITEM "&BG Page0",						IDM_BG0
-			MENUITEM "B&G Page1",						IDM_BG1
+//	POPUP "&MO Drive"
+//	BEGIN
+//		MENUITEM "&Open...",							IDM_MOOPEN
+//		MENUITEM "&Eject",								IDM_MOEJECT
+//		MENUITEM "&Write Protect",						IDM_MOWRITEP
+//		MENUITEM SEPARATOR
+//		MENUITEM "&Force Eject",						IDM_MOFORCE
+//	END
+//	POPUP "&CD-ROM"
+//	BEGIN
+//		MENUITEM "&Open...",							IDM_CDOPEN
+//		MENUITEM "&Eject",								IDM_CDEJECT
+//		MENUITEM SEPARATOR
+//		MENUITEM "&Force Eject",						IDM_CDFORCE
+//	END
+//	POPUP "&View"
+//	BEGIN
+//		POPUP "&System"
+//		BEGIN
+//			MENUITEM "&Log",							IDM_LOG
+//			MENUITEM "&Scheduler",						IDM_SCHEDULER
+//			MENUITEM "&Device",							IDM_DEVICE
+//		END
+//		POPUP "&Processor"
+//		BEGIN
+//			MENUITEM "&Register",						IDM_CPUREG
+//			MENUITEM "&Interrupt",						IDM_INT
+//			MENUITEM "&Disassemble",					IDM_DISASM
+//			MENUITEM "&Memory",							IDM_MEMORY
+//			MENUITEM "&Break Point",					IDM_BREAKP
+//		END
+//		POPUP "&Device"
+//		BEGIN
+//			MENUITEM "Multi-Function &Peripheral",		IDM_MFP
+//			MENUITEM "&Direct Memory Access",			IDM_DMAC
+//			MENUITEM "C&RT Control",					IDM_CRTC
+//			MENUITEM "&Video Control",					IDM_VC
+//			MENUITEM "Real-&Time Clock",				IDM_RTC
+//			MENUITEM "FM-Sound Synthesizer (&OPM)",		IDM_OPM
+//			MENUITEM "&Keyboard",						IDM_KEYBOARD
+//			MENUITEM "Floppy Disk Dr&ive",				IDM_FDD
+//			MENUITEM "&Floppy Disk Control",			IDM_FDC
+//			MENUITEM "Serial &Communication Control",	IDM_SCC
+//			MENUITEM "&BG/Sprite Control",				IDM_CYNTHIA
+//			MENUITEM "SASI &Hard Disk",					IDM_SASI
+//			MENUITEM "&MIDI Control",					IDM_MIDI
+//			MENUITEM "&SCSI Protocol Control",			IDM_SCSI
+//		END
+//		POPUP "&Video"
+//		BEGIN
+//			MENUITEM "&Text",							IDM_TVRAM
+//			MENUITEM "Graphic 16Color 1024&x1024",		IDM_G1024
+//			MENUITEM "Graphic 16Color Page&0",			IDM_G16P0
+//			MENUITEM "Graphic 16Color Page&1",			IDM_G16P1
+//			MENUITEM "Graphic 16Color Page&2",			IDM_G16P2
+//			MENUITEM "Graphic 16Color Page&3",			IDM_G16P3
+//			MENUITEM "Graphic 256Color Page0(&4)",		IDM_G256P0
+//			MENUITEM "Graphic 256Color Page2(&5)",		IDM_G256P1
+//			MENUITEM "Graphic &65536Color",				IDM_G64K
+//			MENUITEM SEPARATOR
+//			MENUITEM "P&CG",							IDM_PCG
+//			MENUITEM "&BG Page0",						IDM_BG0
+//			MENUITEM "B&G Page1",						IDM_BG1
 //			MENUITEM "&Sprite",							IDM_SPRITE
-			MENUITEM SEPARATOR
-			MENUITEM "&Palette"							IDM_PALET
-		END
-		POPUP "&Renderer"
-		BEGIN
-			MENUITEM "&Text Buffer",					IDM_REND_TEXT
-			MENUITEM "Graphic Buffer&0",				IDM_REND_GP0
-			MENUITEM "Graphic Buffer&1",				IDM_REND_GP1
-			MENUITEM "Graphic Buffer&2",				IDM_REND_GP2
-			MENUITEM "Graphic Buffer&3",				IDM_REND_GP3
-			MENUITEM SEPARATOR
-			MENUITEM "P&CG Buffer",						IDM_REND_PCG
-			MENUITEM "BG/&Sprite Buffer",				IDM_REND_BGSPRITE
-			MENUITEM SEPARATOR
-			MENUITEM "&Palette Buffer",					IDM_REND_PALET
-			MENUITEM SEPARATOR
-			MENUITEM "&Mix Buffer",						IDM_REND_MIX
-		END
-		POPUP "&Win32"
-		BEGIN
-			MENUITEM "&Component",						IDM_COMPONENT
-			MENUITEM "&OS Info",						IDM_OSINFO
-			MENUITEM "&Sound",							IDM_SOUND
-			MENUITEM "&Input",							IDM_INPUT
-			MENUITEM "&Port",							IDM_PORT
-			MENUITEM "&Bitmap",							IDM_BITMAP
-			MENUITEM "&MIDI Driver",					IDM_MIDIDRV
-		END
-		MENUITEM SEPARATOR
-		MENUITEM "&Caption",							IDM_CAPTION
-		MENUITEM "&Menu Bar",							IDM_MENU
-		MENUITEM "Status &Bar",							IDM_STATUS
-		MENUITEM "Re&fresh",							IDM_REFRESH
-		MENUITEM SEPARATOR
-		MENUITEM "Stretch with &Aspect Ratio",			IDM_STRETCH
-		MENUITEM "F&ull Screen\tAlt+Enter",				IDM_FULLSCREEN
-	END
+//			MENUITEM SEPARATOR
+//			MENUITEM "&Palette"							IDM_PALET
+//		END
+//		POPUP "&Renderer"
+//		BEGIN
+//			MENUITEM "&Text Buffer",					IDM_REND_TEXT
+//			MENUITEM "Graphic Buffer&0",				IDM_REND_GP0
+//			MENUITEM "Graphic Buffer&1",				IDM_REND_GP1
+//			MENUITEM "Graphic Buffer&2",				IDM_REND_GP2
+//			MENUITEM "Graphic Buffer&3",				IDM_REND_GP3
+//			MENUITEM SEPARATOR
+//			MENUITEM "P&CG Buffer",						IDM_REND_PCG
+//			MENUITEM "BG/&Sprite Buffer",				IDM_REND_BGSPRITE
+//			MENUITEM SEPARATOR
+//			MENUITEM "&Palette Buffer",					IDM_REND_PALET
+//			MENUITEM SEPARATOR
+//			MENUITEM "&Mix Buffer",						IDM_REND_MIX
+//		END
+//		POPUP "&Win32"
+//		BEGIN
+//			MENUITEM "&Component",						IDM_COMPONENT
+//			MENUITEM "&OS Info",						IDM_OSINFO
+//			MENUITEM "&Sound",							IDM_SOUND
+//			MENUITEM "&Input",							IDM_INPUT
+//			MENUITEM "&Port",							IDM_PORT
+//			MENUITEM "&Bitmap",							IDM_BITMAP
+//			MENUITEM "&MIDI Driver",					IDM_MIDIDRV
+//		END
+//		MENUITEM SEPARATOR
+//		MENUITEM "&Caption",							IDM_CAPTION
+//		MENUITEM "&Menu Bar",							IDM_MENU
+//		MENUITEM "Status &Bar",							IDM_STATUS
+//		MENUITEM "Re&fresh",							IDM_REFRESH
+//		MENUITEM SEPARATOR
+//		MENUITEM "Stretch with &Aspect Ratio",			IDM_STRETCH
+//		MENUITEM "F&ull Screen\tAlt+Enter",				IDM_FULLSCREEN
+//	END
 //	POPUP "&Debug"
 //	BEGIN
 //		MENUITEM "E&xecute",							IDM_EXEC

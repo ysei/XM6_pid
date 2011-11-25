@@ -20,28 +20,8 @@
 class CApp : public CWinApp
 {
 public:
-	CApp();
-										// コンストラクタ
-	BOOL InitInstance();
-										// インスタンス初期化
-	BOOL ExitInstance();
-										// インスタンス終了
-
-private:
-	BOOL FASTCALL CheckMutex();
-										// Mutexチェック
-	BOOL FASTCALL CheckEnvironment();
-										// 環境チェック
-	void FASTCALL SendCmd();
-										// コマンド送信
-	HWND FASTCALL SearchXM6Wnd();
-										// XM6ウィンドウ検索
-	static BOOL CALLBACK EnumXM6Proc(HWND hWnd, LPARAM lParam);
-										// ウィンドウ列挙コールバック
-	HANDLE m_hMutex;
-										// Mutexハンドル
-	HMODULE m_hUser32;
-										// USER32.DLLハンドル
+	CApp();														// コンストラクタ
+	BOOL InitInstance();										// インスタンス初期化
 };
 
 #endif	// mfc_app_h

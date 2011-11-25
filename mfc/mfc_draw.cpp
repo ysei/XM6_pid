@@ -39,7 +39,7 @@ CDrawView::CDrawView()
 	m_pFrmWnd = NULL;
 
 	// コンポーネント
-	m_pScheduler = NULL;
+//	m_pScheduler = NULL;
 //	m_pInput = NULL;
 
 	// ワーク初期化(描画全般)
@@ -153,24 +153,6 @@ int CDrawView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	// IMEオフ
 	::ImmAssociateContext(m_hWnd, (HIMC)NULL);
 
-	// テキストフォント作成
-	if (IsJapanese()) {
-		// 日本語環境
-		m_TextFont.CreateFont(14, 0, 0, 0,
-							FW_NORMAL, 0, 0, 0,
-							SHIFTJIS_CHARSET, OUT_DEFAULT_PRECIS,
-							CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-							FIXED_PITCH, NULL);
-	}
-	else {
-		// 英語環境
-		m_TextFont.CreateFont(14, 0, 0, 0,
-							FW_NORMAL, 0, 0, 0,
-							DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
-							CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-							FIXED_PITCH, NULL);
-	}
-
 	// ドラッグ＆ドロップ許可
 	DragAcceptFiles(TRUE);
 
@@ -195,7 +177,7 @@ void CDrawView::OnDestroy()
 	}
 
 	// テキストフォント削除
-	m_TextFont.DeleteObject();
+//	m_TextFont.DeleteObject();
 
 	// 基本クラスへ
 	CView::OnDestroy();
@@ -227,45 +209,6 @@ void CDrawView::OnPaint()
 
 	// 全描画フラグON
 	m_Info.bBltAll = TRUE;
-
-	// イネーブルでスケジューラがOFFなら、Mixバッファに作成(かなり強引)
-	if (m_bEnable) {
-		CFrmWnd *pFrmWnd;
-		pFrmWnd = (CFrmWnd*)GetParent();
-		ASSERT(pFrmWnd);
-		if (!schedulerIsEnable()) {
-			// イネーブルなら必ずRender,CRTCは存在
-			Render *pRender;
-			pRender = (Render*)::GetVM()->SearchDevice(MAKEID('R', 'E', 'N', 'D'));
-			ASSERT(pRender);
-			CRTC *pCRTC;
-			pCRTC = (CRTC*)::GetVM()->SearchDevice(MAKEID('C', 'R', 'T', 'C'));
-			ASSERT(pCRTC);
-			const CRTC::crtc_t *p;
-			p = pCRTC->GetWorkAddr();
-
-			// 作成
-			m_Info.bPower = ::GetVM()->IsPower();
-			if (m_Info.bPower) {
-				pRender->Complete();
-				pRender->EnableAct(TRUE);
-				pRender->StartFrame();
-				pRender->HSync(p->v_dots);
-				pRender->EndFrame();
-			}
-			else {
-				// ビットマップをすべて消去
-				memset(m_Info.pBits, 0, m_Info.nBMPWidth * m_Info.nBMPHeight * 4);
-			}
-
-			// 描画(CDrawView::OnDrawへつなげる)
-			CView::OnPaint();
-
-			// VMアンロック
-			::UnlockVM();
-			return;
-		}
-	}
 
 	// DCだけ得ておく(ダミー)
 	PAINTSTRUCT ps;
@@ -466,14 +409,6 @@ void FASTCALL CDrawView::Enable(BOOL bEnable)
 			}
 		}
 	}
-
-	// サブウィンドウに対し、指示
-//	CSubWnd *pWnd;
-//	pWnd = m_pSubWnd;
-//	while (pWnd) {
-//		pWnd->Enable(bEnable);
-//		pWnd = pWnd->m_pNextWnd;
-//	}
 }
 
 //---------------------------------------------------------------------------
@@ -497,16 +432,6 @@ void FASTCALL CDrawView::Refresh()
 
 	// Drawビューを再描画
 	OnDraw(&dc);
-
-	// サブウィンドウを再描画
-//	CSubWnd *pWnd;
-//	pWnd = m_pSubWnd;
-//	while (pWnd) {
-//		pWnd->Refresh();
-//
-//		// 次のサブウィンドウ
-//		pWnd = pWnd->m_pNextWnd;
-//	}
 }
 
 //---------------------------------------------------------------------------
@@ -527,20 +452,6 @@ void FASTCALL CDrawView::Draw(int nChildWnd)
 		delete pDC;
 		return;
 	}
-
-	// 0以降はサブウィンドウ
-//	CSubWnd *pSubWnd;
-//	pSubWnd = m_pSubWnd;
-//
-//	while (nChildWnd > 0) {
-//		// 次のサブウィンドウ
-//		pSubWnd = pSubWnd->m_pNextWnd;
-//		ASSERT(pSubWnd);
-//		nChildWnd--;
-//	}
-//
-//	// リフレッシュ
-//	pSubWnd->Refresh();
 }
 
 //---------------------------------------------------------------------------
@@ -550,14 +461,6 @@ void FASTCALL CDrawView::Draw(int nChildWnd)
 //---------------------------------------------------------------------------
 void FASTCALL CDrawView::Update()
 {
-//	CSubWnd *pWnd;
-//
-//	// サブウィンドウに対し、指示
-//	pWnd = m_pSubWnd;
-//	while (pWnd) {
-//		pWnd->Update();
-//		pWnd = pWnd->m_pNextWnd;
-//	}
 }
 
 //---------------------------------------------------------------------------
@@ -571,16 +474,8 @@ void FASTCALL CDrawView::ApplyCfg(const Config *pConfig)
 
 	// ストレッチ
 	Stretch(pConfig->aspect_stretch);
-
-	// サブウィンドウに対し、指示
-//	CSubWnd *pWnd;
-//	pWnd = m_pSubWnd;
-//	while (pWnd) {
-//		pWnd->ApplyCfg(pConfig);
-//		pWnd = pWnd->m_pNextWnd;
-//	}
 }
-
+/*
 //---------------------------------------------------------------------------
 //
 //	描画情報取得
@@ -594,7 +489,7 @@ void FASTCALL CDrawView::GetDrawInfo(LPDRAWINFO pDrawInfo) const
 	// 内部ワークをコピー
 	*pDrawInfo = m_Info;
 }
-
+*/
 //---------------------------------------------------------------------------
 //
 //	描画
