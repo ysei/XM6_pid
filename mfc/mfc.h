@@ -87,9 +87,5 @@ VM* FASTCALL GetVM(void);																			// 仮想マシンを取得
 void FASTCALL LockVM(void);																			// 仮想マシンをロック
 void FASTCALL UnlockVM(void);																		// 仮想マシンをアンロック
 
-void schedulerInit();
-BOOL schedulerIsEnable();
-void schedulerSetEnable(BOOL b);
-
 #endif	// mfc_h
 #endif	// _WIN32

@@ -55,11 +55,11 @@ CFrmWnd*	globalFrmWnd	= 0;
 static volatile	BOOL		scheduler_mm_bEnable = FALSE;
 static volatile BOOL		scheduler_m_bExitReq = FALSE;			// スレッド終了要求
 
-BOOL schedulerIsEnable() {
+static BOOL schedulerIsEnable() {
 	return scheduler_mm_bEnable;
 }
 
-void schedulerSetEnable(BOOL b) {
+static void schedulerSetEnable(BOOL b) {
 	scheduler_mm_bEnable = b;
 }
 
@@ -67,7 +67,7 @@ static DWORD FASTCALL GetTime() {
 	return timeGetTime();
 }
 
-void configGetConfig(Config* c) {
+static void configGetConfig(Config* c) {
 	//	Config200
 	// システム
 	c->system_clock			= 5;					// システムクロック(0～5)
@@ -1229,7 +1229,11 @@ static void processSound(BOOL bRun, HWND hWnd) {
 	ASSERT(m_dwWrite < m_uBufSize);
 }
 
-UINT ThreadFunc(LPVOID pParam) {
+
+
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+static UINT scheduler_ThreadFunc(LPVOID pParam) {
 	extern CFrmWnd*	globalFrmWnd;
 	CFrmWnd*	m_pFrmWnd	= globalFrmWnd;
 
@@ -1297,14 +1301,9 @@ UINT ThreadFunc(LPVOID pParam) {
 
 		if(requestRefresh) {
 			if(! schedulerIsEnable() || pRender->IsReady()) {
-#if 0
-				pDrawView->Draw(-1);
-#else
 				CClientDC *pDC = new CClientDC(m_pFrmWnd);
-//				pDrawView->OnDraw(pDC);
 				m_pFrmWnd->OnDraw(pDC);
 				delete pDC;
-#endif
 				pRender->Complete();
 			}
 		}
@@ -1318,12 +1317,12 @@ UINT ThreadFunc(LPVOID pParam) {
 	return 0;
 }
 
-void schedulerInit() {
+static void schedulerInit() {
 	scheduler_m_bExitReq		= FALSE;
 	scheduler_mm_bEnable		= FALSE;
 
 	::timeBeginPeriod(1);
-	AfxBeginThread(ThreadFunc, 0);
+	AfxBeginThread(scheduler_ThreadFunc, 0);
 }
 
 
@@ -1346,10 +1345,7 @@ void schedulerInit() {
 CFrmWnd::CFrmWnd()
 {
 	globalFrmWnd = this;
-
-//	::pVM = NULL;
 	m_pFDD = NULL;
-//	m_pDrawView = NULL;
 	m_bExit = FALSE;
 }
 
@@ -1461,10 +1457,6 @@ int CFrmWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 		// まずVMに適用
 		::GetVM()->ApplyCfg(&config);
-
-//		// 次にコンポーネントに適用
-//		// 次にビューに適用
-//		GetView()->ApplyCfg(&config);
 	}
 	::UnlockVM();
 
@@ -1668,7 +1660,6 @@ LONG CFrmWnd::OnKick(UINT , LONG )
 	}
 
 	// コンポーネントをイネーブル。ただしSchedulerは設定による
-//	GetView()->Enable(TRUE);
 	schedulerSetEnable(TRUE);
 
 	// リセット(ステータスバーのため)
@@ -1823,8 +1814,6 @@ void CFrmWnd::OnReset()
 
 	// リセット＆再描画
 	::GetVM()->Reset();
-//	GetView()->Refresh();
-//	ResetCaption();
 
 	// メモリスイッチ取得を行う
 	pSRAM = (SRAM*)::GetVM()->SearchDevice(MAKEID('S', 'R', 'A', 'M'));
