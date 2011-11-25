@@ -1428,25 +1428,28 @@ BEGIN_MESSAGE_MAP(CFrmWnd, CFrameWnd)
 	ON_WM_ENDSESSION()
 	ON_MESSAGE(WM_SHELLNOTIFY, OnShellNotify)
 
+/*
 	ON_COMMAND(IDM_OPEN, OnOpen)
 	ON_UPDATE_COMMAND_UI(IDM_OPEN, OnOpenUI)
 	ON_COMMAND(IDM_SAVE, OnSave)
 	ON_UPDATE_COMMAND_UI(IDM_SAVE, OnSaveUI)
 	ON_COMMAND(IDM_SAVEAS, OnSaveAs)
 	ON_UPDATE_COMMAND_UI(IDM_SAVEAS, OnSaveAsUI)
+*/
 	ON_COMMAND(IDM_RESET, OnReset)
 	ON_UPDATE_COMMAND_UI(IDM_RESET, OnResetUI)
+/*
 	ON_COMMAND(IDM_INTERRUPT, OnInterrupt)
 	ON_UPDATE_COMMAND_UI(IDM_INTERRUPT, OnInterruptUI)
 	ON_COMMAND(IDM_POWER, OnPower)
 	ON_UPDATE_COMMAND_UI(IDM_POWER, OnPowerUI)
-	ON_COMMAND_RANGE(IDM_XM6_MRU0, IDM_XM6_MRU8, OnMRU)
-	ON_UPDATE_COMMAND_UI_RANGE(IDM_XM6_MRU0, IDM_XM6_MRU8, OnMRUUI)
 	ON_COMMAND(IDM_EXIT, OnExit)
-
 	ON_COMMAND_RANGE(IDM_D0OPEN, IDM_D1_MRU8, OnFD)
+*/
+	ON_COMMAND_RANGE(IDM_D0OPEN, IDM_D1OPEN, OnFD)
 	ON_UPDATE_COMMAND_UI(IDM_D0OPEN, OnFDOpenUI)
 	ON_UPDATE_COMMAND_UI(IDM_D1OPEN, OnFDOpenUI)
+/*
 	ON_UPDATE_COMMAND_UI(IDM_D0EJECT, OnFDEjectUI)
 	ON_UPDATE_COMMAND_UI(IDM_D1EJECT, OnFDEjectUI)
 	ON_UPDATE_COMMAND_UI(IDM_D0WRITEP, OnFDWritePUI)
@@ -1457,8 +1460,9 @@ BEGIN_MESSAGE_MAP(CFrmWnd, CFrameWnd)
 	ON_UPDATE_COMMAND_UI(IDM_D1INVALID, OnFDInvalidUI)
 	ON_UPDATE_COMMAND_UI_RANGE(IDM_D0_MEDIA0, IDM_D0_MEDIAF, OnFDMediaUI)
 	ON_UPDATE_COMMAND_UI_RANGE(IDM_D1_MEDIA0, IDM_D1_MEDIAF, OnFDMediaUI)
-	ON_UPDATE_COMMAND_UI_RANGE(IDM_D0_MRU0, IDM_D0_MRU8, OnFDMRUUI)
-	ON_UPDATE_COMMAND_UI_RANGE(IDM_D1_MRU0, IDM_D1_MRU8, OnFDMRUUI)
+//	ON_UPDATE_COMMAND_UI_RANGE(IDM_D0_MRU0, IDM_D0_MRU8, OnFDMRUUI)
+//	ON_UPDATE_COMMAND_UI_RANGE(IDM_D1_MRU0, IDM_D1_MRU8, OnFDMRUUI)
+*/
 END_MESSAGE_MAP()
 
 //---------------------------------------------------------------------------
@@ -2011,6 +2015,7 @@ BOOL FASTCALL CFrmWnd::InitCmdSub(int nDrive, LPCTSTR lpszPath)
 	// VMロック
 	::LockVM();
 
+/*
 	// 128MO or 230MO or 540MO or 640MO
 	if ((dwSize == 0x797f400) || (dwSize == 0xd9eea00) ||
 		(dwSize == 0x1fc8b800) || (dwSize == 0x25e28000)) {
@@ -2025,39 +2030,39 @@ BOOL FASTCALL CFrmWnd::InitCmdSub(int nDrive, LPCTSTR lpszPath)
 			return FALSE;
 		}
 	}
-	else {
-		if (dwSize >= 0x200000) {
-			// VMの割り当てを試みる
-			nDrive = 4;
+	else if (dwSize >= 0x200000) {
+		// VMの割り当てを試みる
+		nDrive = 4;
 
-			// オープン前処理
-			if (!OnOpenPrep(path, FALSE)) {
-				// ファイルがないか、バージョンなどが正しくない
+		// オープン前処理
+		if (!OnOpenPrep(path, FALSE)) {
+			// ファイルがないか、バージョンなどが正しくない
 //				GetScheduler()->Reset();
 //				ResetCaption();
-				::UnlockVM();
-				return FALSE;
-			}
-
-			// ロード実行(OnOpenSubに任せる)
 			::UnlockVM();
-			if (OnOpenSub(path)) {
-				Filepath::SetDefaultDir(szPath);
-			}
-			// リセットは行わない
 			return FALSE;
 		}
-		else {
-			// FDの割り当てを試みる
-			if (!m_pFDD->Open(nDrive, path)) {
-				// FD割り当て失敗
+
+		// ロード実行(OnOpenSubに任せる)
+		::UnlockVM();
+		if (OnOpenSub(path)) {
+			Filepath::SetDefaultDir(szPath);
+		}
+		// リセットは行わない
+		return FALSE;
+	}
+	else
+*/
+	{
+		// FDの割り当てを試みる
+		if (!m_pFDD->Open(nDrive, path)) {
+			// FD割り当て失敗
 //				GetScheduler()->Reset();
 //				ResetCaption();
-				::UnlockVM();
-				return FALSE;
-			}
-			pFDI = m_pFDD->GetFDI(nDrive);
+			::UnlockVM();
+			return FALSE;
 		}
+		pFDI = m_pFDD->GetFDI(nDrive);
 	}
 
 	// VMリセット、ロック解除
@@ -2403,7 +2408,6 @@ void CFrmWnd::OnClose()
 	CString strFormat;
 	CString strText;
 	Filepath path;
-	int nResult;
 
 	ASSERT(this);
 	ASSERT(!m_bSaved);
@@ -2413,6 +2417,7 @@ void CFrmWnd::OnClose()
 	::GetVM()->GetPath(path);
 	::UnlockVM();
 
+/*
 	// 有効なステートファイルがあって
 	if (!path.IsClear()) {
 		// Windowsサイドで20ms以上の実行実績があれば
@@ -2420,7 +2425,7 @@ void CFrmWnd::OnClose()
 			// 確認
 			::GetMsg(IDS_SAVECLOSE, strFormat);
 			strText.Format(strFormat, path.GetFileExt());
-			nResult = MessageBox(strText, NULL, MB_ICONQUESTION | MB_YESNOCANCEL);
+			int nResult = MessageBox(strText, NULL, MB_ICONQUESTION | MB_YESNOCANCEL);
 
 			// 確認結果による
 			switch (nResult) {
@@ -2443,7 +2448,7 @@ void CFrmWnd::OnClose()
 			}
 		}
 	}
-
+*/
 	// 初期化済みなら
 	if ((m_nStatus == 0) && !m_bSaved) {
 		// ウィンドウ状態・ディスク・ステートを保存
@@ -2751,6 +2756,7 @@ void CFrmWnd::RestoreDiskState()
 	// 設定取得
 	configGetConfig(&config);
 
+/*
 	// ステートが指定されていれば、これを先に行う
 	if (config.resume_state) {
 		// ステートがあった
@@ -2774,7 +2780,7 @@ void CFrmWnd::RestoreDiskState()
 			}
 		}
 	}
-
+*/
 	// フロッピーディスク
 	if (config.resume_fd) {
 		for (nDrive=0; nDrive<2; nDrive++) {

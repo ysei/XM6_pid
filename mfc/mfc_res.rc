@@ -153,43 +153,43 @@ BEGIN
 		MENUITEM "アスペクト比にあわせて拡大(&A)"		IDM_STRETCH
 		MENUITEM "フルスクリーン(&U)\tAlt+Enter",		IDM_FULLSCREEN
 	END
-	POPUP "デバッグ(&D)"
-	BEGIN
-		MENUITEM "実行(&X)",							IDM_EXEC
-		MENUITEM "停止(&B)\tAlt+F12",					IDM_BREAK
-		MENUITEM "トレース(&T)\tShift+F12",				IDM_TRACE
-		MENUITEM SEPARATOR
-		MENUITEM "リセット(&R)",	 					IDM_RESET
-	END
-	POPUP "ツール(&T)"
-	BEGIN
-		MENUITEM "マウスモード(&M)\tF12",				IDM_MOUSEMODE
-		MENUITEM "ソフトウェアキーボード(&K)",			IDM_SOFTKEY
-		MENUITEM SEPARATOR
-		MENUITEM "時刻アジャスト(&T)",					IDM_TIMEADJ
-		MENUITEM "trap #0命令(&I)...",					IDM_TRAP0
-		MENUITEM "WAVキャプチャ(&W)...",				IDM_SAVEWAV
-		MENUITEM SEPARATOR
-		MENUITEM "フロッピーディスクイメージの作成(&F)...",IDM_NEWFD
-		MENUITEM "SASI ハードディスクイメージの作成(&A)...",IDM_NEWSASI
-		MENUITEM "SCSI ハードディスクイメージの作成(&C)...",IDM_NEWSCSI
-		MENUITEM "SCSI MOディスクイメージの作成(&D)...",IDM_NEWMO
-		MENUITEM SEPARATOR
-		MENUITEM "オプション(&O)...",					IDM_OPTIONS
-	END
-	POPUP "ウィンドウ(&W)"
-	BEGIN
-		MENUITEM "重ねて表示(&C)",						IDM_CASCADE
-		MENUITEM "並べて表示(&T)",						IDM_TILE
-		MENUITEM "全てアイコン化(&I)",					IDM_ICONIC
-		MENUITEM "アイコンの整列(&A)",					IDM_ARRANGEICON
-		MENUITEM "全て隠す(&H)",						IDM_HIDE
-		MENUITEM "全て復元(&R)",						IDM_RESTORE
-	END
-	POPUP "ヘルプ(&H)"
-	BEGIN
-		MENUITEM "バージョン情報(&A)...",				IDM_ABOUT
-	END
+//	POPUP "デバッグ(&D)"
+//	BEGIN
+//		MENUITEM "実行(&X)",							IDM_EXEC
+//		MENUITEM "停止(&B)\tAlt+F12",					IDM_BREAK
+//		MENUITEM "トレース(&T)\tShift+F12",				IDM_TRACE
+//		MENUITEM SEPARATOR
+//		MENUITEM "リセット(&R)",	 					IDM_RESET
+//	END
+//	POPUP "ツール(&T)"
+//	BEGIN
+//		MENUITEM "マウスモード(&M)\tF12",				IDM_MOUSEMODE
+//		MENUITEM "ソフトウェアキーボード(&K)",			IDM_SOFTKEY
+//		MENUITEM SEPARATOR
+//		MENUITEM "時刻アジャスト(&T)",					IDM_TIMEADJ
+//		MENUITEM "trap #0命令(&I)...",					IDM_TRAP0
+//		MENUITEM "WAVキャプチャ(&W)...",				IDM_SAVEWAV
+//		MENUITEM SEPARATOR
+//		MENUITEM "フロッピーディスクイメージの作成(&F)...",IDM_NEWFD
+//		MENUITEM "SASI ハードディスクイメージの作成(&A)...",IDM_NEWSASI
+//		MENUITEM "SCSI ハードディスクイメージの作成(&C)...",IDM_NEWSCSI
+//		MENUITEM "SCSI MOディスクイメージの作成(&D)...",IDM_NEWMO
+//		MENUITEM SEPARATOR
+//		MENUITEM "オプション(&O)...",					IDM_OPTIONS
+//	END
+//	POPUP "ウィンドウ(&W)"
+//	BEGIN
+//		MENUITEM "重ねて表示(&C)",						IDM_CASCADE
+//		MENUITEM "並べて表示(&T)",						IDM_TILE
+//		MENUITEM "全てアイコン化(&I)",					IDM_ICONIC
+//		MENUITEM "アイコンの整列(&A)",					IDM_ARRANGEICON
+//		MENUITEM "全て隠す(&H)",						IDM_HIDE
+//		MENUITEM "全て復元(&R)",						IDM_RESTORE
+//	END
+//	POPUP "ヘルプ(&H)"
+//	BEGIN
+//		MENUITEM "バージョン情報(&A)...",				IDM_ABOUT
+//	END
 END
 
 //---------------------------------------------------------------------------
@@ -514,43 +514,43 @@ BEGIN
 		MENUITEM "Stretch with &Aspect Ratio",			IDM_STRETCH
 		MENUITEM "F&ull Screen\tAlt+Enter",				IDM_FULLSCREEN
 	END
-	POPUP "&Debug"
-	BEGIN
-		MENUITEM "E&xecute",							IDM_EXEC
-		MENUITEM "&Break\tAlt+F12",						IDM_BREAK
-		MENUITEM "&Trace\tShift+F12"	,				IDM_TRACE
-		MENUITEM SEPARATOR
-		MENUITEM "&Reset",			 					IDM_RESET
-	END
-	POPUP "&Tools"
-	BEGIN
-		MENUITEM "&Mouse Mode\tF12",					IDM_MOUSEMODE
-		MENUITEM "Software &Keyboard",					IDM_SOFTKEY
-		MENUITEM SEPARATOR
-		MENUITEM "Adjust &Time",						IDM_TIMEADJ
-		MENUITEM "trap #&0...",							IDM_TRAP0
-		MENUITEM "&WAV Dump...",						IDM_SAVEWAV
-		MENUITEM SEPARATOR
-		MENUITEM "Make a new &Floppy Disk...",			IDM_NEWFD
-		MENUITEM "Make a new S&ASI Fixed Disk...",		IDM_NEWSASI
-		MENUITEM "Make a new S&CSI Fixed Disk...",		IDM_NEWSCSI
-		MENUITEM "Make a new SCSI MO &Disk...",			IDM_NEWMO
-		MENUITEM SEPARATOR
-		MENUITEM "&Options...",							IDM_OPTIONS
-	END
-	POPUP "&Window"
-	BEGIN
-		MENUITEM "&Cascade",							IDM_CASCADE
-		MENUITEM "&Tile",								IDM_TILE
-		MENUITEM "&Iconic",								IDM_ICONIC
-		MENUITEM "&Arrange Icon",						IDM_ARRANGEICON
-		MENUITEM "&Hide",								IDM_HIDE
-		MENUITEM "&Restore",							IDM_RESTORE
-	END
-	POPUP "&Help"
-	BEGIN
-		MENUITEM "&About...",							IDM_ABOUT
-	END
+//	POPUP "&Debug"
+//	BEGIN
+//		MENUITEM "E&xecute",							IDM_EXEC
+//		MENUITEM "&Break\tAlt+F12",						IDM_BREAK
+//		MENUITEM "&Trace\tShift+F12"	,				IDM_TRACE
+//		MENUITEM SEPARATOR
+//		MENUITEM "&Reset",			 					IDM_RESET
+//	END
+//	POPUP "&Tools"
+//	BEGIN
+//		MENUITEM "&Mouse Mode\tF12",					IDM_MOUSEMODE
+//		MENUITEM "Software &Keyboard",					IDM_SOFTKEY
+//		MENUITEM SEPARATOR
+//		MENUITEM "Adjust &Time",						IDM_TIMEADJ
+//		MENUITEM "trap #&0...",							IDM_TRAP0
+//		MENUITEM "&WAV Dump...",						IDM_SAVEWAV
+//		MENUITEM SEPARATOR
+//		MENUITEM "Make a new &Floppy Disk...",			IDM_NEWFD
+//		MENUITEM "Make a new S&ASI Fixed Disk...",		IDM_NEWSASI
+//		MENUITEM "Make a new S&CSI Fixed Disk...",		IDM_NEWSCSI
+//		MENUITEM "Make a new SCSI MO &Disk...",			IDM_NEWMO
+//		MENUITEM SEPARATOR
+//		MENUITEM "&Options...",							IDM_OPTIONS
+//	END
+//	POPUP "&Window"
+//	BEGIN
+//		MENUITEM "&Cascade",							IDM_CASCADE
+//		MENUITEM "&Tile",								IDM_TILE
+//		MENUITEM "&Iconic",								IDM_ICONIC
+//		MENUITEM "&Arrange Icon",						IDM_ARRANGEICON
+//		MENUITEM "&Hide",								IDM_HIDE
+//		MENUITEM "&Restore",							IDM_RESTORE
+//	END
+//	POPUP "&Help"
+//	BEGIN
+//		MENUITEM "&About...",							IDM_ABOUT
+//	END
 END
 
 //---------------------------------------------------------------------------

@@ -9,7 +9,6 @@
 
 #include "stdafx.h"
 #if defined(_WIN32)
-
 #include "os.h"
 #include "xm6.h"
 #include "vm.h"
@@ -34,6 +33,7 @@
 #include "sasi.h"
 #include "scsi.h"
 
+/*
 //---------------------------------------------------------------------------
 //
 //	開く
@@ -75,13 +75,7 @@ void CFrmWnd::OnOpenUI(CCmdUI *pCmdUI)
 	CMenu *pMenu;
 	CMenu *pSubMenu;
 	CString strExit;
-//	TCHAR szMRU[_MAX_PATH];
-//	TCHAR szDrive[_MAX_DRIVE];
-//	TCHAR szDir[_MAX_DIR];
-//	TCHAR szFile[_MAX_FNAME];
-//	TCHAR szExt[_MAX_EXT];
 	int nEnable;
-//	int i;
 
 	// 電源状態を取得、ファイルパスを取得(VMロックして行う)
 	::LockVM();
@@ -150,13 +144,6 @@ void CFrmWnd::OnOpenUI(CCmdUI *pCmdUI)
 		pSubMenu->RemoveMenu(9, MF_BYPOSITION);
 	}
 
-	// MRUがなければ、終了メニューを追加して終わる
-//	if (GetConfig()->GetMRUNum(4) == 0) {
-//		::GetMsg(IDS_EXIT, strExit);
-//		pSubMenu->AppendMenu(MF_STRING, IDM_EXIT, strExit);
-//		return;
-//	}
-
 	// 有効・無効定数設定
 	if (bPower) {
 		nEnable = MF_BYCOMMAND | MF_GRAYED;
@@ -164,29 +151,6 @@ void CFrmWnd::OnOpenUI(CCmdUI *pCmdUI)
 	else {
 		nEnable = MF_BYCOMMAND | MF_ENABLED;
 	}
-
-	// MRU処理 - 追加
-//	for (i=0; i<9; i++) {
-//		// 取得してみて
-//		GetConfig()->GetMRUFile(4, i, szMRU);
-//		if (szMRU[0] == _T('\0')) {
-//			break;
-//		}
-//
-//		// あればメニューに追加
-//		_tsplitpath(szMRU, szDrive, szDir, szFile, szExt);
-//		if (_tcslen(szDir) > 1) {
-//			_tcscpy(szDir, _T("\\...\\"));
-//		}
-//		_stprintf(szMRU, _T("&%d "), i + 1);
-//		_tcscat(szMRU, szDrive);
-//		_tcscat(szMRU, szDir);
-//		_tcscat(szMRU, szFile);
-//		_tcscat(szMRU, szExt);
-//
-//		pSubMenu->AppendMenu(MF_STRING, IDM_XM6_MRU0 + i, szMRU);
-//		pSubMenu->EnableMenuItem(IDM_XM6_MRU0 + i, nEnable);
-//	}
 
 	// セパレータを追加
 	pSubMenu->AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
@@ -509,53 +473,7 @@ void FASTCALL CFrmWnd::OnSaveSub(const Filepath& path)
 	::GetMsg(IDS_XM6SAVEOK, strMsg);
 //	SetInfo(strMsg);
 }
-
-//---------------------------------------------------------------------------
-//
-//	MRU
-//
-//---------------------------------------------------------------------------
-void CFrmWnd::OnMRU(UINT uID)
-{
-	TCHAR szMRU[_MAX_PATH];
-	Filepath path;
-
-	ASSERT(uID >= IDM_XM6_MRU0);
-
-	// uID変換
-	uID -= IDM_XM6_MRU0;
-	ASSERT(uID <= 8);
-
-	// MRU取得、パス作成
-//	GetConfig()->GetMRUFile(4, (int)uID, szMRU);
-//	if (szMRU[0] == _T('\0')) {
-//		return;
-//	}
-//	path.SetPath(szMRU);
-
-	// オープン前処理
-	if (!OnOpenPrep(path)) {
-		return;
-	}
-
-	// オープン共通
-	if (OnOpenSub(path)) {
-		// デフォルトディレクトリ更新
-		Filepath::SetDefaultDir(szMRU);
-	}
-}
-
-//---------------------------------------------------------------------------
-//
-//	MRU UI
-//
-//---------------------------------------------------------------------------
-void CFrmWnd::OnMRUUI(CCmdUI *pCmdUI)
-{
-	// 電源ONの場合のみ
-	pCmdUI->Enable(::GetVM()->IsPower());
-}
-
+*/
 //---------------------------------------------------------------------------
 //
 //	リセット
@@ -677,7 +595,7 @@ void CFrmWnd::OnResetUI(CCmdUI *pCmdUI)
 const DWORD CFrmWnd::SigTable[] = {
 	0x82, 0x77, 0x36, 0x38, 0x30, 0x30, 0x30
 };
-
+/*
 //---------------------------------------------------------------------------
 //
 //	インタラプト
@@ -764,7 +682,7 @@ void CFrmWnd::OnExit()
 {
 	PostMessage(WM_CLOSE, 0, 0);
 }
-
+*/
 //---------------------------------------------------------------------------
 //
 //	フロッピーディスク処理
@@ -787,6 +705,7 @@ void CFrmWnd::OnFD(UINT uID)
 			OnFDOpen(nDrive);
 			break;
 
+/*
 		// イジェクト
 		case IDM_D0EJECT:
 			OnFDEject(nDrive);
@@ -806,9 +725,10 @@ void CFrmWnd::OnFD(UINT uID)
 		case IDM_D0INVALID:
 			OnFDInvalid(nDrive);
 			break;
-
+*/
 		// それ以外
 		default:
+/*
 			if (uID >= IDM_D0_MRU0) {
 				// MRU
 				uID -= IDM_D0_MRU0;
@@ -821,7 +741,8 @@ void CFrmWnd::OnFD(UINT uID)
 				ASSERT(uID <= 15);
 				OnFDMedia(nDrive, (int)uID);
 			}
-			break;
+*/
+		break;
 	}
 }
 
@@ -880,7 +801,7 @@ void FASTCALL CFrmWnd::OnFDOpen(int nDrive)
 		MessageBox(strMsg, NULL, MB_ICONSTOP | MB_OK);
 	}
 }
-
+/*
 //---------------------------------------------------------------------------
 //
 //	フロッピーイジェクト
@@ -1022,7 +943,7 @@ void FASTCALL CFrmWnd::OnFDMRU(int nDrive, int nMRU)
 		}
 	}
 }
-
+*/
 //---------------------------------------------------------------------------
 //
 //	フロッピーオープン UI
@@ -1157,52 +1078,8 @@ void CFrmWnd::OnFDOpenUI(CCmdUI *pCmdUI)
 										IDM_D1_MEDIA0 + nMedia, MF_BYCOMMAND);
 		}
 	}
-
-/*
-	// MRU処理 - セパレータ
-	if (GetConfig()->GetMRUNum(nDrive) == 0) {
-		return;
-	}
-	pSubMenu->AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
-
-	// 有効・無効定数設定
-	if (!(nStat & FDST_EJECT) && (nStat & FDST_INSERT)) {
-		nEnable = MF_BYCOMMAND | MF_GRAYED;
-	}
-	else {
-		nEnable = MF_BYCOMMAND | MF_ENABLED;
-	}
-
-	// MRU処理 - 追加
-	for (i=0; i<9; i++) {
-		// 取得してみて
-		GetConfig()->GetMRUFile(nDrive, i, szMRU);
-		if (szMRU[0] == _T('\0')) {
-			break;
-		}
-
-		// あればメニューに追加
-		_tsplitpath(szMRU, szDrive, szDir, szFile, szExt);
-		if (_tcslen(szDir) > 1) {
-			_tcscpy(szDir, _T("\\...\\"));
-		}
-		_stprintf(szMRU, _T("&%d "), i + 1);
-		_tcscat(szMRU, szDrive);
-		_tcscat(szMRU, szDir);
-		_tcscat(szMRU, szFile);
-		_tcscat(szMRU, szExt);
-		if (nDrive == 0) {
-			pSubMenu->AppendMenu(MF_STRING, IDM_D0_MRU0 + i, szMRU);
-			pSubMenu->EnableMenuItem(IDM_D0_MRU0 + i, nEnable);
-		}
-		else {
-			pSubMenu->AppendMenu(MF_STRING, IDM_D1_MRU0 + i, szMRU);
-			pSubMenu->EnableMenuItem(IDM_D1_MRU0 + i, nEnable);
-		}
-	}
-*/
 }
-
+/*
 //---------------------------------------------------------------------------
 //
 //	フロッピーイジェクト UI
@@ -1351,44 +1228,5 @@ void CFrmWnd::OnFDMediaUI(CCmdUI *pCmdUI)
 		pCmdUI->Enable(TRUE);
 	}
 }
-
-//---------------------------------------------------------------------------
-//
-//	フロッピーMRU UI
-//
-//---------------------------------------------------------------------------
-void CFrmWnd::OnFDMRUUI(CCmdUI *pCmdUI)
-{
-	int nDrive;
-	int nStat;
-
-	ASSERT(m_pFDD);
-
-	// ドライブ決定
-	nDrive = 0;
-	if (pCmdUI->m_nID >= IDM_D1OPEN) {
-		nDrive = 1;
-	}
-
-	// ステータス取得
-	nStat = m_nFDDStatus[nDrive];
-
-	// イジェクト禁止で、ディスクあり以外はオープンできる
-	if (!(nStat & FDST_EJECT) && (nStat & FDST_INSERT)) {
-		pCmdUI->Enable(FALSE);
-	}
-	else {
-		pCmdUI->Enable(TRUE);
-	}
-}
-
-//---------------------------------------------------------------------------
-//
-//	オプション
-//
-//---------------------------------------------------------------------------
-void CFrmWnd::OnOptions()
-{
-}
-
+*/
 #endif	// _WIN32
