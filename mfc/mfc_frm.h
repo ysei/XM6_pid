@@ -31,10 +31,10 @@ public:
 	// 初期化
 	CFrmWnd();												// コンストラクタ
 	BOOL Init();											// 初期化
-	CDrawView* FASTCALL GetView() const;					// 描画ビュー取得
 
 	// ドラッグ＆ドロップサポート
 	BOOL FASTCALL InitCmdSub(int nDrive, LPCTSTR lpszPath);	// コマンドライン処理 サブ
+	void OnDraw(CDC *pDC);
 
 protected:
 	// WMメッセージ
@@ -53,7 +53,6 @@ private:
 
 	BOOL			m_bExit;							// 終了フラグ
 	FDD*			m_pFDD;								// FDD
-	CDrawView*		m_pDrawView;						// 描画ビュー
 	CMenu			m_Menu;								// メインメニュー
 
 	DECLARE_MESSAGE_MAP()								// メッセージ マップあり
