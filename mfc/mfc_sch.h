@@ -83,8 +83,6 @@ private:
 										// スレッドポインタ
 	CSound *m_pSound;
 										// サウンド
-	CInput *m_pInput;
-										// インプット
 	BOOL m_bExitReq;
 										// スレッド終了要求
 	DWORD m_dwExecTime;

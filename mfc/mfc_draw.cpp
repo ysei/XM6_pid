@@ -45,7 +45,7 @@ CDrawView::CDrawView()
 
 	// コンポーネント
 	m_pScheduler = NULL;
-	m_pInput = NULL;
+//	m_pInput = NULL;
 
 	// ワーク初期化(描画全般)
 	m_Info.bPower = FALSE;

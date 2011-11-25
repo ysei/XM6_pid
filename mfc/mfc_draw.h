@@ -83,30 +83,6 @@ public:
 	BOOL IsStretch() const				{ return m_Info.bBltStretch; }
 										// 拡大モード取得
 
-//	// サブウィンドウ管理
-//	int FASTCALL GetNewSWnd() const;
-//										// サブウィンドウ新規インデックス取得
-//	void FASTCALL AddSWnd(CSubWnd *pSubWnd);
-//										// サブウィンドウ追加(子から呼ばれる)
-//	void FASTCALL DelSWnd(CSubWnd *pSubWnd);
-//										// サブウィンドウ削除(子から呼ばれる)
-//	void FASTCALL ClrSWnd();
-//										// サブウィンドウをすべて削除
-//	CSubWnd* FASTCALL GetFirstSWnd() const;
-//										// 最初のサブウィンドウを取得
-//	CSubWnd* FASTCALL SearchSWnd(DWORD dwID) const;
-//										// 任意IDのサブウィンドウを取得
-//	CFont* FASTCALL GetTextFont();
-//										// テキストフォント取得
-//	CSubWnd* FASTCALL NewWindow(BOOL bDis);
-//										// 新規ウィンドウ作成(Dis, Mem)
-//	BOOL FASTCALL IsNewWindow(BOOL bDis);
-//										// 新規ウィンドウ作成可能か問い合わせ
-//	int FASTCALL GetSubWndNum() const;
-//										// サブウィンドウの個数を取得
-//	LPCTSTR FASTCALL GetWndClassName() const;
-//										// ウィンドウクラス名取得
-
 protected:
 	// WMメッセージ
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
@@ -121,10 +97,6 @@ protected:
 										// 背景描画
 	afx_msg LRESULT OnDisplayChange(WPARAM wParam, LPARAM lParam);
 										// ディスプレイ変更
-//	afx_msg void OnDropFiles(HDROP hDropInfo);
-//										// ファイルドロップ
-//	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
-//										// マウスホイール
 	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
 										// キー押下
 	afx_msg void OnSysKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
@@ -152,16 +124,10 @@ private:
 										// 描画必要領域を調べる
 	int FASTCALL MakeBits();
 										// ビット作成
-//	BOOL FASTCALL KeyUpDown(UINT nChar, UINT nFlags, BOOL bDown);
-//										// キー判別
-//	CSubWnd *m_pSubWnd;
-//										// 最初のサブウィンドウ
 	CFrmWnd *m_pFrmWnd;
 										// フレームウィンドウ
 	CScheduler *m_pScheduler;
 										// スケジューラ
-	CInput *m_pInput;
-										// インプット
 	DRAWINFO m_Info;
 										// 内部ワーク
 
