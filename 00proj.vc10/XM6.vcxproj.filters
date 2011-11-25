@@ -148,9 +148,6 @@
     <ClCompile Include="..\mfc\mfc_frm.cpp">
       <Filter>mfc</Filter>
     </ClCompile>
-    <ClCompile Include="..\mfc\mfc_host.cpp">
-      <Filter>mfc</Filter>
-    </ClCompile>
     <ClCompile Include="..\mfc\mfc_sch.cpp">
       <Filter>mfc</Filter>
     </ClCompile>

@@ -38,7 +38,6 @@ public:
 	CDrawView* FASTCALL GetView() const;				// 描画ビュー取得
 	CComponent* FASTCALL GetFirstComponent() const;		// 最初のコンポーネントを取得
 	CScheduler* FASTCALL GetScheduler() const;			// スケジューラ取得
-	CHost* FASTCALL GetHost() const;					// Host取得
 	CConfig* FASTCALL GetConfig() const;				// コンフィグ取得
 
 	// ドラッグ＆ドロップサポート
@@ -259,8 +258,6 @@ private:
 										// 最初のコンポーネント
 	CScheduler *m_pSch;
 										// スケジューラ
-	CHost *m_pHost;
-										// Host
 	CConfig *m_pConfig;
 										// コンフィグ
 

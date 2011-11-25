@@ -27,7 +27,6 @@
 #include "mfc_res.h"
 #include "mfc_com.h"
 #include "mfc_sch.h"
-#include "mfc_host.h"
 #include "mfc_cfg.h"
 
 //===========================================================================
@@ -71,7 +70,7 @@ CFrmWnd::CFrmWnd()
 	m_pSch = NULL;
 //	m_pSound = NULL;
 //	m_pInput = NULL;
-	m_pHost = NULL;
+//	m_pHost = NULL;
 	m_pConfig = NULL;
 
 	// フルスクリーン
@@ -538,7 +537,7 @@ BOOL FASTCALL CFrmWnd::InitComponent()
 	ASSERT(!m_pSch);
 //	ASSERT(!m_pSound);
 //	ASSERT(!m_pInput);
-	ASSERT(!m_pHost);
+//	ASSERT(!m_pHost);
 	ASSERT(!m_pConfig);
 
 	// コンストラクト(順番を考慮する必要あり。最初Config、最後Scheduler)
@@ -548,8 +547,8 @@ BOOL FASTCALL CFrmWnd::InitComponent()
 //	m_pFirstComponent->AddComponent(m_pSound);
 //	m_pInput = new CInput(this);
 //	m_pFirstComponent->AddComponent(m_pInput);
-	m_pHost = new CHost(this);
-	m_pFirstComponent->AddComponent(m_pHost);
+//	m_pHost = new CHost(this);
+//	m_pFirstComponent->AddComponent(m_pHost);
 	m_pSch = new CScheduler(this);
 	m_pFirstComponent->AddComponent(m_pSch);
 
@@ -1954,8 +1953,7 @@ LRESULT CFrmWnd::OnShellNotify(UINT uParam, LONG lParam)
 	LPITEMIDLIST *pidls;
 	HANDLE hLock;
 	LONG nEvent;
-	TCHAR szPath[_MAX_PATH];
-	CHost *pHost;
+//	TCHAR szPath[_MAX_PATH];
 
 	// Windows NTか
 	if (::IsWinNT()) {
@@ -1976,7 +1974,7 @@ LRESULT CFrmWnd::OnShellNotify(UINT uParam, LONG lParam)
 
 	// 実行中で、CHostがあれば、通知
 	if (m_nStatus == 0) {
-		pHost = GetHost();
+//		CHost *pHost = GetHost();
 
 #if 1
 		// Windrvがまだ不安定のため、実際にEnableにされていない場合は何もしない(version2.04)
@@ -1984,18 +1982,17 @@ LRESULT CFrmWnd::OnShellNotify(UINT uParam, LONG lParam)
 			Config config;
 			GetConfig()->GetConfig(&config);
 			if ((config.windrv_enable <= 0) || (config.windrv_enable > 3)) {
-				pHost = NULL;
+//				pHost = NULL;
 			}
 		}
 #endif
 
-		if (pHost) {
-			// パス取得
-			::SHGetPathFromIDList(pidls[0], szPath);
-
-			// 通知
-			pHost->ShellNotify(nEvent, szPath);
-		}
+//		if (pHost) {
+//			// パス取得
+//			::SHGetPathFromIDList(pidls[0], szPath);
+//			// 通知
+//			pHost->ShellNotify(nEvent, szPath);
+//		}
 	}
 
 	// NTの場合、SHCnangeNotifcation_Unlockでアンロックする
@@ -2298,7 +2295,7 @@ CInput* FASTCALL CFrmWnd::GetInput() const
 	ASSERT(m_pInput);
 	return m_pInput;
 }
-*/
+
 //---------------------------------------------------------------------------
 //
 //	Host取得
@@ -2310,7 +2307,7 @@ CHost* FASTCALL CFrmWnd::GetHost() const
 	ASSERT(m_pHost);
 	return m_pHost;
 }
-
+*/
 //---------------------------------------------------------------------------
 //
 //	コンフィグ取得
