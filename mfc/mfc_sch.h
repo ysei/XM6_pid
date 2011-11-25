@@ -24,12 +24,6 @@ public:
 	CScheduler(CFrmWnd *pFrmWnd);			// コンストラクタ
 	BOOL FASTCALL Init();					// 初期化
 	void FASTCALL Cleanup();				// クリーンアップ
-#if defined(_DEBUG)
-	void AssertValid() const;				// 診断
-#endif	// _DEBUG
-
-	// 実行制御
-	void FASTCALL Reset();					// 時間をリセット
 
 private:
 	void FASTCALL Run();					// 実行

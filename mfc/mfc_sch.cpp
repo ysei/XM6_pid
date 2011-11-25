@@ -122,30 +122,6 @@ void FASTCALL CScheduler::Cleanup()
 	CComponent::Cleanup();
 }
 
-#if defined(_DEBUG)
-//---------------------------------------------------------------------------
-//
-//	診断
-//
-//---------------------------------------------------------------------------
-void CScheduler::AssertValid() const
-{
-	ASSERT(this);
-	ASSERT(GetID() == MAKEID('S', 'C', 'H', 'E'));
-}
-#endif	// _DEBUG
-
-//---------------------------------------------------------------------------
-//
-//	リセット
-//
-//---------------------------------------------------------------------------
-void FASTCALL CScheduler::Reset()
-{
-	ASSERT(this);
-	ASSERT_VALID(this);
-}
-
 //---------------------------------------------------------------------------
 //
 //	スレッド関数
@@ -1161,32 +1137,15 @@ static void processSound(BOOL bRun, HWND hWnd) {
 //---------------------------------------------------------------------------
 void FASTCALL CScheduler::Run()
 {
-	VM *pVM;
-	Scheduler *pScheduler;
-	Render *pRender;
-	DWORD dwExecCount;
-
-	ASSERT(this);
-	ASSERT_VALID(this);
-
-	// VM取得
-	pVM = ::GetVM();
-	ASSERT(pVM);
-	pScheduler = (Scheduler*)pVM->SearchDevice(MAKEID('S', 'C', 'H', 'E'));
-	ASSERT(pScheduler);
-	pRender = (Render*)pVM->SearchDevice(MAKEID('R', 'E', 'N', 'D'));
-	ASSERT(pRender);
-
-	// 時間カウンタ
-	DWORD m_dwExecTime = GetTime();
-	dwExecCount = 0;
-	BOOL m_bBackup = m_bEnable;
+	VM*			pVM			= ::GetVM();
+	Render*		pRender		= (Render*)pVM->SearchDevice(MAKEID('R', 'E', 'N', 'D'));
+	HWND		hFrmWnd		= m_pFrmWnd->m_hWnd;
+	CDrawView*	pDrawView	= m_pFrmWnd->GetView();
+	DWORD		dwExecTime	= GetTime();
+	DWORD		dwExecCount	= 0;
 
 	// 終了リクエストが上がるまでループ
 	while (!m_bExitReq) {
-		// 常時診断
-		ASSERT_VALID(this);
-
 		int	preSleep	= 0;
 		int postSleep	= -1;
 
@@ -1199,53 +1158,42 @@ void FASTCALL CScheduler::Run()
 		::LockVM();
 
 		// 有効フラグが上がっていなければ、停止中
-		if (!m_bEnable) {
-			// ブレークポイント、電源停止などで有効→無効になったら、必ず再描画
-			if (m_bBackup) {
-				m_pFrmWnd->GetView()->Invalidate(FALSE);
-				m_bBackup = FALSE;
-			}
-
+		if(!m_bEnable) {
 			// 描画
 			requestRefresh = true;
 			dwExecCount = 0;
 
 			// 他コンポーネントの処理、時間あわせ
-			processSound(FALSE, m_pFrmWnd->m_hWnd);
-			processInput(FALSE, m_pFrmWnd->m_hWnd);
-			m_dwExecTime = GetTime();
+			processSound(FALSE, hFrmWnd);
+			processInput(FALSE, hFrmWnd);
+			dwExecTime = GetTime();
 			postSleep = 10;
 		} else {
 			DWORD dwTime = GetTime();
-			if(m_dwExecTime > dwTime) {
+			if(dwExecTime > dwTime) {
 				requestRefresh = true;
 				dwExecCount = 0;
-
-				if(m_dwExecTime > GetTime()) {
+				if(dwExecTime > GetTime()) {
 					postSleep = 1;
 				}
 			} else {
 				// レンダリング可否を判定(1or36)
-				if (m_dwExecTime >= dwTime) {
-					pRender->EnableAct(TRUE);
-				} else {
-					pRender->EnableAct(FALSE);
-				}
+				pRender->EnableAct(dwExecTime >= dwTime);
 
 				if(pVM->Exec(1000 * 2)) {
-					if (pVM->IsPower()) {
+					if(pVM->IsPower()) {
 						dwExecCount++;
-						m_dwExecTime++;
+						dwExecTime++;
 
 						// 他コンポーネントの処理
-						processSound(TRUE, m_pFrmWnd->m_hWnd);
-						processInput(TRUE, m_pFrmWnd->m_hWnd);
+						processSound(TRUE, hFrmWnd);
+						processInput(TRUE, hFrmWnd);
 
 						// dwExecCountが規定数を超えたら、一度表示して強制時間合わせ
 						if (dwExecCount > 400) {
 							requestRefresh = true;
 							dwExecCount = 0;
-							m_dwExecTime = GetTime();
+							dwExecTime = GetTime();
 						}
 					}
 				}
@@ -1253,36 +1201,9 @@ void FASTCALL CScheduler::Run()
 		}
 
 		if(requestRefresh) {
-			ASSERT(this);
-			ASSERT_VALID(this);
-			ASSERT(m_pFrmWnd);
-
-			// ビューを取得
-			CDrawView *pView = m_pFrmWnd->GetView();
-			ASSERT(pView);
-
-			int m_nSubWndDisp = -1;
-
-			bool skip = false;
-
-			if (m_bEnable) {
-				// 実行中でメイン画面の番か
-				if (m_nSubWndDisp < 0) {
-					// レンダラの準備ができていなければ描画しない
-					if (!pRender->IsReady()) {
-						skip = true;
-					}
-				}
-			}
-
-			if(!skip) {
-				// 表示(一部)
-				pView->Draw(m_nSubWndDisp);
-
-				// メイン画面表示なら、カウントダウン
-				if (m_nSubWndDisp < 0) {
-					pRender->Complete();
-				}
+			if(!m_bEnable || pRender->IsReady()) {
+				pDrawView->Draw(-1);
+				pRender->Complete();
 			}
 		}
 

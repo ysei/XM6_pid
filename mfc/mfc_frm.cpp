@@ -756,7 +756,7 @@ BOOL FASTCALL CFrmWnd::InitCmdSub(int nDrive, LPCTSTR lpszPath)
 
 		if (!m_pSASI->Open(path)) {
 			// MO割り当て失敗
-			GetScheduler()->Reset();
+//			GetScheduler()->Reset();
 //			ResetCaption();
 			::UnlockVM();
 			return FALSE;
@@ -770,7 +770,7 @@ BOOL FASTCALL CFrmWnd::InitCmdSub(int nDrive, LPCTSTR lpszPath)
 			// オープン前処理
 			if (!OnOpenPrep(path, FALSE)) {
 				// ファイルがないか、バージョンなどが正しくない
-				GetScheduler()->Reset();
+//				GetScheduler()->Reset();
 //				ResetCaption();
 				::UnlockVM();
 				return FALSE;
@@ -788,7 +788,7 @@ BOOL FASTCALL CFrmWnd::InitCmdSub(int nDrive, LPCTSTR lpszPath)
 			// FDの割り当てを試みる
 			if (!m_pFDD->Open(nDrive, path)) {
 				// FD割り当て失敗
-				GetScheduler()->Reset();
+//				GetScheduler()->Reset();
 //				ResetCaption();
 				::UnlockVM();
 				return FALSE;
@@ -798,7 +798,7 @@ BOOL FASTCALL CFrmWnd::InitCmdSub(int nDrive, LPCTSTR lpszPath)
 	}
 
 	// VMリセット、ロック解除
-	GetScheduler()->Reset();
+//	GetScheduler()->Reset();
 //	ResetCaption();
 	::UnlockVM();
 
@@ -1076,6 +1076,7 @@ LONG CFrmWnd::OnKick(UINT , LONG )
 
 	// ROMチェック
 	pMemory = (Memory*)::GetVM()->SearchDevice(MAKEID('M', 'E', 'M', ' '));
+/*
 	ASSERT(pMemory);
 	if (!pMemory->CheckIPL()) {
 		::GetMsg(IDS_INIT_IPLERR, strMsg);
@@ -1091,7 +1092,7 @@ LONG CFrmWnd::OnKick(UINT , LONG )
 			return 0;
 		}
 	}
-
+*/
 	// 設定取得(power_off設定のため)
 	GetConfig()->GetConfig(&config);
 	if (config.power_off) {

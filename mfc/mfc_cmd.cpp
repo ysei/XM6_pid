@@ -300,7 +300,7 @@ BOOL FASTCALL CFrmWnd::OnOpenSub(const Filepath& path)
 		// 失敗は途中中断で危険なため、必ずリセットする
 		::GetVM()->Reset();
 //		GetSound()->Enable(bSound);
-		GetScheduler()->Reset();
+//		GetScheduler()->Reset();
 		GetScheduler()->Enable(bRun);
 //		ResetCaption();
 
@@ -316,7 +316,7 @@ BOOL FASTCALL CFrmWnd::OnOpenSub(const Filepath& path)
 
 		// 失敗は途中中断で危険なため、必ずリセットする
 		::GetVM()->Reset();
-		GetScheduler()->Reset();
+//		GetScheduler()->Reset();
 		GetScheduler()->Enable(bRun);
 
 		// ロードエラー
@@ -343,7 +343,7 @@ BOOL FASTCALL CFrmWnd::OnOpenSub(const Filepath& path)
 	m_dwExec = 0;
 
 	// 成功
-	GetScheduler()->Reset();
+//	GetScheduler()->Reset();
 	GetScheduler()->Enable(bRun);
 
 	// MRUに追加
@@ -469,7 +469,7 @@ void FASTCALL CFrmWnd::OnSaveSub(const Filepath& path)
 
 		// セーブ失敗
 //		GetSound()->Enable(bSound);
-		GetScheduler()->Reset();
+//		GetScheduler()->Reset();
 		GetScheduler()->Enable(bRun);
 //		ResetCaption();
 
@@ -485,7 +485,7 @@ void FASTCALL CFrmWnd::OnSaveSub(const Filepath& path)
 
 		// セーブ失敗
 //		GetSound()->Enable(bSound);
-		GetScheduler()->Reset();
+//		GetScheduler()->Reset();
 		GetScheduler()->Enable(bRun);
 //		ResetCaption();
 
@@ -502,7 +502,7 @@ void FASTCALL CFrmWnd::OnSaveSub(const Filepath& path)
 
 	// 成功
 //	GetSound()->Enable(bSound);
-	GetScheduler()->Reset();
+//	GetScheduler()->Reset();
 	GetScheduler()->Enable(bRun);
 //	ResetCaption();
 
@@ -857,7 +857,7 @@ void FASTCALL CFrmWnd::OnFDOpen(int nDrive)
 
 	// ディスク割り当て
 	if (!m_pFDD->Open(nDrive, path)) {
-		GetScheduler()->Reset();
+//		GetScheduler()->Reset();
 		::UnlockVM();
 
 		// オープンエラー
@@ -871,7 +871,7 @@ void FASTCALL CFrmWnd::OnFDOpen(int nDrive)
 	pFDI = m_pFDD->GetFDI(nDrive);
 
 	// 成功
-	GetScheduler()->Reset();
+//	GetScheduler()->Reset();
 //	ResetCaption();
 	::UnlockVM();
 
@@ -1005,7 +1005,7 @@ void FASTCALL CFrmWnd::OnFDMRU(int nDrive, int nMRU)
 	// ディスク割り当てを試みる
 	bResult = m_pFDD->Open(nDrive, path);
 	pFDI = m_pFDD->GetFDI(nDrive);
-	GetScheduler()->Reset();
+//	GetScheduler()->Reset();
 //	ResetCaption();
 
 	// VMアンロック
@@ -1409,7 +1409,7 @@ void CFrmWnd::OnOptions()
 	// 適用(VMロックして行う)
 	::LockVM();
 	ApplyCfg();
-	GetScheduler()->Reset();
+//	GetScheduler()->Reset();
 //	ResetCaption();
 	::UnlockVM();
 }
