@@ -367,6 +367,7 @@ const CConfig::INIKEY CConfig::IniTable[] = {
 //---------------------------------------------------------------------------
 void FASTCALL CConfig::LoadConfig()
 {
+/*
 	PINIKEY pIni;
 	int nValue;
 	BOOL bFlag;
@@ -438,6 +439,191 @@ void FASTCALL CConfig::LoadConfig()
 		// 次へ
 		pIni++;
 	}
+*/
+
+	////////////////////////////////////////////////////////////////////////////////////////////////
+	Config* c = &m_Config;
+	//	Config200
+	// システム
+	c->system_clock			= 5;					// システムクロック(0～5)
+	c->ram_size				= 0;						// メインRAMサイズ(0～5)
+	c->ram_sramsync			= TRUE;					// メモリスイッチ自動更新
+
+	// スケジューラ
+	c->mpu_fullspeed		= FALSE;					// MPUフルスピード
+	c->vm_fullspeed			= FALSE;					// VMフルスピード
+
+	// サウンド
+	c->sound_device			= 0;					// サウンドデバイス(0～15)
+	c->sample_rate			= 5;					// サンプリングレート(0～4)
+	c->primary_buffer		= 10;					// バッファサイズ(2～100)
+	c->polling_buffer		= 5;					// ポーリング間隔(0～99)
+	c->adpcm_interp			= TRUE;					// ADPCM線形補間あり
+
+	// 描画
+	c->aspect_stretch		= TRUE;				// アスペクト比にあわせ拡大
+
+	// 音量
+	c->master_volume		= 100;					// マスタ音量(0～100)
+	c->fm_enable			= TRUE;						// FM有効
+	c->fm_volume			= 54;						// FM音量(0～100)
+	c->adpcm_enable			= TRUE;					// ADPCM有効
+	c->adpcm_volume			= 52;					// ADPCM音量(0～100)
+
+	// キーボード
+	c->kbd_connect			= TRUE;					// 接続
+
+	// マウス
+	c->mouse_speed			= 205;					// スピード
+	c->mouse_port			= 1;						// 接続ポート
+	c->mouse_swap			= FALSE;					// ボタンスワップ
+	c->mouse_mid			= TRUE;						// 中ボタンイネーブル
+	c->mouse_trackb			= FALSE;					// トラックボールモード
+
+	// ジョイスティック
+	c->joy_type[0]			= 1;					// ジョイスティックタイプ
+	c->joy_type[1]			= 1;					// ジョイスティックタイプ
+	c->joy_dev[0]			= 1;						// ジョイスティックデバイス
+	c->joy_dev[1]			= 2;						// ジョイスティックデバイス
+	c->joy_button0[0]		= 1;				// ジョイスティックボタン(デバイスA)
+	c->joy_button0[1]		= 2;				// ジョイスティックボタン(デバイスA)
+	c->joy_button0[2]		= 3;				// ジョイスティックボタン(デバイスA)
+	c->joy_button0[3]		= 4;				// ジョイスティックボタン(デバイスA)
+	c->joy_button0[4]		= 5;				// ジョイスティックボタン(デバイスA)
+	c->joy_button0[5]		= 6;				// ジョイスティックボタン(デバイスA)
+	c->joy_button0[6]		= 7;				// ジョイスティックボタン(デバイスA)
+	c->joy_button0[7]		= 8;				// ジョイスティックボタン(デバイスA)
+	c->joy_button0[8]		= 0;				// ジョイスティックボタン(デバイスA)
+	c->joy_button0[9]		= 0;				// ジョイスティックボタン(デバイスA)
+	c->joy_button0[10]		= 0;				// ジョイスティックボタン(デバイスA)
+	c->joy_button0[11]		= 0;				// ジョイスティックボタン(デバイスA)
+	c->joy_button1[0]		= 65537;				// ジョイスティックボタン(デバイスB)
+	c->joy_button1[1]		= 65538;				// ジョイスティックボタン(デバイスB)
+	c->joy_button1[2]		= 65539;				// ジョイスティックボタン(デバイスB)
+	c->joy_button1[3]		= 65540;				// ジョイスティックボタン(デバイスB)
+	c->joy_button1[4]		= 65541;				// ジョイスティックボタン(デバイスB)
+	c->joy_button1[5]		= 65542;				// ジョイスティックボタン(デバイスB)
+	c->joy_button1[6]		= 65543;				// ジョイスティックボタン(デバイスB)
+	c->joy_button1[7]		= 65544;				// ジョイスティックボタン(デバイスB)
+	c->joy_button1[8]		= 0;				// ジョイスティックボタン(デバイスB)
+	c->joy_button1[9]		= 0;				// ジョイスティックボタン(デバイスB)
+	c->joy_button1[10]		= 0;				// ジョイスティックボタン(デバイスB)
+	c->joy_button1[11]		= 0;				// ジョイスティックボタン(デバイスB)
+
+	// SASI
+	c->sasi_drives			= 1;					// SASIドライブ数
+	c->sasi_sramsync		= TRUE;					// SASIメモリスイッチ自動更新
+	strcpy(&c->sasi_file[ 0][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD0.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[ 1][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD1.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[ 2][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD2.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[ 3][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD3.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[ 4][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD4.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[ 5][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD5.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[ 6][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD6.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[ 7][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD7.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[ 8][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD8.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[ 9][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD9.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[10][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD10.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[11][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD11.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[12][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD12.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[13][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD13.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[14][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD14.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[15][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD15.HDF"));				// SASIイメージファイル
+
+	// SxSI
+	c->sxsi_drives			= 0;							// SxSIドライブ数
+	c->sxsi_mofirst			= FALSE;						// MOドライブ優先割り当て
+	memset(&c->sxsi_file[0][0], 0, sizeof(c->sxsi_file));	// SxSIイメージファイル
+
+	// ポート
+	c->port_com				= 0;								// COMxポート
+	memset(&c->port_recvlog[0], 0, sizeof(c->port_recvlog));	// シリアル受信ログ
+	c->port_384				= FALSE;							// シリアル38400bps固定
+	c->port_lpt				= 0;								// LPTxポート
+	memset(&c->port_sendlog[0], 0, sizeof(c->port_sendlog));	// パラレル送信ログ
+
+	// MIDI
+	c->midi_bid				= 0;							// MIDIボードID
+	c->midi_ilevel			= 0;							// MIDI割り込みレベル
+	c->midi_reset			= 0;							// MIDIリセットコマンド
+	c->midiin_device		= 0;							// MIDI INデバイス
+	c->midiin_delay			= 0;							// MIDI INディレイ(ms)
+	c->midiout_device		= 0;							// MIDI OUTデバイス
+	c->midiout_delay		= 84;							// MIDI OUTディレイ(ms)
+
+	// 改造
+	c->sram_64k				= FALSE;						// 64KB SRAM
+	c->scc_clkup			= FALSE;						// SCCクロックアップ
+	c->power_led			= FALSE;						// 青色電源LED
+	c->dual_fdd				= FALSE;						// 2DD/2HD兼用FDD
+	c->sasi_parity			= FALSE;						// SASIバスパリティ
+
+	// TrueKey
+	c->tkey_mode			= 1;							// TrueKeyモード(bit0:VM bit1:WinApp)
+	c->tkey_com				= 0;							// キーボードCOMポート
+	c->tkey_rts				= FALSE;						// RTS反転モード
+
+	// その他
+	c->floppy_speed			= TRUE;							// フロッピーディスク高速
+	c->floppy_led			= TRUE;							// フロッピーディスクLEDモード
+	c->popup_swnd			= TRUE;							// ポップアップサブウィンドウ
+	c->auto_mouse			= FALSE;						// 自動マウスモード制御
+	c->power_off			= FALSE;						// 電源OFFで開始
+
+	//	Config202
+	// システム
+	c->mem_type				= 1;		// メモリマップ種別
+
+	// SCSI
+	c->scsi_ilevel			= 1;		// SCSI割り込みレベル
+	c->scsi_drives			= 0;		// SCSIドライブ数
+	c->scsi_sramsync		= 1;		// SCSIメモリスイッチ自動更新
+	c->scsi_mofirst			= 0;		// MOドライブ優先割り当て
+	memset(&c->scsi_file[0][0], 0, sizeof(c->scsi_file));	// SCSIイメージファイル
+
+	//	Config
+	// レジューム
+	c->resume_fd			= FALSE;	// FDレジューム
+	c->resume_fdi[0]		= TRUE;		// FD挿入フラグ
+	c->resume_fdi[1]		= FALSE;	// FD挿入フラグ
+	c->resume_fdw[0]		= FALSE;	// FD書き込み禁止
+	c->resume_fdw[1]		= FALSE;	// FD書き込み禁止
+	c->resume_fdm[0]		= 0;		// FDメディアNo.
+	c->resume_fdm[1]		= 0;		// FDメディアNo.
+	c->resume_mo			= 0;		// MOレジューム
+	c->resume_mos			= 0;		// MO挿入フラグ
+	c->resume_mow			= 0;		// MO書き込み禁止
+	c->resume_cd			= 0;		// CDレジューム
+	c->resume_iso			= 0;		// CD挿入フラグ
+	c->resume_state			= 0;		// ステートレジューム
+	c->resume_xm6			= 0;		// ステート有効フラグ
+	c->resume_screen		= 0;		// 画面モードレジューム
+	c->resume_dir			= 0;		// デフォルトディレクトリレジューム
+	strcpy(c->resume_path, _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\"));
+
+	// 描画
+	c->caption_info			= 1;		// キャプション情報表示
+
+	// ディスプレイ
+	c->caption				= 1;		// キャプション
+	c->menu_bar				= 1;		// メニューバー
+	c->status_bar			= 1;		// ステータスバー
+	c->window_left			= 543;		// ウィンドウ矩形
+	c->window_top			= 231;		// ウィンドウ矩形
+	c->window_full			= 0;		// フルスクリーン
+	c->window_mode			= 0;		// ワイドスクリーン
+
+	// WINDRVモジュール
+	c->windrv_enable		= 0;		// Windrvサポート 0:無効 1:WindrvXM (2:Windrv互換)
+
+	// ホスト側ファイルシステム
+	c->host_option			= 0;		// 動作フラグ (class CHostFilename 参照)
+	c->host_resume			= FALSE;	// ベースパス状態復元有効 FALSEだと毎回スキャンする
+	c->host_drives			= 0;		// 有効なドライブ数
+	memset(&c->host_flag[0], 0, sizeof(c->host_flag));		// 動作フラグ (class CWinFileDrv 参照)
+	memset(&c->host_path[0][0], 0, sizeof(c->host_path));		// ベースパス
+
+////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
 //---------------------------------------------------------------------------
@@ -1008,325 +1194,4 @@ BOOL FASTCALL CConfig::IsApply()
 	// 要求していない
 	return FALSE;
 }
-
-//===========================================================================
-//
-//	コンフィグプロパティページ
-//
-//===========================================================================
-
-//---------------------------------------------------------------------------
-//
-//	コンストラクタ
-//
-//---------------------------------------------------------------------------
-CConfigPage::CConfigPage()
-{
-	// メンバ変数クリア
-	m_dwID = 0;
-	m_nTemplate = 0;
-	m_uHelpID = 0;
-	m_uMsgID = 0;
-	m_pConfig = NULL;
-	m_pSheet = NULL;
-}
-
-//---------------------------------------------------------------------------
-//
-//	メッセージ マップ
-//
-//---------------------------------------------------------------------------
-BEGIN_MESSAGE_MAP(CConfigPage, CPropertyPage)
-	ON_WM_SETCURSOR()
-END_MESSAGE_MAP()
-
-//---------------------------------------------------------------------------
-//
-//	初期化
-//
-//---------------------------------------------------------------------------
-void FASTCALL CConfigPage::Init(CConfigSheet *pSheet)
-{
-	int nID;
-
-	ASSERT(this);
-	ASSERT(m_dwID != 0);
-
-	// 親シート記憶
-	ASSERT(pSheet);
-	m_pSheet = pSheet;
-
-	// ID決定
-	nID = m_nTemplate;
-	if (!::IsJapanese()) {
-		nID += 50;
-	}
-
-	// 構築
-	CommonConstruct(MAKEINTRESOURCE(nID), 0);
-
-	// 親シートに追加
-	pSheet->AddPage(this);
-}
-
-//---------------------------------------------------------------------------
-//
-//	初期化
-//
-//---------------------------------------------------------------------------
-BOOL CConfigPage::OnInitDialog()
-{
-	CConfigSheet *pSheet;
-
-	ASSERT(this);
-
-	// 親ウィンドウから設定データを受け取る
-	pSheet = (CConfigSheet*)GetParent();
-	ASSERT(pSheet);
-	m_pConfig = pSheet->m_pConfig;
-
-	// 基本クラス
-	return CPropertyPage::OnInitDialog();
-}
-
-//---------------------------------------------------------------------------
-//
-//	ページアクティブ
-//
-//---------------------------------------------------------------------------
-BOOL CConfigPage::OnSetActive()
-{
-	CStatic *pStatic;
-	CString strEmpty;
-
-	ASSERT(this);
-
-	// 基本クラス
-	if (!CPropertyPage::OnSetActive()) {
-		return FALSE;
-	}
-
-	// ヘルプ初期化
-	ASSERT(m_uHelpID > 0);
-	m_uMsgID = 0;
-	pStatic = (CStatic*)GetDlgItem(m_uHelpID);
-	ASSERT(pStatic);
-	strEmpty.Empty();
-	pStatic->SetWindowText(strEmpty);
-
-	return TRUE;
-}
-
-//---------------------------------------------------------------------------
-//
-//	マウスカーソル設定
-//
-//---------------------------------------------------------------------------
-BOOL CConfigPage::OnSetCursor(CWnd *pWnd, UINT nHitTest, UINT nMsg)
-{
-	CWnd *pChildWnd;
-	CPoint pt;
-	UINT nID;
-	CRect rectParent;
-	CRect rectChild;
-	CString strText;
-	CStatic *pStatic;
-
-	// ヘルプが指定されていること
-	ASSERT(this);
-	ASSERT(m_uHelpID > 0);
-
-	// マウス位置取得
-	GetCursorPos(&pt);
-
-	// 子ウィンドウをまわって、矩形内に位置するか調べる
-	nID = 0;
-	rectParent.top = 0;
-	pChildWnd = GetTopWindow();
-
-	// ループ
-	while (pChildWnd) {
-		// ヘルプID自身ならスキップ
-		if (pChildWnd->GetDlgCtrlID() == (int)m_uHelpID) {
-			pChildWnd = pChildWnd->GetNextWindow();
-			continue;
-		}
-
-		// 矩形を取得
-		pChildWnd->GetWindowRect(&rectChild);
-
-		// 内部にいるか
-		if (rectChild.PtInRect(pt)) {
-			// 既に取得した矩形があれば、それより内側か
-			if (rectParent.top == 0) {
-				// 最初の候補
-				rectParent = rectChild;
-				nID = pChildWnd->GetDlgCtrlID();
-			}
-			else {
-				if (rectChild.Width() < rectParent.Width()) {
-					// より内側の候補
-					rectParent = rectChild;
-					nID = pChildWnd->GetDlgCtrlID();
-				}
-			}
-		}
-
-		// 次へ
-		pChildWnd = pChildWnd->GetNextWindow();
-	}
-
-	// nIDを比較
-	if (m_uMsgID == nID) {
-		// 基本クラス
-		return CPropertyPage::OnSetCursor(pWnd, nHitTest, nMsg);
-	}
-	m_uMsgID = nID;
-
-	// 文字列をロード、設定
-	::GetMsg(m_uMsgID, strText);
-	pStatic = (CStatic*)GetDlgItem(m_uHelpID);
-	ASSERT(pStatic);
-	pStatic->SetWindowText(strText);
-
-	// 基本クラス
-	return CPropertyPage::OnSetCursor(pWnd, nHitTest, nMsg);
-}
-//===========================================================================
-//
-//	コンフィグプロパティシート
-//
-//===========================================================================
-
-//---------------------------------------------------------------------------
-//
-//	コンストラクタ
-//
-//---------------------------------------------------------------------------
-CConfigSheet::CConfigSheet(CWnd *pParent) : CPropertySheet(IDS_OPTIONS, pParent)
-{
-	// この時点では設定データはNULL
-	m_pConfig = NULL;
-
-	// 英語環境への対応
-	if (!::IsJapanese()) {
-		::GetMsg(IDS_OPTIONS, m_strCaption);
-	}
-
-	// Applyボタンを削除
-	m_psh.dwFlags |= PSH_NOAPPLYNOW;
-
-	// 親ウィンドウを記憶
-	m_pFrmWnd = (CFrmWnd*)pParent;
-
-	// タイマなし
-	m_nTimerID = NULL;
-}
-
-//---------------------------------------------------------------------------
-//
-//	メッセージ マップ
-//
-//---------------------------------------------------------------------------
-BEGIN_MESSAGE_MAP(CConfigSheet, CPropertySheet)
-	ON_WM_CREATE()
-	ON_WM_DESTROY()
-	ON_WM_TIMER()
-END_MESSAGE_MAP()
-
-//---------------------------------------------------------------------------
-//
-//	ページ検索
-//
-//---------------------------------------------------------------------------
-CConfigPage* FASTCALL CConfigSheet::SearchPage(DWORD dwID) const
-{
-	int nPage;
-	int nCount;
-	CConfigPage *pPage;
-
-	ASSERT(this);
-	ASSERT(dwID != 0);
-
-	// ページ数取得
-	nCount = GetPageCount();
-	ASSERT(nCount >= 0);
-
-	// ページループ
-	for (nPage=0; nPage<nCount; nPage++) {
-		// ページ取得
-		pPage = (CConfigPage*)GetPage(nPage);
-		ASSERT(pPage);
-
-		// IDチェック
-		if (pPage->GetID() == dwID) {
-			return pPage;
-		}
-	}
-
-	// 見つからなかった
-	return NULL;
-}
-
-//---------------------------------------------------------------------------
-//
-//	ウィンドウ作成
-//
-//---------------------------------------------------------------------------
-int CConfigSheet::OnCreate(LPCREATESTRUCT lpCreateStruct)
-{
-	// 基本クラス
-	if (CPropertySheet::OnCreate(lpCreateStruct) != 0) {
-		return -1;
-	}
-
-	// タイマをインストール
-	m_nTimerID = SetTimer(IDM_OPTIONS, 100, NULL);
-
-	return 0;
-}
-
-//---------------------------------------------------------------------------
-//
-//	ウィンドウ削除
-//
-//---------------------------------------------------------------------------
-void CConfigSheet::OnDestroy()
-{
-	// タイマ停止
-	if (m_nTimerID) {
-		KillTimer(m_nTimerID);
-		m_nTimerID = NULL;
-	}
-
-	// 基本クラス
-	CPropertySheet::OnDestroy();
-}
-
-//---------------------------------------------------------------------------
-//
-//	タイマ
-//
-//---------------------------------------------------------------------------
-#if _MFC_VER >= 0x700
-void CConfigSheet::OnTimer(UINT_PTR nID)
-#else
-void CConfigSheet::OnTimer(UINT nID)
-#endif
-{
-	ASSERT(m_pFrmWnd);
-
-	// IDチェック
-	if (m_nTimerID != nID) {
-		return;
-	}
-
-	// タイマ停止
-	KillTimer(m_nTimerID);
-	m_nTimerID = NULL;
-
-	// タイマ再開(表示完了から100msあける)
-	m_nTimerID = SetTimer(IDM_OPTIONS, 100, NULL);
-}
-
 #endif	// _WIN32

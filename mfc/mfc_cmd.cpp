@@ -1390,27 +1390,6 @@ void CFrmWnd::OnFDMRUUI(CCmdUI *pCmdUI)
 //---------------------------------------------------------------------------
 void CFrmWnd::OnOptions()
 {
-	Config config;
-	CConfigSheet sheet(this);
-
-	// 設定データを取得
-	GetConfig()->GetConfig(&config);
-
-	// プロパティシートを実行
-	sheet.m_pConfig = &config;
-	if (sheet.DoModal() != IDOK) {
-		return;
-	}
-
-	// データ転送
-	GetConfig()->SetConfig(&config);
-
-	// 適用(VMロックして行う)
-	::LockVM();
-	ApplyCfg();
-//	GetScheduler()->Reset();
-//	ResetCaption();
-	::UnlockVM();
 }
 
 #endif	// _WIN32
