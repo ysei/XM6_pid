@@ -72,7 +72,8 @@ void configGetConfig(Config* c) {
 	//	Config200
 	// システム
 	c->system_clock			= 5;					// システムクロック(0～5)
-	c->ram_size				= 0;						// メインRAMサイズ(0～5)
+//	c->system_clock			= 0;					// システムクロック(0～5)
+	c->ram_size				= 0;					// メインRAMサイズ(0～5)
 	c->ram_sramsync			= TRUE;					// メモリスイッチ自動更新
 
 	// スケジューラ
@@ -1298,7 +1299,13 @@ UINT ThreadFunc(LPVOID pParam) {
 
 		if(requestRefresh) {
 			if(! schedulerIsEnable() || pRender->IsReady()) {
+#if 0
 				pDrawView->Draw(-1);
+#else
+				CClientDC *pDC = new CClientDC(m_pFrmWnd);
+				pDrawView->OnDraw(pDC);
+				delete pDC;
+#endif
 				pRender->Complete();
 			}
 		}
@@ -1460,9 +1467,9 @@ int CFrmWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		// まずVMに適用
 		::GetVM()->ApplyCfg(&config);
 
-		// 次にコンポーネントに適用
-		// 次にビューに適用
-		GetView()->ApplyCfg(&config);
+//		// 次にコンポーネントに適用
+//		// 次にビューに適用
+//		GetView()->ApplyCfg(&config);
 	}
 	::UnlockVM();
 
@@ -1666,7 +1673,7 @@ LONG CFrmWnd::OnKick(UINT , LONG )
 	}
 
 	// コンポーネントをイネーブル。ただしSchedulerは設定による
-	GetView()->Enable(TRUE);
+//	GetView()->Enable(TRUE);
 	schedulerSetEnable(TRUE);
 
 	// リセット(ステータスバーのため)
@@ -1711,11 +1718,6 @@ LONG CFrmWnd::OnKick(UINT , LONG )
 					m_dwExec--;
 				}
 			}
-
-			if ((nIdle & 1) == 0) {
-				// ビューは40ms
-				GetView()->Update();
-			}
 		}
 	}
 
@@ -1734,7 +1736,6 @@ void CFrmWnd::OnDestroy()
 	m_bExit = TRUE;
 
 	// コンポーネントを止める
-	GetView()->Enable(FALSE);
 	schedulerSetEnable(FALSE);
 
 	// スケジューラが実行をやめるまで待つ
@@ -1840,7 +1841,7 @@ void CFrmWnd::OnReset()
 
 	// リセット＆再描画
 	::GetVM()->Reset();
-	GetView()->Refresh();
+//	GetView()->Refresh();
 //	ResetCaption();
 
 	// メモリスイッチ取得を行う
