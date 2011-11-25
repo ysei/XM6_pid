@@ -179,7 +179,6 @@
     <ClCompile Include="..\mfc\mfc_draw.cpp" />
     <ClCompile Include="..\mfc\mfc_frm.cpp" />
     <ClCompile Include="..\mfc\mfc_host.cpp" />
-    <ClCompile Include="..\mfc\mfc_inp.cpp" />
     <ClCompile Include="..\mfc\mfc_sch.cpp" />
     <ClCompile Include="..\mfc\mfc_snd.cpp" />
   </ItemGroup>
@@ -284,7 +283,6 @@
     <ClInclude Include="mfc_com.h" />
     <ClInclude Include="mfc_draw.h" />
     <ClInclude Include="mfc_frm.h" />
-    <ClInclude Include="mfc_inp.h" />
     <ClInclude Include="mfc_res.h" />
     <ClInclude Include="mfc_sch.h" />
     <ClInclude Include="mfc_snd.h" />
