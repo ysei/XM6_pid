@@ -1329,9 +1329,9 @@ void FASTCALL CFrmWnd::CleanSub()
 	}
 
 	// スケジューラを停止(CScheduler)
-	if (m_nStatus == 0) {
-		GetScheduler()->Stop();
-	}
+//	if (m_nStatus == 0) {
+//		GetScheduler()->Stop();
+//	}
 
 	// コンポーネントを削除
 	pComponent = m_pFirstComponent;
@@ -1730,12 +1730,6 @@ void CFrmWnd::OnPaint()
 //---------------------------------------------------------------------------
 void CFrmWnd::OnMove(int x, int y)
 {
-//	CRect rect;
-//
-//	// 初期化済みなら
-//	if (m_nStatus == 0) {
-//	}
-//
 	// 基本クラス
 	CFrameWnd::OnMove(x, y);
 }
@@ -1759,11 +1753,11 @@ void CFrmWnd::OnActivate(UINT nState, CWnd *pWnd, BOOL bMinimized)
 			// WA_INACTIVEか最小化なら、ディセーブル
 			if ((nState == WA_INACTIVE) || bMinimized) {
 				// 入力受け付けない、低速実行
-				pScheduler->Activate(FALSE);
+//				pScheduler->Activate(FALSE);
 			}
 			else {
 				// 入力受け付ける、通常実行
-				pScheduler->Activate(TRUE);
+//				pScheduler->Activate(TRUE);
 			}
 		}
 	}
@@ -1815,11 +1809,11 @@ void CFrmWnd::OnEnterMenuLoop(BOOL bTrackPopup)
 {
 	::LockVM();
 
-	// スケジューラへ通知
-	CScheduler *pScheduler = GetScheduler();
-	if (pScheduler) {
-		pScheduler->Menu(TRUE);
-	}
+//	// スケジューラへ通知
+//	CScheduler *pScheduler = GetScheduler();
+//	if (pScheduler) {
+//		pScheduler->Menu(TRUE);
+//	}
 
 	::UnlockVM();
 
@@ -1836,11 +1830,11 @@ void CFrmWnd::OnExitMenuLoop(BOOL bTrackPopup)
 {
 	::LockVM();
 
-	// スケジューラへ通知
-	CScheduler *pScheduler = GetScheduler();
-	if (pScheduler) {
-		pScheduler->Menu(FALSE);
-	}
+//	// スケジューラへ通知
+//	CScheduler *pScheduler = GetScheduler();
+//	if (pScheduler) {
+//		pScheduler->Menu(FALSE);
+//	}
 
 	::UnlockVM();
 
@@ -2283,31 +2277,7 @@ CScheduler* FASTCALL CFrmWnd::GetScheduler() const
 	ASSERT(m_pSch);
 	return m_pSch;
 }
-/*
-//---------------------------------------------------------------------------
-//
-//	インプット取得
-//
-//---------------------------------------------------------------------------
-CInput* FASTCALL CFrmWnd::GetInput() const
-{
-	ASSERT(this);
-	ASSERT(m_pInput);
-	return m_pInput;
-}
 
-//---------------------------------------------------------------------------
-//
-//	Host取得
-//
-//---------------------------------------------------------------------------
-CHost* FASTCALL CFrmWnd::GetHost() const
-{
-	ASSERT(this);
-	ASSERT(m_pHost);
-	return m_pHost;
-}
-*/
 //---------------------------------------------------------------------------
 //
 //	コンフィグ取得

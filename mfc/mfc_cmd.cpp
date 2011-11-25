@@ -316,10 +316,8 @@ BOOL FASTCALL CFrmWnd::OnOpenSub(const Filepath& path)
 
 		// 失敗は途中中断で危険なため、必ずリセットする
 		::GetVM()->Reset();
-//		GetSound()->Enable(bSound);
 		GetScheduler()->Reset();
 		GetScheduler()->Enable(bRun);
-//		ResetCaption();
 
 		// ロードエラー
 		::GetMsg(IDS_XM6LOADERR, strMsg);
@@ -341,31 +339,18 @@ BOOL FASTCALL CFrmWnd::OnOpenSub(const Filepath& path)
 		m_pSASI->GetPath(diskpath);
 		GetConfig()->SetMRUFile(2, diskpath.GetPath());
 	}
-//	if (m_pSCSI->IsReady(FALSE)) {
-//		m_pSCSI->GetPath(diskpath, FALSE);
-//		GetConfig()->SetMRUFile(3, diskpath.GetPath());
-//	}
-
-	// スケジューラが停止の状態でセーブされていれば、停止のまま(version2.04)
-	if (GetScheduler()->HasSavedEnable()) {
-		bRun = GetScheduler()->GetSavedEnable();
-	}
-
 	// 実行カウンタをクリア
 	m_dwExec = 0;
 
 	// 成功
-//	GetSound()->Enable(bSound);
 	GetScheduler()->Reset();
 	GetScheduler()->Enable(bRun);
-//	ResetCaption();
 
 	// MRUに追加
 	GetConfig()->SetMRUFile(4, path.GetPath());
 
 	// 情報メッセージを表示
 	::GetMsg(IDS_XM6LOADOK, strMsg);
-//	SetInfo(strMsg);
 
 	return TRUE;
 }
@@ -475,7 +460,7 @@ void FASTCALL CFrmWnd::OnSaveSub(const Filepath& path)
 	AfxGetApp()->BeginWaitCursor();
 
 	// スケジューラに対して、セーブ時の状態を通知(version2.04)
-	GetScheduler()->SetSavedEnable(bRun);
+//	GetScheduler()->SetSavedEnable(bRun);
 
 	// VM
 	dwPos = ::GetVM()->Save(path);
