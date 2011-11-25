@@ -111,5 +111,9 @@ void FASTCALL SetInfoMsg(LPCTSTR lpszBuf, BOOL bRec);
 int FASTCALL DrawTextWide(HDC hDC, LPCWSTR lpString, int nCount, LPRECT lpRect, UINT uFormat);
 										// DrawTextWƒ‰ƒbƒp
 
+void schedulerInit();
+BOOL schedulerIsEnable();
+void schedulerSetEnable(BOOL b);
+
 #endif	// mfc_h
 #endif	// _WIN32

@@ -18,10 +18,8 @@
 #include "config.h"
 #include "mfc_frm.h"
 #include "mfc_com.h"
-#include "mfc_sch.h"
 #include "mfc_cfg.h"
 #include "mfc_res.h"
-#include "mfc_sch.h"
 #include "mfc_draw.h"
 
 //===========================================================================
@@ -226,12 +224,6 @@ void CDrawView::OnSize(UINT nType, int cx, int cy)
 //---------------------------------------------------------------------------
 void CDrawView::OnPaint()
 {
-	Render *pRender;
-	CRTC *pCRTC;
-	const CRTC::crtc_t *p;
-	CFrmWnd *pFrmWnd;
-	PAINTSTRUCT ps;
-
 	// VMロック
 	::LockVM();
 
@@ -240,14 +232,18 @@ void CDrawView::OnPaint()
 
 	// イネーブルでスケジューラがOFFなら、Mixバッファに作成(かなり強引)
 	if (m_bEnable) {
+		CFrmWnd *pFrmWnd;
 		pFrmWnd = (CFrmWnd*)GetParent();
 		ASSERT(pFrmWnd);
 		if (!schedulerIsEnable()) {
 			// イネーブルなら必ずRender,CRTCは存在
+			Render *pRender;
 			pRender = (Render*)::GetVM()->SearchDevice(MAKEID('R', 'E', 'N', 'D'));
 			ASSERT(pRender);
+			CRTC *pCRTC;
 			pCRTC = (CRTC*)::GetVM()->SearchDevice(MAKEID('C', 'R', 'T', 'C'));
 			ASSERT(pCRTC);
+			const CRTC::crtc_t *p;
 			p = pCRTC->GetWorkAddr();
 
 			// 作成
@@ -274,6 +270,7 @@ void CDrawView::OnPaint()
 	}
 
 	// DCだけ得ておく(ダミー)
+	PAINTSTRUCT ps;
 	BeginPaint(&ps);
 	EndPaint(&ps);
 
