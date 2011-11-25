@@ -282,8 +282,8 @@ BOOL FASTCALL CFrmWnd::OnOpenSub(const Filepath& path)
 	int nDrive;
 
 	// スケジューラ停止、サウンド停止
-	bRun = GetScheduler()->IsEnable();
-	GetScheduler()->Enable(FALSE);
+	bRun = schedulerIsEnable();
+	schedulerSetEnable(FALSE);
 	::LockVM();
 	::UnlockVM();
 //	BOOL bSound = GetSound()->IsEnable();
@@ -301,7 +301,7 @@ BOOL FASTCALL CFrmWnd::OnOpenSub(const Filepath& path)
 		::GetVM()->Reset();
 //		GetSound()->Enable(bSound);
 //		GetScheduler()->Reset();
-		GetScheduler()->Enable(bRun);
+		schedulerSetEnable(bRun);
 //		ResetCaption();
 
 		// ロードエラー
@@ -317,7 +317,7 @@ BOOL FASTCALL CFrmWnd::OnOpenSub(const Filepath& path)
 		// 失敗は途中中断で危険なため、必ずリセットする
 		::GetVM()->Reset();
 //		GetScheduler()->Reset();
-		GetScheduler()->Enable(bRun);
+		schedulerSetEnable(bRun);
 
 		// ロードエラー
 		::GetMsg(IDS_XM6LOADERR, strMsg);
@@ -344,7 +344,7 @@ BOOL FASTCALL CFrmWnd::OnOpenSub(const Filepath& path)
 
 	// 成功
 //	GetScheduler()->Reset();
-	GetScheduler()->Enable(bRun);
+	schedulerSetEnable(bRun);
 
 	// MRUに追加
 	GetConfig()->SetMRUFile(4, path.GetPath());
@@ -450,8 +450,8 @@ void FASTCALL CFrmWnd::OnSaveSub(const Filepath& path)
 	DWORD dwPos;
 
 	// スケジューラ停止、サウンド停止
-	bRun = GetScheduler()->IsEnable();
-	GetScheduler()->Enable(FALSE);
+	bRun = schedulerIsEnable();
+	schedulerSetEnable(FALSE);
 	::LockVM();
 	::UnlockVM();
 //	BOOL bSound = GetSound()->IsEnable();
@@ -470,7 +470,7 @@ void FASTCALL CFrmWnd::OnSaveSub(const Filepath& path)
 		// セーブ失敗
 //		GetSound()->Enable(bSound);
 //		GetScheduler()->Reset();
-		GetScheduler()->Enable(bRun);
+		schedulerSetEnable(bRun);
 //		ResetCaption();
 
 		// セーブエラー
@@ -486,7 +486,7 @@ void FASTCALL CFrmWnd::OnSaveSub(const Filepath& path)
 		// セーブ失敗
 //		GetSound()->Enable(bSound);
 //		GetScheduler()->Reset();
-		GetScheduler()->Enable(bRun);
+		schedulerSetEnable(bRun);
 //		ResetCaption();
 
 		// セーブエラー
@@ -503,7 +503,7 @@ void FASTCALL CFrmWnd::OnSaveSub(const Filepath& path)
 	// 成功
 //	GetSound()->Enable(bSound);
 //	GetScheduler()->Reset();
-	GetScheduler()->Enable(bRun);
+	schedulerSetEnable(bRun);
 //	ResetCaption();
 
 	// MRUに追加
@@ -738,8 +738,8 @@ void CFrmWnd::OnPower()
 	::GetVM()->PowerSW(TRUE);
 
 	// 電源が切れていてスケジューラが止まっていれば、動かす
-	if (!bPower && !GetScheduler()->IsEnable()) {
-		GetScheduler()->Enable(TRUE);
+	if (!bPower && !schedulerIsEnable()) {
+		schedulerSetEnable(TRUE);
 	}
 
 	::UnlockVM();

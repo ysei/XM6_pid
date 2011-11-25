@@ -242,7 +242,7 @@ void CDrawView::OnPaint()
 	if (m_bEnable) {
 		pFrmWnd = (CFrmWnd*)GetParent();
 		ASSERT(pFrmWnd);
-		if (!pFrmWnd->GetScheduler()->IsEnable()) {
+		if (!schedulerIsEnable()) {
 			// イネーブルなら必ずRender,CRTCは存在
 			pRender = (Render*)::GetVM()->SearchDevice(MAKEID('R', 'E', 'N', 'D'));
 			ASSERT(pRender);

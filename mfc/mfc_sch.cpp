@@ -40,6 +40,16 @@
 //	スケジューラ
 //
 //===========================================================================
+static volatile	BOOL	mm_bEnable = FALSE;
+
+BOOL schedulerIsEnable() {
+	return mm_bEnable;
+}
+
+void schedulerSetEnable(BOOL b) {
+	mm_bEnable = b;
+}
+
 static DWORD FASTCALL GetTime() {
 	return timeGetTime();
 }
@@ -1164,7 +1174,7 @@ void FASTCALL CScheduler::Run()
 		::LockVM();
 
 		// 有効フラグが上がっていなければ、停止中
-		if(! IsEnable()) {
+		if(! schedulerIsEnable()) {
 			// 描画
 			requestRefresh = true;
 			dwExecCount = 0;
@@ -1207,7 +1217,7 @@ void FASTCALL CScheduler::Run()
 		}
 
 		if(requestRefresh) {
-			if(! IsEnable() || pRender->IsReady()) {
+			if(! schedulerIsEnable() || pRender->IsReady()) {
 				pDrawView->Draw(-1);
 				pRender->Complete();
 			}

@@ -1129,7 +1129,7 @@ LONG CFrmWnd::OnKick(UINT , LONG )
 		pComponent = pComponent->GetNextComponent();
 	}
 
-	m_pSch->Enable(TRUE);
+	schedulerSetEnable(TRUE);
 
 	// リセット(ステータスバーのため)
 	if (!config.power_off) {
@@ -1330,7 +1330,7 @@ void FASTCALL CFrmWnd::CleanSub()
 		pComponent->Enable(FALSE);
 		pComponent = pComponent->GetNextComponent();
 	}
-	m_pSch->Enable(FALSE);
+	schedulerSetEnable(FALSE);
 
 	// スケジューラが実行をやめるまで待つ
 	for (i=0; i<8; i++) {
@@ -2019,7 +2019,7 @@ void FASTCALL CFrmWnd::UpdateExec()
 	ASSERT_VALID(this);
 
 	// スケジューラが有効なら、実行カウンタを上げる(セーブ時にクリアされる)
-	if (GetScheduler()->IsEnable()) {
+	if (schedulerIsEnable()) {
 		m_dwExec++;
 		if (m_dwExec == 0) {
 			m_dwExec--;
