@@ -71,7 +71,7 @@ CFrmWnd::CFrmWnd()
 	// コンポーネント
 	m_pFirstComponent = NULL;
 	m_pDrawView = NULL;
-	m_pSch = NULL;
+//	m_pSch = NULL;
 //	m_pSound = NULL;
 //	m_pInput = NULL;
 //	m_pHost = NULL;
@@ -538,7 +538,7 @@ BOOL FASTCALL CFrmWnd::InitComponent()
 	CComponent *pComponent;
 
 	ASSERT(!m_pFirstComponent);
-	ASSERT(!m_pSch);
+//	ASSERT(!m_pSch);
 //	ASSERT(!m_pSound);
 //	ASSERT(!m_pInput);
 //	ASSERT(!m_pHost);
@@ -553,7 +553,7 @@ BOOL FASTCALL CFrmWnd::InitComponent()
 //	m_pFirstComponent->AddComponent(m_pInput);
 //	m_pHost = new CHost(this);
 //	m_pFirstComponent->AddComponent(m_pHost);
-	m_pSch = new CScheduler(this);
+//	m_pSch = new CScheduler(this);
 //	m_pFirstComponent->AddComponent(m_pSch);
 
 	// 初期化
@@ -567,8 +567,8 @@ BOOL FASTCALL CFrmWnd::InitComponent()
 		}
 		pComponent = pComponent->GetNextComponent();
 	}
-
-	m_pSch->Init();
+//	m_pSch->Init();
+	schedulerInit();
 
 	return bSuccess;
 }
@@ -1752,24 +1752,24 @@ void CFrmWnd::OnMove(int x, int y)
 void CFrmWnd::OnActivate(UINT nState, CWnd *pWnd, BOOL bMinimized)
 {
 //	CInput *pInput;
-	CScheduler *pScheduler;
+//	CScheduler *pScheduler;
 
 	// 初期化済みなら
 	if (m_nStatus == 0) {
 		// インプット、スケジューラへ通知
 //		pInput = GetInput();
-		pScheduler = GetScheduler();
-		if (pScheduler) {
-			// WA_INACTIVEか最小化なら、ディセーブル
-			if ((nState == WA_INACTIVE) || bMinimized) {
-				// 入力受け付けない、低速実行
+//		pScheduler = GetScheduler();
+//		if (pScheduler) {
+//			// WA_INACTIVEか最小化なら、ディセーブル
+//			if ((nState == WA_INACTIVE) || bMinimized) {
+//				// 入力受け付けない、低速実行
 //				pScheduler->Activate(FALSE);
-			}
-			else {
-				// 入力受け付ける、通常実行
+//			}
+//			else {
+//				// 入力受け付ける、通常実行
 //				pScheduler->Activate(TRUE);
-			}
-		}
+//			}
+//		}
 	}
 
 	// 基本クラスへ
@@ -2275,7 +2275,7 @@ CComponent* FASTCALL CFrmWnd::GetFirstComponent() const
 	ASSERT(this);
 	return m_pFirstComponent;
 }
-
+/*
 //---------------------------------------------------------------------------
 //
 //	スケジューラ取得
@@ -2287,7 +2287,7 @@ CScheduler* FASTCALL CFrmWnd::GetScheduler() const
 	ASSERT(m_pSch);
 	return m_pSch;
 }
-
+*/
 //---------------------------------------------------------------------------
 //
 //	コンフィグ取得

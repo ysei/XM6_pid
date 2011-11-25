@@ -40,120 +40,19 @@
 //	スケジューラ
 //
 //===========================================================================
-static volatile	BOOL	mm_bEnable = FALSE;
+static volatile	BOOL		scheduler_mm_bEnable = FALSE;
+static volatile BOOL		scheduler_m_bExitReq = FALSE;			// スレッド終了要求
 
 BOOL schedulerIsEnable() {
-	return mm_bEnable;
+	return scheduler_mm_bEnable;
 }
 
 void schedulerSetEnable(BOOL b) {
-	mm_bEnable = b;
+	scheduler_mm_bEnable = b;
 }
 
 static DWORD FASTCALL GetTime() {
 	return timeGetTime();
-}
-
-//---------------------------------------------------------------------------
-//
-//	コンストラクタ
-//
-//---------------------------------------------------------------------------
-CScheduler::CScheduler(CFrmWnd *pFrmWnd)	// : CComponent(pFrmWnd)
-{
-	// コンポーネントパラメータ
-//	m_dwID = MAKEID('S', 'C', 'H', 'E');
-//	m_strDesc = _T("Scheduler");
-
-	// ワーク初期化
-	m_pThread		= NULL;
-	m_bExitReq		= FALSE;
-
-	mm_bEnable = FALSE;
-
-}
-
-//---------------------------------------------------------------------------
-//
-//	初期化
-//
-//---------------------------------------------------------------------------
-BOOL FASTCALL CScheduler::Init()
-{
-	ASSERT(this);
-
-	// 基本クラス
-//	if (!CComponent::Init()) {
-//		return FALSE;
-//	}
-
-	// マルチメディアタイマーの時間間隔を1msに設定
-	::timeBeginPeriod(1);
-
-	// スレッドを立てる
-	m_pThread = AfxBeginThread(ThreadFunc, this);
-	if (!m_pThread) {
-		::timeEndPeriod(1);
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-//---------------------------------------------------------------------------
-//
-//	クリーンアップ
-//
-//---------------------------------------------------------------------------
-void FASTCALL CScheduler::Cleanup()
-{
-	ASSERT(this);
-//	ASSERT_VALID(this);
-
-	// 停止
-	{
-		ASSERT(this);
-//		ASSERT_VALID(this);
-
-		// スレッドが上がっている場合のみ終了処理
-		if (m_pThread) {
-			// 終了リクエストを立てる
-			m_bExitReq = TRUE;
-
-			// 停止まで待つ
-			::WaitForSingleObject(m_pThread->m_hThread, INFINITE);
-
-			// スレッドは終了した
-			m_pThread = NULL;
-		}
-	}
-
-	// マルチメディアタイマーの時間間隔を戻す
-	::timeEndPeriod(1);
-
-	// 基本クラス
-//	CComponent::Cleanup();
-}
-
-//---------------------------------------------------------------------------
-//
-//	スレッド関数
-//
-//---------------------------------------------------------------------------
-UINT CScheduler::ThreadFunc(LPVOID pParam)
-{
-	// パラメータを受け取る
-	CScheduler *pSch = (CScheduler*)pParam;
-	ASSERT(pSch);
-//#if defined(_DEBUG)
-//	pSch->AssertValid();
-//#endif	// _DEBUG
-
-	// 実行
-	pSch->Run();
-
-	// 終了コードを持ってスレッドを終了
-	return 0;
 }
 
 
@@ -1143,13 +1042,7 @@ static void processSound(BOOL bRun, HWND hWnd) {
 	ASSERT(m_dwWrite < m_uBufSize);
 }
 
-//---------------------------------------------------------------------------
-//
-//	実行
-//
-//---------------------------------------------------------------------------
-void FASTCALL CScheduler::Run()
-{
+UINT ThreadFunc(LPVOID pParam) {
 	extern CFrmWnd*	globalFrmWnd;
 	CFrmWnd*	m_pFrmWnd	= globalFrmWnd;
 
@@ -1161,7 +1054,7 @@ void FASTCALL CScheduler::Run()
 	DWORD		dwExecCount	= 0;
 
 	// 終了リクエストが上がるまでループ
-	while (!m_bExitReq) {
+	while (!scheduler_m_bExitReq) {
 		int	preSleep	= 0;
 		int postSleep	= -1;
 
@@ -1229,5 +1122,15 @@ void FASTCALL CScheduler::Run()
 			::Sleep(postSleep);
 		}
 	}
+	return 0;
 }
+
+void schedulerInit() {
+	scheduler_m_bExitReq		= FALSE;
+	scheduler_mm_bEnable		= FALSE;
+
+	::timeBeginPeriod(1);
+	AfxBeginThread(ThreadFunc, 0);
+}
+
 #endif	// _WIN32
