@@ -154,9 +154,6 @@
     <ClCompile Include="..\mfc\mfc_sch.cpp">
       <Filter>mfc</Filter>
     </ClCompile>
-    <ClCompile Include="..\mfc\mfc_snd.cpp">
-      <Filter>mfc</Filter>
-    </ClCompile>
     <ClCompile Include="..\mfc\stdafx.cpp" />
     <ClCompile Include="..\vm\cpudebug.cpp">
       <Filter>vm</Filter>
@@ -314,9 +311,6 @@
       <Filter>vm</Filter>
     </ClInclude>
     <ClInclude Include="mfc.h">
-      <Filter>mfc</Filter>
-    </ClInclude>
-    <ClInclude Include="mfc_snd.h">
       <Filter>mfc</Filter>
     </ClInclude>
     <ClInclude Include="mfc_app.h">

@@ -36,8 +36,6 @@
 
 #include "mfc_com.h"
 #include "mfc_sch.h"
-#include "mfc_snd.h"
-#include "mfc_inp.h"
 #include "mfc_cfg.h"
 
 //---------------------------------------------------------------------------

@@ -21,13 +21,12 @@
 #include "fdc.h"
 #include "fdi.h"
 #include "render.h"
+#include "fileio.h"
 #include "mfc_frm.h"
 #include "mfc_draw.h"
 #include "mfc_res.h"
 #include "mfc_com.h"
 #include "mfc_sch.h"
-#include "mfc_snd.h"
-#include "mfc_inp.h"
 #include "mfc_host.h"
 #include "mfc_cfg.h"
 
@@ -70,7 +69,7 @@ CFrmWnd::CFrmWnd()
 	m_pFirstComponent = NULL;
 	m_pDrawView = NULL;
 	m_pSch = NULL;
-	m_pSound = NULL;
+//	m_pSound = NULL;
 //	m_pInput = NULL;
 	m_pHost = NULL;
 	m_pConfig = NULL;
@@ -537,7 +536,7 @@ BOOL FASTCALL CFrmWnd::InitComponent()
 
 	ASSERT(!m_pFirstComponent);
 	ASSERT(!m_pSch);
-	ASSERT(!m_pSound);
+//	ASSERT(!m_pSound);
 //	ASSERT(!m_pInput);
 	ASSERT(!m_pHost);
 	ASSERT(!m_pConfig);
@@ -545,8 +544,8 @@ BOOL FASTCALL CFrmWnd::InitComponent()
 	// コンストラクト(順番を考慮する必要あり。最初Config、最後Scheduler)
 	m_pConfig = new CConfig(this);
 	m_pFirstComponent = m_pConfig;
-	m_pSound = new CSound(this);
-	m_pFirstComponent->AddComponent(m_pSound);
+//	m_pSound = new CSound(this);
+//	m_pFirstComponent->AddComponent(m_pSound);
 //	m_pInput = new CInput(this);
 //	m_pFirstComponent->AddComponent(m_pInput);
 	m_pHost = new CHost(this);

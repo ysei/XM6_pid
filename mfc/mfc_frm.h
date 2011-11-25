@@ -259,8 +259,6 @@ private:
 										// 最初のコンポーネント
 	CScheduler *m_pSch;
 										// スケジューラ
-	CSound *m_pSound;
-										// サウンド
 	CHost *m_pHost;
 										// Host
 	CConfig *m_pConfig;

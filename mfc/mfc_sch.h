@@ -81,8 +81,6 @@ private:
 										// レンダラ
 	CWinThread *m_pThread;
 										// スレッドポインタ
-	CSound *m_pSound;
-										// サウンド
 	BOOL m_bExitReq;
 										// スレッド終了要求
 	DWORD m_dwExecTime;

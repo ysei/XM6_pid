@@ -180,7 +180,6 @@
     <ClCompile Include="..\mfc\mfc_frm.cpp" />
     <ClCompile Include="..\mfc\mfc_host.cpp" />
     <ClCompile Include="..\mfc\mfc_sch.cpp" />
-    <ClCompile Include="..\mfc\mfc_snd.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\vm\core_asm.asm">
@@ -285,7 +284,6 @@
     <ClInclude Include="mfc_frm.h" />
     <ClInclude Include="mfc_res.h" />
     <ClInclude Include="mfc_sch.h" />
-    <ClInclude Include="mfc_snd.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="star.vcxproj">

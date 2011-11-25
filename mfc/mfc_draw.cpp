@@ -22,7 +22,6 @@
 #include "mfc_cfg.h"
 #include "mfc_res.h"
 #include "mfc_sch.h"
-#include "mfc_inp.h"
 #include "mfc_draw.h"
 
 //===========================================================================

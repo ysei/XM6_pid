@@ -23,11 +23,10 @@
 #include "disk.h"
 #include "filepath.h"
 #include "ppi.h"
+#include "fileio.h"
 #include "mfc_frm.h"
 #include "mfc_com.h"
 #include "mfc_res.h"
-#include "mfc_snd.h"
-#include "mfc_inp.h"
 #include "mfc_cfg.h"
 
 //===========================================================================
