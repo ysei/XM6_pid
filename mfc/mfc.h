@@ -74,7 +74,6 @@ class CApp;								// アプリケーション
 class CFrmWnd;							// フレームウィンドウ
 class CDrawView;						// 描画ビュー
 class CComponent;						// コンポーネント共通
-class CConfig;							// コンフィグコンポーネント
 class CScheduler;						// スケジュールコンポーネント
 
 //---------------------------------------------------------------------------

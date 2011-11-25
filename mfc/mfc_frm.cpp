@@ -26,7 +26,6 @@
 #include "mfc_draw.h"
 #include "mfc_res.h"
 #include "mfc_com.h"
-#include "mfc_cfg.h"
 
 #include "crtc.h"
 #include "keyboard.h"
@@ -38,6 +37,8 @@
 #include "adpcm.h"
 #include "scsi.h"
 #include "mfc_asm.h"
+
+#include "config.h"
 
 //===========================================================================
 //
@@ -67,6 +68,187 @@ static DWORD FASTCALL GetTime() {
 	return timeGetTime();
 }
 
+void configGetConfig(Config* c) {
+	//	Config200
+	// システム
+	c->system_clock			= 5;					// システムクロック(0～5)
+	c->ram_size				= 0;						// メインRAMサイズ(0～5)
+	c->ram_sramsync			= TRUE;					// メモリスイッチ自動更新
+
+	// スケジューラ
+	c->mpu_fullspeed		= FALSE;					// MPUフルスピード
+	c->vm_fullspeed			= FALSE;					// VMフルスピード
+
+	// サウンド
+	c->sound_device			= 0;					// サウンドデバイス(0～15)
+	c->sample_rate			= 5;					// サンプリングレート(0～4)
+	c->primary_buffer		= 10;					// バッファサイズ(2～100)
+	c->polling_buffer		= 5;					// ポーリング間隔(0～99)
+	c->adpcm_interp			= TRUE;					// ADPCM線形補間あり
+
+	// 描画
+	c->aspect_stretch		= TRUE;				// アスペクト比にあわせ拡大
+
+	// 音量
+	c->master_volume		= 100;					// マスタ音量(0～100)
+	c->fm_enable			= TRUE;						// FM有効
+	c->fm_volume			= 54;						// FM音量(0～100)
+	c->adpcm_enable			= TRUE;					// ADPCM有効
+	c->adpcm_volume			= 52;					// ADPCM音量(0～100)
+
+	// キーボード
+	c->kbd_connect			= TRUE;					// 接続
+
+	// マウス
+	c->mouse_speed			= 205;					// スピード
+	c->mouse_port			= 1;						// 接続ポート
+	c->mouse_swap			= FALSE;					// ボタンスワップ
+	c->mouse_mid			= TRUE;						// 中ボタンイネーブル
+	c->mouse_trackb			= FALSE;					// トラックボールモード
+
+	// ジョイスティック
+	c->joy_type[0]			= 1;					// ジョイスティックタイプ
+	c->joy_type[1]			= 1;					// ジョイスティックタイプ
+	c->joy_dev[0]			= 1;						// ジョイスティックデバイス
+	c->joy_dev[1]			= 2;						// ジョイスティックデバイス
+	c->joy_button0[0]		= 1;				// ジョイスティックボタン(デバイスA)
+	c->joy_button0[1]		= 2;				// ジョイスティックボタン(デバイスA)
+	c->joy_button0[2]		= 3;				// ジョイスティックボタン(デバイスA)
+	c->joy_button0[3]		= 4;				// ジョイスティックボタン(デバイスA)
+	c->joy_button0[4]		= 5;				// ジョイスティックボタン(デバイスA)
+	c->joy_button0[5]		= 6;				// ジョイスティックボタン(デバイスA)
+	c->joy_button0[6]		= 7;				// ジョイスティックボタン(デバイスA)
+	c->joy_button0[7]		= 8;				// ジョイスティックボタン(デバイスA)
+	c->joy_button0[8]		= 0;				// ジョイスティックボタン(デバイスA)
+	c->joy_button0[9]		= 0;				// ジョイスティックボタン(デバイスA)
+	c->joy_button0[10]		= 0;				// ジョイスティックボタン(デバイスA)
+	c->joy_button0[11]		= 0;				// ジョイスティックボタン(デバイスA)
+	c->joy_button1[0]		= 65537;				// ジョイスティックボタン(デバイスB)
+	c->joy_button1[1]		= 65538;				// ジョイスティックボタン(デバイスB)
+	c->joy_button1[2]		= 65539;				// ジョイスティックボタン(デバイスB)
+	c->joy_button1[3]		= 65540;				// ジョイスティックボタン(デバイスB)
+	c->joy_button1[4]		= 65541;				// ジョイスティックボタン(デバイスB)
+	c->joy_button1[5]		= 65542;				// ジョイスティックボタン(デバイスB)
+	c->joy_button1[6]		= 65543;				// ジョイスティックボタン(デバイスB)
+	c->joy_button1[7]		= 65544;				// ジョイスティックボタン(デバイスB)
+	c->joy_button1[8]		= 0;				// ジョイスティックボタン(デバイスB)
+	c->joy_button1[9]		= 0;				// ジョイスティックボタン(デバイスB)
+	c->joy_button1[10]		= 0;				// ジョイスティックボタン(デバイスB)
+	c->joy_button1[11]		= 0;				// ジョイスティックボタン(デバイスB)
+
+	// SASI
+	c->sasi_drives			= 1;					// SASIドライブ数
+	c->sasi_sramsync		= TRUE;					// SASIメモリスイッチ自動更新
+	strcpy(&c->sasi_file[ 0][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD0.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[ 1][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD1.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[ 2][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD2.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[ 3][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD3.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[ 4][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD4.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[ 5][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD5.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[ 6][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD6.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[ 7][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD7.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[ 8][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD8.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[ 9][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD9.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[10][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD10.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[11][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD11.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[12][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD12.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[13][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD13.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[14][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD14.HDF"));				// SASIイメージファイル
+	strcpy(&c->sasi_file[15][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD15.HDF"));				// SASIイメージファイル
+
+	// SxSI
+	c->sxsi_drives			= 0;							// SxSIドライブ数
+	c->sxsi_mofirst			= FALSE;						// MOドライブ優先割り当て
+	memset(&c->sxsi_file[0][0], 0, sizeof(c->sxsi_file));	// SxSIイメージファイル
+
+	// ポート
+	c->port_com				= 0;								// COMxポート
+	memset(&c->port_recvlog[0], 0, sizeof(c->port_recvlog));	// シリアル受信ログ
+	c->port_384				= FALSE;							// シリアル38400bps固定
+	c->port_lpt				= 0;								// LPTxポート
+	memset(&c->port_sendlog[0], 0, sizeof(c->port_sendlog));	// パラレル送信ログ
+
+	// MIDI
+	c->midi_bid				= 0;							// MIDIボードID
+	c->midi_ilevel			= 0;							// MIDI割り込みレベル
+	c->midi_reset			= 0;							// MIDIリセットコマンド
+	c->midiin_device		= 0;							// MIDI INデバイス
+	c->midiin_delay			= 0;							// MIDI INディレイ(ms)
+	c->midiout_device		= 0;							// MIDI OUTデバイス
+	c->midiout_delay		= 84;							// MIDI OUTディレイ(ms)
+
+	// 改造
+	c->sram_64k				= FALSE;						// 64KB SRAM
+	c->scc_clkup			= FALSE;						// SCCクロックアップ
+	c->power_led			= FALSE;						// 青色電源LED
+	c->dual_fdd				= FALSE;						// 2DD/2HD兼用FDD
+	c->sasi_parity			= FALSE;						// SASIバスパリティ
+
+	// TrueKey
+	c->tkey_mode			= 1;							// TrueKeyモード(bit0:VM bit1:WinApp)
+	c->tkey_com				= 0;							// キーボードCOMポート
+	c->tkey_rts				= FALSE;						// RTS反転モード
+
+	// その他
+	c->floppy_speed			= TRUE;							// フロッピーディスク高速
+	c->floppy_led			= TRUE;							// フロッピーディスクLEDモード
+	c->popup_swnd			= TRUE;							// ポップアップサブウィンドウ
+	c->auto_mouse			= FALSE;						// 自動マウスモード制御
+	c->power_off			= FALSE;						// 電源OFFで開始
+
+	//	Config202
+	// システム
+	c->mem_type				= 1;		// メモリマップ種別
+
+	// SCSI
+	c->scsi_ilevel			= 1;		// SCSI割り込みレベル
+	c->scsi_drives			= 0;		// SCSIドライブ数
+	c->scsi_sramsync		= 1;		// SCSIメモリスイッチ自動更新
+	c->scsi_mofirst			= 0;		// MOドライブ優先割り当て
+	memset(&c->scsi_file[0][0], 0, sizeof(c->scsi_file));	// SCSIイメージファイル
+
+	//	Config
+	// レジューム
+	c->resume_fd			= FALSE;	// FDレジューム
+	c->resume_fdi[0]		= TRUE;		// FD挿入フラグ
+	c->resume_fdi[1]		= FALSE;	// FD挿入フラグ
+	c->resume_fdw[0]		= FALSE;	// FD書き込み禁止
+	c->resume_fdw[1]		= FALSE;	// FD書き込み禁止
+	c->resume_fdm[0]		= 0;		// FDメディアNo.
+	c->resume_fdm[1]		= 0;		// FDメディアNo.
+	c->resume_mo			= 0;		// MOレジューム
+	c->resume_mos			= 0;		// MO挿入フラグ
+	c->resume_mow			= 0;		// MO書き込み禁止
+	c->resume_cd			= 0;		// CDレジューム
+	c->resume_iso			= 0;		// CD挿入フラグ
+	c->resume_state			= 0;		// ステートレジューム
+	c->resume_xm6			= 0;		// ステート有効フラグ
+	c->resume_screen		= 0;		// 画面モードレジューム
+	c->resume_dir			= 0;		// デフォルトディレクトリレジューム
+	strcpy(c->resume_path, _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\"));
+
+	// 描画
+	c->caption_info			= 1;		// キャプション情報表示
+
+	// ディスプレイ
+	c->caption				= 1;		// キャプション
+	c->menu_bar				= 1;		// メニューバー
+	c->status_bar			= 1;		// ステータスバー
+	c->window_left			= 543;		// ウィンドウ矩形
+	c->window_top			= 231;		// ウィンドウ矩形
+	c->window_full			= 0;		// フルスクリーン
+	c->window_mode			= 0;		// ワイドスクリーン
+
+	// WINDRVモジュール
+	c->windrv_enable		= 0;		// Windrvサポート 0:無効 1:WindrvXM (2:Windrv互換)
+
+	// ホスト側ファイルシステム
+	c->host_option			= 0;		// 動作フラグ (class CHostFilename 参照)
+	c->host_resume			= FALSE;	// ベースパス状態復元有効 FALSEだと毎回スキャンする
+	c->host_drives			= 0;		// 有効なドライブ数
+	memset(&c->host_flag[0], 0, sizeof(c->host_flag));		// 動作フラグ (class CWinFileDrv 参照)
+	memset(&c->host_path[0][0], 0, sizeof(c->host_path));		// ベースパス
+}
 
 
 //---------------------------------------------------------------------------
@@ -1185,7 +1367,7 @@ CFrmWnd::CFrmWnd()
 //	m_pSound = NULL;
 //	m_pInput = NULL;
 //	m_pHost = NULL;
-	m_pConfig = NULL;
+//	m_pConfig = NULL;
 
 	// フルスクリーン
 	m_bFullScreen = FALSE;
@@ -1648,23 +1830,6 @@ BOOL FASTCALL CFrmWnd::InitComponent()
 	CComponent *pComponent;
 
 	ASSERT(!m_pFirstComponent);
-//	ASSERT(!m_pSch);
-//	ASSERT(!m_pSound);
-//	ASSERT(!m_pInput);
-//	ASSERT(!m_pHost);
-	ASSERT(!m_pConfig);
-
-	// コンストラクト(順番を考慮する必要あり。最初Config、最後Scheduler)
-	m_pConfig = new CConfig(this);
-	m_pFirstComponent = m_pConfig;
-//	m_pSound = new CSound(this);
-//	m_pFirstComponent->AddComponent(m_pSound);
-//	m_pInput = new CInput(this);
-//	m_pFirstComponent->AddComponent(m_pInput);
-//	m_pHost = new CHost(this);
-//	m_pFirstComponent->AddComponent(m_pHost);
-//	m_pSch = new CScheduler(this);
-//	m_pFirstComponent->AddComponent(m_pSch);
 
 	// 初期化
 	pComponent = m_pFirstComponent;
@@ -1920,7 +2085,7 @@ BOOL FASTCALL CFrmWnd::InitCmdSub(int nDrive, LPCTSTR lpszPath)
 
 	// 成功。ディレクトリ保存＆MRU追加
 	Filepath::SetDefaultDir(szPath);
-	GetConfig()->SetMRUFile(nDrive, szPath);
+//	GetConfig()->SetMRUFile(nDrive, szPath);
 
 	// フロッピーなら、BADイメージ警告
 	if (pFDI) {
@@ -2095,7 +2260,8 @@ BOOL FASTCALL CFrmWnd::LoadComponent(const Filepath& path, DWORD dwPos)
 	fio.Close();
 
 	// 設定適用(VMロックして行う)
-	if (GetConfig()->IsApply()) {
+//	if (GetConfig()->IsApply())
+	{
 		::LockVM();
 		ApplyCfg();
 		::UnlockVM();
@@ -2118,7 +2284,7 @@ void FASTCALL CFrmWnd::ApplyCfg()
 	CComponent *pComponent;
 
 	// 設定取得
-	GetConfig()->GetConfig(&config);
+	configGetConfig(&config);
 
 	// まずVMに適用
 	::GetVM()->ApplyCfg(&config);
@@ -2210,7 +2376,7 @@ LONG CFrmWnd::OnKick(UINT , LONG )
 	}
 */
 	// 設定取得(power_off設定のため)
-	GetConfig()->GetConfig(&config);
+	configGetConfig(&config);
 	if (config.power_off) {
 		// 電源OFFで起動
 		::GetVM()->SetPower(FALSE);
@@ -2496,7 +2662,7 @@ void CFrmWnd::SaveFrameWnd()
 	ASSERT_VALID(this);
 
 	// 設定取得
-	GetConfig()->GetConfig(&config);
+	configGetConfig(&config);
 
 	// キャプション・メニュー・ステータスバー
 	config.menu_bar = m_bMenuBar;
@@ -2518,7 +2684,7 @@ void CFrmWnd::SaveFrameWnd()
 	config.window_full = m_bFullScreen;
 
 	// 設定変更
-	GetConfig()->SetConfig(&config);
+//	GetConfig()->SetConfig(&config);
 }
 
 //---------------------------------------------------------------------------
@@ -2539,7 +2705,7 @@ void CFrmWnd::SaveDiskState()
 	::LockVM();
 
 	// 設定取得
-	GetConfig()->GetConfig(&config);
+	configGetConfig(&config);
 
 	// フロッピーディスク
 	for (nDrive=0; nDrive<2; nDrive++) {
@@ -2575,7 +2741,7 @@ void CFrmWnd::SaveDiskState()
 	_tcscpy(config.resume_path, Filepath::GetDefaultDir());
 
 	// 設定変更
-	GetConfig()->SetConfig(&config);
+//	GetConfig()->SetConfig(&config);
 
 	// アンロック
 	::UnlockVM();
@@ -2600,7 +2766,7 @@ BOOL CFrmWnd::RestoreFrameWnd(BOOL bFullScreen)
 	ASSERT(this);
 
 	// 設定取得
-	GetConfig()->GetConfig(&config);
+	configGetConfig(&config);
 
 	// ウィンドウ位置の復元が指定されていなければ、デフォルト状態で動作
 	if (!config.resume_screen) {
@@ -2676,7 +2842,7 @@ BOOL CFrmWnd::RestoreFrameWnd(BOOL bFullScreen)
 void CFrmWnd::RestoreDiskState()
 {
 	int nDrive;
-	TCHAR szMRU[_MAX_PATH];
+//	TCHAR szMRU[_MAX_PATH];
 	BOOL bResult;
 	Filepath path;
 	Config config;
@@ -2684,15 +2850,15 @@ void CFrmWnd::RestoreDiskState()
 	ASSERT(this);
 
 	// 設定取得
-	GetConfig()->GetConfig(&config);
+	configGetConfig(&config);
 
 	// ステートが指定されていれば、これを先に行う
 	if (config.resume_state) {
 		// ステートがあった
 		if (config.resume_xm6) {
 			// パス取得
-			GetConfig()->GetMRUFile(4, 0, szMRU);
-			path.SetPath(szMRU);
+//			GetConfig()->GetMRUFile(4, 0, szMRU);
+//			path.SetPath(szMRU);
 
 			// オープン前処理
 			if (OnOpenPrep(path)) {
@@ -2720,9 +2886,9 @@ void CFrmWnd::RestoreDiskState()
 			}
 
 			// ディスク挿入
-			GetConfig()->GetMRUFile(nDrive, 0, szMRU);
-			ASSERT(szMRU[0] != _T('\0'));
-			path.SetPath(szMRU);
+//			GetConfig()->GetMRUFile(nDrive, 0, szMRU);
+//			ASSERT(szMRU[0] != _T('\0'));
+//			path.SetPath(szMRU);
 
 			// VMロックを行い、ディスク割り当てを試みる
 			::LockVM();
@@ -2748,9 +2914,9 @@ void CFrmWnd::RestoreDiskState()
 		// ディスク挿入されていたか
 		if (config.resume_mos) {
 			// ディスク挿入
-			GetConfig()->GetMRUFile(2, 0, szMRU);
-			ASSERT(szMRU[0] != _T('\0'));
-			path.SetPath(szMRU);
+//			GetConfig()->GetMRUFile(2, 0, szMRU);
+//			ASSERT(szMRU[0] != _T('\0'));
+//			path.SetPath(szMRU);
 
 			// VMロックを行い、ディスク割り当てを試みる
 			::LockVM();
@@ -2774,9 +2940,9 @@ void CFrmWnd::RestoreDiskState()
 		// ディスク挿入されていたか
 		if (config.resume_iso) {
 			// ディスク挿入
-			GetConfig()->GetMRUFile(3, 0, szMRU);
-			ASSERT(szMRU[0] != _T('\0'));
-			path.SetPath(szMRU);
+//			GetConfig()->GetMRUFile(3, 0, szMRU);
+//			ASSERT(szMRU[0] != _T('\0'));
+//			path.SetPath(szMRU);
 
 			// VMロックを行い、ディスク割り当てを試みる
 			::LockVM();
@@ -3094,7 +3260,7 @@ LRESULT CFrmWnd::OnShellNotify(UINT uParam, LONG lParam)
 		// Windrvがまだ不安定のため、実際にEnableにされていない場合は何もしない(version2.04)
 		{
 			Config config;
-			GetConfig()->GetConfig(&config);
+			configGetConfig(&config);
 			if ((config.windrv_enable <= 0) || (config.windrv_enable > 3)) {
 //				pHost = NULL;
 			}
@@ -3145,7 +3311,7 @@ void FASTCALL CFrmWnd::UpdateExec()
 void CFrmWnd::GetMessageString(UINT nID, CString& rMessage) const
 {
 	Filepath path;
-	TCHAR szPath[_MAX_PATH];
+//	TCHAR szPath[_MAX_PATH];
 	TCHAR szName[60];
 	TCHAR szDrive[_MAX_DRIVE];
 	TCHAR szDir[_MAX_DIR];
@@ -3185,50 +3351,50 @@ void CFrmWnd::GetMessageString(UINT nID, CString& rMessage) const
 	if ((nID >= IDM_D0_MRU0) && (nID <= IDM_D0_MRU8)) {
 		nMRU = nID - IDM_D0_MRU0;
 		ASSERT((nMRU >= 0) && (nMRU <= 8));
-		GetConfig()->GetMRUFile(0, nMRU, szPath);
-		szPath[60] = _T('\0');
-		rMessage = szPath;
-		bValid = TRUE;
+//		GetConfig()->GetMRUFile(0, nMRU, szPath);
+//		szPath[60] = _T('\0');
+//		rMessage = szPath;
+//		bValid = TRUE;
 	}
 
 	// MRU1
 	if ((nID >= IDM_D1_MRU0) && (nID <= IDM_D1_MRU8)) {
 		nMRU = nID - IDM_D1_MRU0;
 		ASSERT((nMRU >= 0) && (nMRU <= 8));
-		GetConfig()->GetMRUFile(1, nMRU, szPath);
-		szPath[60] = _T('\0');
-		rMessage = szPath;
-		bValid = TRUE;
+//		GetConfig()->GetMRUFile(1, nMRU, szPath);
+//		szPath[60] = _T('\0');
+//		rMessage = szPath;
+//		bValid = TRUE;
 	}
 
 	// MRU2
 	if ((nID >= IDM_MO_MRU0) && (nID <= IDM_MO_MRU8)) {
 		nMRU = nID - IDM_MO_MRU0;
 		ASSERT((nMRU >= 0) && (nMRU <= 8));
-		GetConfig()->GetMRUFile(2, nMRU, szPath);
-		szPath[60] = _T('\0');
-		rMessage = szPath;
-		bValid = TRUE;
+//		GetConfig()->GetMRUFile(2, nMRU, szPath);
+//		szPath[60] = _T('\0');
+//		rMessage = szPath;
+//		bValid = TRUE;
 	}
 
 	// MRU3
 	if ((nID >= IDM_CD_MRU0) && (nID <= IDM_CD_MRU8)) {
 		nMRU = nID - IDM_CD_MRU0;
 		ASSERT((nMRU >= 0) && (nMRU <= 8));
-		GetConfig()->GetMRUFile(3, nMRU, szPath);
-		szPath[60] = _T('\0');
-		rMessage = szPath;
-		bValid = TRUE;
+//		GetConfig()->GetMRUFile(3, nMRU, szPath);
+//		szPath[60] = _T('\0');
+//		rMessage = szPath;
+//		bValid = TRUE;
 	}
 
 	// MRU4
 	if ((nID >= IDM_XM6_MRU0) && (nID <= IDM_XM6_MRU8)) {
 		nMRU = nID - IDM_XM6_MRU0;
 		ASSERT((nMRU >= 0) && (nMRU <= 8));
-		GetConfig()->GetMRUFile(4, nMRU, szPath);
-		szPath[60] = _T('\0');
-		rMessage = szPath;
-		bValid = TRUE;
+//		GetConfig()->GetMRUFile(4, nMRU, szPath);
+//		szPath[60] = _T('\0');
+//		rMessage = szPath;
+//		bValid = TRUE;
 	}
 
 	// ディスク名0
@@ -3385,29 +3551,4 @@ CComponent* FASTCALL CFrmWnd::GetFirstComponent() const
 	ASSERT(this);
 	return m_pFirstComponent;
 }
-/*
-//---------------------------------------------------------------------------
-//
-//	スケジューラ取得
-//
-//---------------------------------------------------------------------------
-CScheduler* FASTCALL CFrmWnd::GetScheduler() const
-{
-	ASSERT(this);
-	ASSERT(m_pSch);
-	return m_pSch;
-}
-*/
-//---------------------------------------------------------------------------
-//
-//	コンフィグ取得
-//
-//---------------------------------------------------------------------------
-CConfig* FASTCALL CFrmWnd::GetConfig() const
-{
-	ASSERT(this);
-	ASSERT(m_pConfig);
-	return m_pConfig;
-}
-
 #endif	// _WIN32

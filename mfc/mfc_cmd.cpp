@@ -35,7 +35,6 @@
 #include "scsi.h"
 
 #include "mfc_com.h"
-#include "mfc_cfg.h"
 
 //---------------------------------------------------------------------------
 //
@@ -78,13 +77,13 @@ void CFrmWnd::OnOpenUI(CCmdUI *pCmdUI)
 	CMenu *pMenu;
 	CMenu *pSubMenu;
 	CString strExit;
-	TCHAR szMRU[_MAX_PATH];
-	TCHAR szDrive[_MAX_DRIVE];
-	TCHAR szDir[_MAX_DIR];
-	TCHAR szFile[_MAX_FNAME];
-	TCHAR szExt[_MAX_EXT];
+//	TCHAR szMRU[_MAX_PATH];
+//	TCHAR szDrive[_MAX_DRIVE];
+//	TCHAR szDir[_MAX_DIR];
+//	TCHAR szFile[_MAX_FNAME];
+//	TCHAR szExt[_MAX_EXT];
 	int nEnable;
-	int i;
+//	int i;
 
 	// 電源状態を取得、ファイルパスを取得(VMロックして行う)
 	::LockVM();
@@ -154,11 +153,11 @@ void CFrmWnd::OnOpenUI(CCmdUI *pCmdUI)
 	}
 
 	// MRUがなければ、終了メニューを追加して終わる
-	if (GetConfig()->GetMRUNum(4) == 0) {
-		::GetMsg(IDS_EXIT, strExit);
-		pSubMenu->AppendMenu(MF_STRING, IDM_EXIT, strExit);
-		return;
-	}
+//	if (GetConfig()->GetMRUNum(4) == 0) {
+//		::GetMsg(IDS_EXIT, strExit);
+//		pSubMenu->AppendMenu(MF_STRING, IDM_EXIT, strExit);
+//		return;
+//	}
 
 	// 有効・無効定数設定
 	if (bPower) {
@@ -169,27 +168,27 @@ void CFrmWnd::OnOpenUI(CCmdUI *pCmdUI)
 	}
 
 	// MRU処理 - 追加
-	for (i=0; i<9; i++) {
-		// 取得してみて
-		GetConfig()->GetMRUFile(4, i, szMRU);
-		if (szMRU[0] == _T('\0')) {
-			break;
-		}
-
-		// あればメニューに追加
-		_tsplitpath(szMRU, szDrive, szDir, szFile, szExt);
-		if (_tcslen(szDir) > 1) {
-			_tcscpy(szDir, _T("\\...\\"));
-		}
-		_stprintf(szMRU, _T("&%d "), i + 1);
-		_tcscat(szMRU, szDrive);
-		_tcscat(szMRU, szDir);
-		_tcscat(szMRU, szFile);
-		_tcscat(szMRU, szExt);
-
-		pSubMenu->AppendMenu(MF_STRING, IDM_XM6_MRU0 + i, szMRU);
-		pSubMenu->EnableMenuItem(IDM_XM6_MRU0 + i, nEnable);
-	}
+//	for (i=0; i<9; i++) {
+//		// 取得してみて
+//		GetConfig()->GetMRUFile(4, i, szMRU);
+//		if (szMRU[0] == _T('\0')) {
+//			break;
+//		}
+//
+//		// あればメニューに追加
+//		_tsplitpath(szMRU, szDrive, szDir, szFile, szExt);
+//		if (_tcslen(szDir) > 1) {
+//			_tcscpy(szDir, _T("\\...\\"));
+//		}
+//		_stprintf(szMRU, _T("&%d "), i + 1);
+//		_tcscat(szMRU, szDrive);
+//		_tcscat(szMRU, szDir);
+//		_tcscat(szMRU, szFile);
+//		_tcscat(szMRU, szExt);
+//
+//		pSubMenu->AppendMenu(MF_STRING, IDM_XM6_MRU0 + i, szMRU);
+//		pSubMenu->EnableMenuItem(IDM_XM6_MRU0 + i, nEnable);
+//	}
 
 	// セパレータを追加
 	pSubMenu->AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
@@ -331,12 +330,12 @@ BOOL FASTCALL CFrmWnd::OnOpenSub(const Filepath& path)
 	for (nDrive=0; nDrive<2; nDrive++) {
 		if (m_pFDD->IsReady(nDrive, FALSE)) {
 			m_pFDD->GetPath(nDrive, diskpath);
-			GetConfig()->SetMRUFile(nDrive, diskpath.GetPath());
+//			GetConfig()->SetMRUFile(nDrive, diskpath.GetPath());
 		}
 	}
 	if (m_pSASI->IsReady()) {
 		m_pSASI->GetPath(diskpath);
-		GetConfig()->SetMRUFile(2, diskpath.GetPath());
+//		GetConfig()->SetMRUFile(2, diskpath.GetPath());
 	}
 	// 実行カウンタをクリア
 	m_dwExec = 0;
@@ -346,7 +345,7 @@ BOOL FASTCALL CFrmWnd::OnOpenSub(const Filepath& path)
 	schedulerSetEnable(bRun);
 
 	// MRUに追加
-	GetConfig()->SetMRUFile(4, path.GetPath());
+//	GetConfig()->SetMRUFile(4, path.GetPath());
 
 	// 情報メッセージを表示
 	::GetMsg(IDS_XM6LOADOK, strMsg);
@@ -506,7 +505,7 @@ void FASTCALL CFrmWnd::OnSaveSub(const Filepath& path)
 //	ResetCaption();
 
 	// MRUに追加
-	GetConfig()->SetMRUFile(4, path.GetPath());
+//	GetConfig()->SetMRUFile(4, path.GetPath());
 
 	// 情報メッセージを表示
 	::GetMsg(IDS_XM6SAVEOK, strMsg);
@@ -530,11 +529,11 @@ void CFrmWnd::OnMRU(UINT uID)
 	ASSERT(uID <= 8);
 
 	// MRU取得、パス作成
-	GetConfig()->GetMRUFile(4, (int)uID, szMRU);
-	if (szMRU[0] == _T('\0')) {
-		return;
-	}
-	path.SetPath(szMRU);
+//	GetConfig()->GetMRUFile(4, (int)uID, szMRU);
+//	if (szMRU[0] == _T('\0')) {
+//		return;
+//	}
+//	path.SetPath(szMRU);
 
 	// オープン前処理
 	if (!OnOpenPrep(path)) {
@@ -875,7 +874,7 @@ void FASTCALL CFrmWnd::OnFDOpen(int nDrive)
 	::UnlockVM();
 
 	// MRUに追加
-	GetConfig()->SetMRUFile(nDrive, szPath);
+//	GetConfig()->SetMRUFile(nDrive, szPath);
 
 	// 成功なら、BADイメージ警告
 	if (pFDI->GetID() == MAKEID('B', 'A', 'D', ' ')) {
@@ -992,11 +991,11 @@ void FASTCALL CFrmWnd::OnFDMRU(int nDrive, int nMRU)
 	ASSERT((nMRU >= 0) && (nMRU <= 8));
 
 	// MRU取得、パス作成
-	GetConfig()->GetMRUFile(nDrive, nMRU, szMRU);
-	if (szMRU[0] == _T('\0')) {
-		return;
-	}
-	path.SetPath(szMRU);
+//	GetConfig()->GetMRUFile(nDrive, nMRU, szMRU);
+//	if (szMRU[0] == _T('\0')) {
+//		return;
+//	}
+//	path.SetPath(szMRU);
 
 	// VMロック
 	::LockVM();
@@ -1016,7 +1015,7 @@ void FASTCALL CFrmWnd::OnFDMRU(int nDrive, int nMRU)
 		Filepath::SetDefaultDir(szMRU);
 
 		// MRUに追加
-		GetConfig()->SetMRUFile(nDrive, szMRU);
+//		GetConfig()->SetMRUFile(nDrive, szMRU);
 
 		// BADイメージ警告
 		if (pFDI->GetID() == MAKEID('B', 'A', 'D', ' ')) {
@@ -1043,11 +1042,11 @@ void CFrmWnd::OnFDOpenUI(CCmdUI *pCmdUI)
 	char szShort[_MAX_PATH];
 	LPTSTR lpszShort;
 	int i;
-	TCHAR szMRU[_MAX_PATH];
-	TCHAR szDrive[_MAX_DRIVE];
-	TCHAR szDir[_MAX_DIR];
-	TCHAR szFile[_MAX_FNAME];
-	TCHAR szExt[_MAX_EXT];
+//	TCHAR szMRU[_MAX_PATH];
+//	TCHAR szDrive[_MAX_DRIVE];
+//	TCHAR szDir[_MAX_DIR];
+//	TCHAR szFile[_MAX_FNAME];
+//	TCHAR szExt[_MAX_EXT];
 
 	ASSERT(this);
 	ASSERT(m_pFDD);
@@ -1161,6 +1160,7 @@ void CFrmWnd::OnFDOpenUI(CCmdUI *pCmdUI)
 		}
 	}
 
+/*
 	// MRU処理 - セパレータ
 	if (GetConfig()->GetMRUNum(nDrive) == 0) {
 		return;
@@ -1202,6 +1202,7 @@ void CFrmWnd::OnFDOpenUI(CCmdUI *pCmdUI)
 			pSubMenu->EnableMenuItem(IDM_D1_MRU0 + i, nEnable);
 		}
 	}
+*/
 }
 
 //---------------------------------------------------------------------------

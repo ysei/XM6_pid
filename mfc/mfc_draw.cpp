@@ -18,7 +18,6 @@
 #include "config.h"
 #include "mfc_frm.h"
 #include "mfc_com.h"
-#include "mfc_cfg.h"
 #include "mfc_res.h"
 #include "mfc_draw.h"
 

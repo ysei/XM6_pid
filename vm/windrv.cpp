@@ -19,7 +19,7 @@
 #include "config.h"
 #include "windrv.h"
 #include "mfc_com.h"
-#include "mfc_cfg.h"
+//#include "mfc_cfg.h"
 
 //===========================================================================
 //
