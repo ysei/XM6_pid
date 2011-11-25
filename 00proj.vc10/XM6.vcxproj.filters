@@ -133,9 +133,6 @@
     <ClCompile Include="..\mfc\mfc_app.cpp">
       <Filter>mfc</Filter>
     </ClCompile>
-    <ClCompile Include="..\mfc\mfc_cmd.cpp">
-      <Filter>mfc</Filter>
-    </ClCompile>
     <ClCompile Include="..\mfc\mfc_draw.cpp">
       <Filter>mfc</Filter>
     </ClCompile>

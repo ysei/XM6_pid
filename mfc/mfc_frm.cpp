@@ -38,6 +38,7 @@
 #include "mfc_asm.h"
 
 #include "config.h"
+#include "sram.h"
 
 //===========================================================================
 //
@@ -3444,5 +3445,382 @@ CDrawView* FASTCALL CFrmWnd::GetView() const
 	ASSERT(m_pDrawView);
 	ASSERT(m_pDrawView->m_hWnd);
 	return m_pDrawView;
+}
+
+//---------------------------------------------------------------------------
+//
+//	リセット
+//
+//---------------------------------------------------------------------------
+void CFrmWnd::OnReset()
+{
+	SRAM *pSRAM;
+	DWORD Sw[0x100];
+	DWORD dwDevice;
+	DWORD dwAddr;
+	CString strReset;
+	CString strSub;
+	BOOL bFlag;
+	int i;
+
+	// 電源OFFなら操作不可
+	if (!::GetVM()->IsPower()) {
+		return;
+	}
+
+	::LockVM();
+
+	// リセット＆再描画
+	::GetVM()->Reset();
+	GetView()->Refresh();
+//	ResetCaption();
+
+	// メモリスイッチ取得を行う
+	pSRAM = (SRAM*)::GetVM()->SearchDevice(MAKEID('S', 'R', 'A', 'M'));
+	ASSERT(pSRAM);
+	for (i=0; i<0x100; i++) {
+		Sw[i] = pSRAM->ReadOnly(0xed0000 + i);
+	}
+
+	::UnlockVM();
+
+	// リセットメッセージをロード
+	::GetMsg(IDS_RESET, strReset);
+
+	// メモリスイッチの先頭を比較
+	if (memcmp(Sw, SigTable, sizeof(DWORD) * 7) != 0) {
+//		SetInfo(strReset);
+		return;
+	}
+
+	// ブートデバイスを取得
+	dwDevice = Sw[0x18];
+	dwDevice <<= 8;
+	dwDevice |= Sw[0x19];
+
+	// ブートデバイス判別
+	bFlag = FALSE;
+	if (dwDevice == 0x0000) {
+		// STD
+		strSub = _T("STD)");
+		bFlag = TRUE;
+	}
+	if (dwDevice == 0xa000) {
+		// ROM
+		dwAddr = Sw[0x0c];
+		dwAddr = (dwAddr << 8) | Sw[0x0d];
+		dwAddr = (dwAddr << 8) | Sw[0x0e];
+		dwAddr = (dwAddr << 8) | Sw[0x0f];
+
+		// FC0000～FC001Cと、EA0020～EA003CはSCSI#
+		strSub.Format(_T("ROM $%06X)"), dwAddr);
+		if ((dwAddr >= 0xfc0000) && (dwAddr < 0xfc0020)) {
+			strSub.Format(_T("SCSI%1d)"), (dwAddr & 0x001f) >> 2);
+		}
+		if ((dwAddr >= 0xea0020) && (dwAddr < 0xea0040)) {
+			strSub.Format(_T("SCSI%1d)"), (dwAddr & 0x001f) >> 2);
+		}
+		bFlag = TRUE;
+	}
+	if (dwDevice == 0xb000) {
+		// RAM
+		dwAddr = Sw[0x10];
+		dwAddr = (dwAddr << 8) | Sw[0x11];
+		dwAddr = (dwAddr << 8) | Sw[0x12];
+		dwAddr = (dwAddr << 8) | Sw[0x13];
+		strSub.Format(_T("RAM $%06X)"), dwAddr);
+		bFlag = TRUE;
+	}
+	if ((dwDevice & 0xf0ff) == 0x9070) {
+		strSub.Format(_T("2HD%1d)"), (dwDevice & 0xf00) >> 8);
+		bFlag = TRUE;
+	}
+	if ((dwDevice & 0xf0ff) == 0x8000) {
+		strSub.Format(_T("HD%1d)"), (dwDevice & 0xf00) >> 8);
+		bFlag = TRUE;
+	}
+	if (!bFlag) {
+		strSub = _T("Unknown)");
+	}
+
+	// 表示
+	strReset += _T(" (");
+	strReset += strSub;
+//	SetInfo(strReset);
+}
+
+//---------------------------------------------------------------------------
+//
+//	リセット UI
+//
+//---------------------------------------------------------------------------
+void CFrmWnd::OnResetUI(CCmdUI *pCmdUI)
+{
+	// 電源ONなら操作できる
+	pCmdUI->Enable(::GetVM()->IsPower());
+}
+
+//---------------------------------------------------------------------------
+//
+//	SRAMシグネチャテーブル
+//
+//---------------------------------------------------------------------------
+const DWORD CFrmWnd::SigTable[] = {
+	0x82, 0x77, 0x36, 0x38, 0x30, 0x30, 0x30
+};
+
+//---------------------------------------------------------------------------
+//
+//	フロッピーディスク処理
+//
+//---------------------------------------------------------------------------
+void CFrmWnd::OnFD(UINT uID)
+{
+	int nDrive;
+
+	// ドライブ決定
+	nDrive = 0;
+	if (uID >= IDM_D1OPEN) {
+		nDrive = 1;
+		uID -= (IDM_D1OPEN - IDM_D0OPEN);
+	}
+
+	switch (uID) {
+		// オープン
+		case IDM_D0OPEN:
+			OnFDOpen(nDrive);
+			break;
+
+/*
+		// イジェクト
+		case IDM_D0EJECT:
+			OnFDEject(nDrive);
+			break;
+
+		// 書き込み保護
+		case IDM_D0WRITEP:
+			OnFDWriteP(nDrive);
+			break;
+
+		// 強制イジェクト
+		case IDM_D0FORCE:
+			OnFDForce(nDrive);
+			break;
+
+		// 誤挿入
+		case IDM_D0INVALID:
+			OnFDInvalid(nDrive);
+			break;
+*/
+		// それ以外
+		default:
+/*
+			if (uID >= IDM_D0_MRU0) {
+				// MRU
+				uID -= IDM_D0_MRU0;
+				ASSERT(uID <= 8);
+				OnFDMRU(nDrive, (int)uID);
+			}
+			else {
+				// Media
+				uID -= IDM_D0_MEDIA0;
+				ASSERT(uID <= 15);
+				OnFDMedia(nDrive, (int)uID);
+			}
+*/
+		break;
+	}
+}
+
+//---------------------------------------------------------------------------
+//
+//	フロッピーオープン
+//
+//---------------------------------------------------------------------------
+void FASTCALL CFrmWnd::OnFDOpen(int nDrive)
+{
+	Filepath path;
+	CString strMsg;
+	TCHAR szPath[_MAX_PATH];
+	FDI *pFDI;
+
+	ASSERT((nDrive == 0) || (nDrive == 1));
+	ASSERT(m_pFDD);
+
+	// コモンダイアログ実行
+	memset(szPath, 0, sizeof(szPath));
+	if (!::FileOpenDlg(this, szPath, IDS_FDOPEN)) {
+//		ResetCaption();
+		return;
+	}
+	path.SetPath(szPath);
+
+	// VMロック
+	::LockVM();
+
+	// ディスク割り当て
+	if (!m_pFDD->Open(nDrive, path)) {
+//		GetScheduler()->Reset();
+		::UnlockVM();
+
+		// オープンエラー
+		::GetMsg(IDS_FDERR, strMsg);
+		MessageBox(strMsg, NULL, MB_ICONSTOP | MB_OK);
+//		ResetCaption();
+		return;
+	}
+
+	// VMをリスタートさせる前に、FDIを取得しておく
+	pFDI = m_pFDD->GetFDI(nDrive);
+
+	// 成功
+//	GetScheduler()->Reset();
+//	ResetCaption();
+	::UnlockVM();
+
+	// MRUに追加
+//	GetConfig()->SetMRUFile(nDrive, szPath);
+
+	// 成功なら、BADイメージ警告
+	if (pFDI->GetID() == MAKEID('B', 'A', 'D', ' ')) {
+		::GetMsg(IDS_BADFDI_WARNING, strMsg);
+		MessageBox(strMsg, NULL, MB_ICONSTOP | MB_OK);
+	}
+}
+
+//---------------------------------------------------------------------------
+//
+//	フロッピーオープン UI
+//
+//---------------------------------------------------------------------------
+void CFrmWnd::OnFDOpenUI(CCmdUI *pCmdUI)
+{
+	CMenu *pMenu;
+	CMenu *pSubMenu;
+	UINT nEnable;
+	int nDrive;
+	int nStat;
+	int nDisks;
+	int nMedia;
+	char szShort[_MAX_PATH];
+	LPTSTR lpszShort;
+	int i;
+//	TCHAR szMRU[_MAX_PATH];
+//	TCHAR szDrive[_MAX_DRIVE];
+//	TCHAR szDir[_MAX_DIR];
+//	TCHAR szFile[_MAX_FNAME];
+//	TCHAR szExt[_MAX_EXT];
+
+	ASSERT(this);
+	ASSERT(m_pFDD);
+
+	// ドライブ決定
+	nDrive = 0;
+	if (pCmdUI->m_nID >= IDM_D1OPEN) {
+		nDrive = 1;
+	}
+
+	// イジェクト禁止で、ディスクあり以外はオープンできる
+	::LockVM();
+	nStat = m_pFDD->GetStatus(nDrive);
+	m_nFDDStatus[nDrive] = nStat;
+	nDisks = m_pFDD->GetDisks(nDrive);
+	nMedia = m_pFDD->GetMedia(nDrive);
+	::UnlockVM();
+	if (!(nStat & FDST_EJECT) && (nStat & FDST_INSERT)) {
+		pCmdUI->Enable(FALSE);
+	}
+	else {
+		pCmdUI->Enable(TRUE);
+	}
+
+	// サブメニュー取得
+	if (m_bPopupMenu) {
+		pMenu = m_PopupMenu.GetSubMenu(0);
+	}
+	else {
+		pMenu = &m_Menu;
+	}
+	// ファイル(F)の次にフロッピー0、フロッピー1と並ぶ
+	pSubMenu = pMenu->GetSubMenu(nDrive + 1);
+
+	// イジェクトUI(以下、ON_UPDATE_COMMAND_UIのタイミング対策)
+	if ((nStat & FDST_INSERT) && (nStat & FDST_EJECT)) {
+		pSubMenu->EnableMenuItem(1, MF_BYPOSITION | MF_ENABLED);
+	}
+	else {
+		pSubMenu->EnableMenuItem(1, MF_BYPOSITION | MF_GRAYED);
+	}
+
+	// 書き込み保護UI
+	if (m_pFDD->IsReadOnly(nDrive) || !(nStat & FDST_INSERT)) {
+		pSubMenu->EnableMenuItem(2, MF_BYPOSITION | MF_GRAYED);
+	}
+	else {
+		pSubMenu->EnableMenuItem(2, MF_BYPOSITION | MF_ENABLED);
+	}
+
+	// 強制イジェクトUI
+	if (!(nStat & FDST_EJECT) && (nStat & FDST_INSERT)) {
+		pSubMenu->EnableMenuItem(4, MF_BYPOSITION | MF_ENABLED);
+	}
+	else {
+		pSubMenu->EnableMenuItem(4, MF_BYPOSITION | MF_GRAYED);
+	}
+
+	// 誤挿入UI
+	if (!(nStat & FDST_INSERT) && !(nStat & FDST_INVALID)) {
+		pSubMenu->EnableMenuItem(5, MF_BYPOSITION | MF_ENABLED);
+	}
+	else {
+		pSubMenu->EnableMenuItem(5, MF_BYPOSITION | MF_GRAYED);
+	}
+
+	// 以降のメニューはすべて削除
+	while (pSubMenu->GetMenuItemCount() > 6) {
+		pSubMenu->RemoveMenu(6, MF_BYPOSITION);
+	}
+
+	// マルチディスク処理
+	if (nDisks > 1) {
+		// 有効・無効定数設定
+		if (!(nStat & FDST_EJECT) && (nStat & FDST_INSERT)) {
+			nEnable = MF_BYCOMMAND | MF_ENABLED;
+		}
+		else {
+			nEnable = MF_BYCOMMAND | MF_GRAYED;
+		}
+
+		// セパレータを挿入
+		pSubMenu->AppendMenu(MF_SEPARATOR, 0, (LPCTSTR)NULL);
+
+		// メディアループ
+		ASSERT(nDisks <= 16);
+		for (i=0; i<nDisks; i++) {
+			// ディスク名はchar*で格納されている為、TCHARへ変換
+			m_pFDD->GetName(nDrive, szShort, i);
+			lpszShort = A2T(szShort);
+
+			// 追加
+			if (nDrive == 0) {
+				pSubMenu->AppendMenu(MF_STRING, IDM_D0_MEDIA0 + i, lpszShort);
+				pSubMenu->EnableMenuItem(IDM_D0_MEDIA0 + i, nEnable);
+			}
+			else {
+				pSubMenu->AppendMenu(MF_STRING, IDM_D1_MEDIA0 + i, lpszShort);
+				pSubMenu->EnableMenuItem(IDM_D1_MEDIA0 + i, nEnable);
+			}
+		}
+
+		// ラジオボタン設定
+		if (nDrive == 0) {
+			pSubMenu->CheckMenuRadioItem(IDM_D0_MEDIA0, IDM_D0_MEDIAF,
+										IDM_D0_MEDIA0 + nMedia, MF_BYCOMMAND);
+		}
+		else {
+			pSubMenu->CheckMenuRadioItem(IDM_D1_MEDIA0, IDM_D1_MEDIAF,
+										IDM_D1_MEDIA0 + nMedia, MF_BYCOMMAND);
+		}
+	}
 }
 #endif	// _WIN32
