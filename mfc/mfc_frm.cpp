@@ -25,7 +25,6 @@
 #include "mfc_frm.h"
 #include "mfc_draw.h"
 #include "mfc_res.h"
-#include "mfc_com.h"
 
 #include "crtc.h"
 #include "keyboard.h"
@@ -1361,7 +1360,7 @@ CFrmWnd::CFrmWnd()
 	m_pMouse = NULL;
 
 	// コンポーネント
-	m_pFirstComponent = NULL;
+//	m_pFirstComponent = NULL;
 	m_pDrawView = NULL;
 //	m_pSch = NULL;
 //	m_pSound = NULL;
@@ -1826,25 +1825,8 @@ BOOL FASTCALL CFrmWnd::InitVM()
 //---------------------------------------------------------------------------
 BOOL FASTCALL CFrmWnd::InitComponent()
 {
-	BOOL bSuccess;
-	CComponent *pComponent;
-
-	ASSERT(!m_pFirstComponent);
-
-	// 初期化
-	pComponent = m_pFirstComponent;
-	bSuccess = TRUE;
-
-	// ループ
-	while (pComponent) {
-		if (!pComponent->Init()) {
-			bSuccess = FALSE;
-		}
-		pComponent = pComponent->GetNextComponent();
-	}
-//	m_pSch->Init();
+	BOOL bSuccess = TRUE;
 	schedulerInit();
-
 	return bSuccess;
 }
 
@@ -2112,7 +2094,6 @@ BOOL FASTCALL CFrmWnd::SaveComponent(const Filepath& path, DWORD dwPos)
 {
 	Fileio fio;
 	DWORD dwID;
-	CComponent *pComponent;
 	DWORD dwMajor;
 	DWORD dwMinor;
 	int nVer;
@@ -2140,26 +2121,6 @@ BOOL FASTCALL CFrmWnd::SaveComponent(const Filepath& path, DWORD dwPos)
 		return FALSE;
 	}
 
-	// コンポーネントループ
-	pComponent = m_pFirstComponent;
-	while (pComponent) {
-		// IDを保存
-		dwID = pComponent->GetID();
-		if (!fio.Write(&dwID, sizeof(dwID))) {
-			fio.Close();
-			return FALSE;
-		}
-
-		// コンポーネント固有
-		if (!pComponent->Save(&fio, nVer)) {
-			fio.Close();
-			return FALSE;
-		}
-
-		// 次へ
-		pComponent = pComponent->GetNextComponent();
-	}
-
 	// 終端書き込み
 	dwID = MAKEID('E', 'N', 'D', ' ');
 	if (!fio.Write(&dwID, sizeof(dwID))) {
@@ -2182,7 +2143,6 @@ BOOL FASTCALL CFrmWnd::LoadComponent(const Filepath& path, DWORD dwPos)
 {
 	Fileio fio;
 	DWORD dwID;
-	CComponent *pComponent;
 	char cHeader[0x10];
 	int nVer;
 
@@ -2241,19 +2201,8 @@ BOOL FASTCALL CFrmWnd::LoadComponent(const Filepath& path, DWORD dwPos)
 			break;
 		}
 
-		// コンポーネントを探す
-		pComponent = m_pFirstComponent->SearchComponent(dwID);
-		if (!pComponent) {
-			// セーブ時はコンポーネントが存在したが、今は見つからない
-			fio.Close();
-			return FALSE;
-		}
-
-		// コンポーネント固有
-		if (!pComponent->Load(&fio, nVer)) {
-			fio.Close();
-			return FALSE;
-		}
+		fio.Close();
+		return FALSE;
 	}
 
 	// クローズ
@@ -2281,7 +2230,6 @@ BOOL FASTCALL CFrmWnd::LoadComponent(const Filepath& path, DWORD dwPos)
 void FASTCALL CFrmWnd::ApplyCfg()
 {
 	Config config;
-	CComponent *pComponent;
 
 	// 設定取得
 	configGetConfig(&config);
@@ -2290,12 +2238,6 @@ void FASTCALL CFrmWnd::ApplyCfg()
 	::GetVM()->ApplyCfg(&config);
 
 	// 次にコンポーネントに適用
-	pComponent = m_pFirstComponent;
-	while (pComponent) {
-		pComponent->ApplyCfg(&config);
-		pComponent = pComponent->GetNextComponent();
-	}
-
 	// 次にビューに適用
 	GetView()->ApplyCfg(&config);
 
@@ -2326,7 +2268,6 @@ void FASTCALL CFrmWnd::ApplyCfg()
 //---------------------------------------------------------------------------
 LONG CFrmWnd::OnKick(UINT , LONG )
 {
-	CComponent *pComponent;
 //	CInfo *pInfo;
 	Config config;
 	CString strMsg;
@@ -2388,23 +2329,6 @@ LONG CFrmWnd::OnKick(UINT , LONG )
 
 	// コンポーネントをイネーブル。ただしSchedulerは設定による
 	GetView()->Enable(TRUE);
-	pComponent = m_pFirstComponent;
-	while (pComponent) {
-		// スケジューラか
-		if (pComponent->GetID() == MAKEID('S', 'C', 'H', 'E')) {
-			if (config.power_off) {
-				// 電源OFFで起動
-				pComponent->Enable(FALSE);
-				pComponent = pComponent->GetNextComponent();
-				continue;
-			}
-		}
-
-		// イネーブル
-		pComponent->Enable(TRUE);
-		pComponent = pComponent->GetNextComponent();
-	}
-
 	schedulerSetEnable(TRUE);
 
 	// リセット(ステータスバーのため)
@@ -2592,8 +2516,6 @@ void CFrmWnd::OnEndSession(BOOL bEnding)
 //---------------------------------------------------------------------------
 void FASTCALL CFrmWnd::CleanSub()
 {
-	CComponent *pComponent;
-	CComponent *pNext;
 	int i;
 
 	// 終了フラグを上げる
@@ -2601,35 +2523,12 @@ void FASTCALL CFrmWnd::CleanSub()
 
 	// コンポーネントを止める
 	GetView()->Enable(FALSE);
-	pComponent = m_pFirstComponent;
-	while (pComponent) {
-		pComponent->Enable(FALSE);
-		pComponent = pComponent->GetNextComponent();
-	}
 	schedulerSetEnable(FALSE);
 
 	// スケジューラが実行をやめるまで待つ
 	for (i=0; i<8; i++) {
 		::LockVM();
 		::UnlockVM();
-	}
-
-	// スケジューラを停止(CScheduler)
-//	if (m_nStatus == 0) {
-//		GetScheduler()->Stop();
-//	}
-
-	// コンポーネントを削除
-	pComponent = m_pFirstComponent;
-	while (pComponent) {
-		pComponent->Cleanup();
-		pComponent = pComponent->GetNextComponent();
-	}
-	pComponent = m_pFirstComponent;
-	while (pComponent) {
-		pNext = pComponent->GetNextComponent();
-		delete pComponent;
-		pComponent = pNext;
 	}
 
 	// 仮想マシンを削除
@@ -3539,16 +3438,5 @@ CDrawView* FASTCALL CFrmWnd::GetView() const
 	ASSERT(m_pDrawView);
 	ASSERT(m_pDrawView->m_hWnd);
 	return m_pDrawView;
-}
-
-//---------------------------------------------------------------------------
-//
-//	最初のコンポーネントを取得
-//
-//---------------------------------------------------------------------------
-CComponent* FASTCALL CFrmWnd::GetFirstComponent() const
-{
-	ASSERT(this);
-	return m_pFirstComponent;
 }
 #endif	// _WIN32

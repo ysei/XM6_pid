@@ -173,7 +173,6 @@
     <ClCompile Include="..\vm\windrv.cpp" />
     <ClCompile Include="..\mfc\mfc_app.cpp" />
     <ClCompile Include="..\mfc\mfc_cmd.cpp" />
-    <ClCompile Include="..\mfc\mfc_com.cpp" />
     <ClCompile Include="..\mfc\mfc_draw.cpp" />
     <ClCompile Include="..\mfc\mfc_frm.cpp" />
   </ItemGroup>
@@ -274,7 +273,6 @@
     <ClInclude Include="mfc.h" />
     <ClInclude Include="mfc_app.h" />
     <ClInclude Include="mfc_asm.h" />
-    <ClInclude Include="mfc_com.h" />
     <ClInclude Include="mfc_draw.h" />
     <ClInclude Include="mfc_frm.h" />
     <ClInclude Include="mfc_res.h" />

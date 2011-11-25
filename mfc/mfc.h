@@ -73,7 +73,6 @@ class VM;								// 仮想マシン
 class CApp;								// アプリケーション
 class CFrmWnd;							// フレームウィンドウ
 class CDrawView;						// 描画ビュー
-class CComponent;						// コンポーネント共通
 class CScheduler;						// スケジュールコンポーネント
 
 //---------------------------------------------------------------------------

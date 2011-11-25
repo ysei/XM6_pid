@@ -136,9 +136,6 @@
     <ClCompile Include="..\mfc\mfc_cmd.cpp">
       <Filter>mfc</Filter>
     </ClCompile>
-    <ClCompile Include="..\mfc\mfc_com.cpp">
-      <Filter>mfc</Filter>
-    </ClCompile>
     <ClCompile Include="..\mfc\mfc_draw.cpp">
       <Filter>mfc</Filter>
     </ClCompile>
@@ -308,9 +305,6 @@
       <Filter>mfc</Filter>
     </ClInclude>
     <ClInclude Include="mfc_asm.h">
-      <Filter>mfc</Filter>
-    </ClInclude>
-    <ClInclude Include="mfc_com.h">
       <Filter>mfc</Filter>
     </ClInclude>
     <ClInclude Include="mfc_draw.h">

@@ -15,7 +15,6 @@
 #include "filepath.h"
 #include "mfc_frm.h"
 #include "mfc_asm.h"
-#include "mfc_com.h"
 #include "mfc_res.h"
 #include "mfc_app.h"
 

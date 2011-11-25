@@ -36,7 +36,6 @@ public:
 
 	// 取得
 	CDrawView* FASTCALL GetView() const;				// 描画ビュー取得
-	CComponent* FASTCALL GetFirstComponent() const;		// 最初のコンポーネントを取得
 
 	// ドラッグ＆ドロップサポート
 	BOOL FASTCALL InitCmdSub(int nDrive, LPCTSTR lpszPath);	// コマンドライン処理 サブ
@@ -252,8 +251,6 @@ private:
 										// Mouse
 	CDrawView *m_pDrawView;
 										// 描画ビュー
-	CComponent *m_pFirstComponent;
-										// 最初のコンポーネント
 
 	// フルスクリーン
 	BOOL m_bFullScreen;
