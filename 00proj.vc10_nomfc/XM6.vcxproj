@@ -172,8 +172,6 @@
     <ClCompile Include="..\vm\vc.cpp" />
     <ClCompile Include="..\vm\vm.cpp" />
     <ClCompile Include="..\vm\windrv.cpp" />
-    <ClCompile Include="..\mfc\mfc_app.cpp" />
-    <ClCompile Include="..\mfc\mfc_frm.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\vm\core_asm.asm">
@@ -210,12 +208,6 @@
 </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
     </CustomBuild>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="..\mfc\mfc_res.rc">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir);..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir);..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\mfc\mfc_nomfc.h" />
@@ -271,10 +263,7 @@
     <ClInclude Include="xm6.h" />
     <ClInclude Include="cpudebug.h" />
     <ClInclude Include="mfc.h" />
-    <ClInclude Include="mfc_app.h" />
     <ClInclude Include="mfc_asm.h" />
-    <ClInclude Include="mfc_frm.h" />
-    <ClInclude Include="mfc_res.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="star.vcxproj">

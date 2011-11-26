@@ -31,35 +31,13 @@
 #include "sram.h"
 
 #include "mfc_asm.h"
-
 #include "mfc_nomfc.h"
 
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 static void OnDraw(HDC hdc);
-static CFrmWnd*	globalFrmWnd	= 0;
-static bool		ready0			= false;
-
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
 static HWND						mainWindow		= 0;
-static LPDIRECTINPUT8			pDirectInput	= 0;
-
-LPDIRECTINPUT8 getDirectInput() {
-	LPDIRECTINPUT8 p = pDirectInput;
-	if(p == 0) {
-		DirectInput8Create(
-			  GetModuleHandle(0)
-			, DIRECTINPUT_VERSION
-			, IID_IDirectInput8
-			, (void**) &pDirectInput
-			, 0
-		);
-		p = pDirectInput;
-	}
-	return p;
-}
 
 HWND getMainWindow() {
 	return mainWindow;
@@ -68,6 +46,9 @@ HWND getMainWindow() {
 
 
 //---------------------------------------------------------------------------
+//
+//	Critical section
+//
 //---------------------------------------------------------------------------
 class CCriticalSection {
 public:
@@ -91,59 +72,127 @@ protected:
 
 
 
-static CCriticalSection	vmCs;		// VMロック用クリティカルセクション
-static VM*				pVM = 0;	// Virtual Machine
+//---------------------------------------------------------------------------
+//
+//	VM Interface
+//
+//---------------------------------------------------------------------------
+class CVm {
+public:
+	CVm()
+		: cs(0)
+		, vm(0)
+	{
+	}
 
-VM* FASTCALL GetVM() {
-	return pVM;
-}
+	~CVm() {
+		cleanup();
+	}
+
+	void init() {
+		if(!cs) {
+			cs = new CCriticalSection;
+		}
+		if(!vm) {
+			lock();
+			vm = new VM;
+			vm->Init();
+			unlock();
+		}
+	}
+
+	void cleanup() {
+		if(vm) {
+			lock();
+			vm->Cleanup();
+			delete vm;
+			vm = 0;
+			unlock();
+		}
+		if(cs) {
+			delete cs;
+			cs = 0;
+		}
+	}
+
+	VM* get() {
+		return vm;
+	}
+
+	void lock() {
+		if(cs) {
+			cs->enter();
+		}
+	}
+
+	void unlock() {
+		if(cs) {
+			cs->leave();
+		}
+	}
+
+	void reset() {
+		if(vm) {
+			lock();
+			if(vm->IsPower()) {
+				vm->Reset();
+			}
+			unlock();
+		}
+	}
+
+	Device* getDevice(unsigned int id) {
+		Device* p = 0;
+		if(vm) {
+			p = vm->SearchDevice(id);
+		}
+		return p;
+	}
+
+	void applyCfg(const Config* config) {
+		if(vm) {
+			lock();
+			vm->ApplyCfg(config);
+			unlock();
+		}
+	}
+
+	int exec(unsigned int hus) {
+		int r = 0;
+		if(vm) {
+			r = vm->Exec(hus);
+		}
+		return r;
+	}
+
+	int isPower() const {
+		int r = 0;
+		if(vm) {
+			r = vm->IsPower();
+		}
+		return r;
+	}
+
+protected:
+	CCriticalSection*	cs;
+	VM*					vm;
+};
+
+static CVm* cvm = 0;
 
 void FASTCALL LockVM() {
-	vmCs.enter();
+	if(cvm) {
+		cvm->lock();
+	}
 }
 
 void FASTCALL UnlockVM() {
-	vmCs.leave();
-}
-
-VM* FASTCALL CreateVM(void) {
-	if(pVM == 0) {
-		pVM = new VM;
-	}
-	return pVM;
-}
-
-void FASTCALL DestroyVM(void) {
-	VM* p = GetVM();
-	if(p) {
-		LockVM();
-		p->Cleanup();
-		delete p;
-		pVM = 0;
-		UnlockVM();
-	}
-}
-
-void ResetVM() {
-	VM* p = GetVM();
-	if(p) {
-		if(p->IsPower()) {
-			LockVM();
-			p->Reset();
-			UnlockVM();
-		}
+	if(cvm) {
+		cvm->unlock();
 	}
 }
 
 
-
-
-//===========================================================================
-//
-//	フレームウィンドウ
-//
-//===========================================================================
-//CFrmWnd*	globalFrmWnd	= 0;
 
 //---------------------------------------------------------------------------
 //
@@ -166,6 +215,8 @@ static DWORD FASTCALL GetTime() {
 }
 
 static void configGetConfig(Config* c) {
+	memset(c, 0, sizeof(*c));
+
 	//	Config200
 	// システム
 	c->system_clock			= 5;					// システムクロック(0～5)
@@ -174,8 +225,8 @@ static void configGetConfig(Config* c) {
 	c->ram_sramsync			= TRUE;					// メモリスイッチ自動更新
 
 	// スケジューラ
-	c->mpu_fullspeed		= FALSE;					// MPUフルスピード
-	c->vm_fullspeed			= FALSE;					// VMフルスピード
+	c->mpu_fullspeed		= FALSE;				// MPUフルスピード
+	c->vm_fullspeed			= FALSE;				// VMフルスピード
 
 	// サウンド
 	c->sound_device			= 0;					// サウンドデバイス(0～15)
@@ -185,12 +236,12 @@ static void configGetConfig(Config* c) {
 	c->adpcm_interp			= TRUE;					// ADPCM線形補間あり
 
 	// 描画
-	c->aspect_stretch		= TRUE;				// アスペクト比にあわせ拡大
+	c->aspect_stretch		= TRUE;					// アスペクト比にあわせ拡大
 
 	// 音量
 	c->master_volume		= 100;					// マスタ音量(0～100)
-	c->fm_enable			= TRUE;						// FM有効
-	c->fm_volume			= 54;						// FM音量(0～100)
+	c->fm_enable			= TRUE;					// FM有効
+	c->fm_volume			= 54;					// FM音量(0～100)
 	c->adpcm_enable			= TRUE;					// ADPCM有効
 	c->adpcm_volume			= 52;					// ADPCM音量(0～100)
 
@@ -199,28 +250,28 @@ static void configGetConfig(Config* c) {
 
 	// マウス
 	c->mouse_speed			= 205;					// スピード
-	c->mouse_port			= 1;						// 接続ポート
-	c->mouse_swap			= FALSE;					// ボタンスワップ
-	c->mouse_mid			= TRUE;						// 中ボタンイネーブル
-	c->mouse_trackb			= FALSE;					// トラックボールモード
+	c->mouse_port			= 1;					// 接続ポート
+	c->mouse_swap			= FALSE;				// ボタンスワップ
+	c->mouse_mid			= TRUE;					// 中ボタンイネーブル
+	c->mouse_trackb			= FALSE;				// トラックボールモード
 
 	// ジョイスティック
 	c->joy_type[0]			= 1;					// ジョイスティックタイプ
 	c->joy_type[1]			= 1;					// ジョイスティックタイプ
-	c->joy_dev[0]			= 1;						// ジョイスティックデバイス
-	c->joy_dev[1]			= 2;						// ジョイスティックデバイス
-	c->joy_button0[0]		= 1;				// ジョイスティックボタン(デバイスA)
-	c->joy_button0[1]		= 2;				// ジョイスティックボタン(デバイスA)
-	c->joy_button0[2]		= 3;				// ジョイスティックボタン(デバイスA)
-	c->joy_button0[3]		= 4;				// ジョイスティックボタン(デバイスA)
-	c->joy_button0[4]		= 5;				// ジョイスティックボタン(デバイスA)
-	c->joy_button0[5]		= 6;				// ジョイスティックボタン(デバイスA)
-	c->joy_button0[6]		= 7;				// ジョイスティックボタン(デバイスA)
-	c->joy_button0[7]		= 8;				// ジョイスティックボタン(デバイスA)
-	c->joy_button0[8]		= 0;				// ジョイスティックボタン(デバイスA)
-	c->joy_button0[9]		= 0;				// ジョイスティックボタン(デバイスA)
-	c->joy_button0[10]		= 0;				// ジョイスティックボタン(デバイスA)
-	c->joy_button0[11]		= 0;				// ジョイスティックボタン(デバイスA)
+	c->joy_dev[0]			= 1;					// ジョイスティックデバイス
+	c->joy_dev[1]			= 2;					// ジョイスティックデバイス
+	c->joy_button0[0]		= 1;					// ジョイスティックボタン(デバイスA)
+	c->joy_button0[1]		= 2;					// ジョイスティックボタン(デバイスA)
+	c->joy_button0[2]		= 3;					// ジョイスティックボタン(デバイスA)
+	c->joy_button0[3]		= 4;					// ジョイスティックボタン(デバイスA)
+	c->joy_button0[4]		= 5;					// ジョイスティックボタン(デバイスA)
+	c->joy_button0[5]		= 6;					// ジョイスティックボタン(デバイスA)
+	c->joy_button0[6]		= 7;					// ジョイスティックボタン(デバイスA)
+	c->joy_button0[7]		= 8;					// ジョイスティックボタン(デバイスA)
+	c->joy_button0[8]		= 0;					// ジョイスティックボタン(デバイスA)
+	c->joy_button0[9]		= 0;					// ジョイスティックボタン(デバイスA)
+	c->joy_button0[10]		= 0;					// ジョイスティックボタン(デバイスA)
+	c->joy_button0[11]		= 0;					// ジョイスティックボタン(デバイスA)
 	c->joy_button1[0]		= 65537;				// ジョイスティックボタン(デバイスB)
 	c->joy_button1[1]		= 65538;				// ジョイスティックボタン(デバイスB)
 	c->joy_button1[2]		= 65539;				// ジョイスティックボタン(デバイスB)
@@ -229,42 +280,11 @@ static void configGetConfig(Config* c) {
 	c->joy_button1[5]		= 65542;				// ジョイスティックボタン(デバイスB)
 	c->joy_button1[6]		= 65543;				// ジョイスティックボタン(デバイスB)
 	c->joy_button1[7]		= 65544;				// ジョイスティックボタン(デバイスB)
-	c->joy_button1[8]		= 0;				// ジョイスティックボタン(デバイスB)
-	c->joy_button1[9]		= 0;				// ジョイスティックボタン(デバイスB)
-	c->joy_button1[10]		= 0;				// ジョイスティックボタン(デバイスB)
-	c->joy_button1[11]		= 0;				// ジョイスティックボタン(デバイスB)
+	c->joy_button1[8]		= 0;					// ジョイスティックボタン(デバイスB)
+	c->joy_button1[9]		= 0;					// ジョイスティックボタン(デバイスB)
+	c->joy_button1[10]		= 0;					// ジョイスティックボタン(デバイスB)
+	c->joy_button1[11]		= 0;					// ジョイスティックボタン(デバイスB)
 
-	// SASI
-	c->sasi_drives			= 1;					// SASIドライブ数
-	c->sasi_sramsync		= TRUE;					// SASIメモリスイッチ自動更新
-	strcpy(&c->sasi_file[ 0][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD0.HDF"));				// SASIイメージファイル
-	strcpy(&c->sasi_file[ 1][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD1.HDF"));				// SASIイメージファイル
-	strcpy(&c->sasi_file[ 2][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD2.HDF"));				// SASIイメージファイル
-	strcpy(&c->sasi_file[ 3][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD3.HDF"));				// SASIイメージファイル
-	strcpy(&c->sasi_file[ 4][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD4.HDF"));				// SASIイメージファイル
-	strcpy(&c->sasi_file[ 5][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD5.HDF"));				// SASIイメージファイル
-	strcpy(&c->sasi_file[ 6][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD6.HDF"));				// SASIイメージファイル
-	strcpy(&c->sasi_file[ 7][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD7.HDF"));				// SASIイメージファイル
-	strcpy(&c->sasi_file[ 8][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD8.HDF"));				// SASIイメージファイル
-	strcpy(&c->sasi_file[ 9][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD9.HDF"));				// SASIイメージファイル
-	strcpy(&c->sasi_file[10][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD10.HDF"));				// SASIイメージファイル
-	strcpy(&c->sasi_file[11][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD11.HDF"));				// SASIイメージファイル
-	strcpy(&c->sasi_file[12][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD12.HDF"));				// SASIイメージファイル
-	strcpy(&c->sasi_file[13][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD13.HDF"));				// SASIイメージファイル
-	strcpy(&c->sasi_file[14][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD14.HDF"));				// SASIイメージファイル
-	strcpy(&c->sasi_file[15][0], _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\HD15.HDF"));				// SASIイメージファイル
-
-	// SxSI
-	c->sxsi_drives			= 0;							// SxSIドライブ数
-	c->sxsi_mofirst			= FALSE;						// MOドライブ優先割り当て
-	memset(&c->sxsi_file[0][0], 0, sizeof(c->sxsi_file));	// SxSIイメージファイル
-
-	// ポート
-	c->port_com				= 0;								// COMxポート
-	memset(&c->port_recvlog[0], 0, sizeof(c->port_recvlog));	// シリアル受信ログ
-	c->port_384				= FALSE;							// シリアル38400bps固定
-	c->port_lpt				= 0;								// LPTxポート
-	memset(&c->port_sendlog[0], 0, sizeof(c->port_sendlog));	// パラレル送信ログ
 
 	// MIDI
 	c->midi_bid				= 0;							// MIDIボードID
@@ -785,10 +805,10 @@ static void processInput(BOOL bRun, HWND hWnd) {
 	if(lpDi == 0) {
 		m_dwDispCount	= 0;
 
-		m_pCRTC		= (CRTC*)		::GetVM()->SearchDevice(MAKEID('C', 'R', 'T', 'C'));
-		m_pKeyboard	= (Keyboard*)	::GetVM()->SearchDevice(MAKEID('K', 'E', 'Y', 'B'));
-		m_pMouse	= (Mouse*)		::GetVM()->SearchDevice(MAKEID('M', 'O', 'U', 'S'));
-		m_pPPI		= (PPI*)		::GetVM()->SearchDevice(MAKEID('P', 'P', 'I', ' '));
+		m_pCRTC		= (CRTC*)		cvm->getDevice(MAKEID('C', 'R', 'T', 'C'));
+		m_pKeyboard	= (Keyboard*)	cvm->getDevice(MAKEID('K', 'E', 'Y', 'B'));
+		m_pMouse	= (Mouse*)		cvm->getDevice(MAKEID('M', 'O', 'U', 'S'));
+		m_pPPI		= (PPI*)		cvm->getDevice(MAKEID('P', 'P', 'I', ' '));
 
 		DirectInput8Create(GetModuleHandle(0), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**) &lpDi, 0);
 
@@ -983,19 +1003,19 @@ static void processSound(BOOL bRun, HWND hWnd) {
 
 	if(m_pScheduler == 0) {
 		// スケジューラ取得
-		m_pScheduler = (Scheduler*)::GetVM()->SearchDevice(MAKEID('S', 'C', 'H', 'E'));
+		m_pScheduler = (Scheduler*)cvm->getDevice(MAKEID('S', 'C', 'H', 'E'));
 		ASSERT(m_pScheduler);
 
 		// OPMIF取得
-		m_pOPMIF = (OPMIF*)::GetVM()->SearchDevice(MAKEID('O', 'P', 'M', ' '));
+		m_pOPMIF = (OPMIF*)cvm->getDevice(MAKEID('O', 'P', 'M', ' '));
 		ASSERT(m_pOPMIF);
 
 		// ADPCM取得
-		m_pADPCM = (ADPCM*)::GetVM()->SearchDevice(MAKEID('A', 'P', 'C', 'M'));
+		m_pADPCM = (ADPCM*)cvm->getDevice(MAKEID('A', 'P', 'C', 'M'));
 		ASSERT(m_pADPCM);
 
 		// SCSI取得
-		m_pSCSI = (SCSI*)::GetVM()->SearchDevice(MAKEID('S', 'C', 'S', 'I'));
+		m_pSCSI = (SCSI*)cvm->getDevice(MAKEID('S', 'C', 'S', 'I'));
 		ASSERT(m_pSCSI);
 
 		// デバイス列挙
@@ -1332,8 +1352,8 @@ static void processSound(BOOL bRun, HWND hWnd) {
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 static UINT schedulerFunc() {
-	VM*			pVM			= ::GetVM();
-	Render*		pRender		= (Render*)pVM->SearchDevice(MAKEID('R', 'E', 'N', 'D'));
+//	VM*			pVM			= ::GetVM();
+	Render*		pRender		= (Render*)cvm->getDevice(MAKEID('R', 'E', 'N', 'D'));
 	HWND		hFrmWnd		= getMainWindow();	//m_pFrmWnd->m_hWnd;
 	DWORD		dwExecTime	= GetTime();
 	DWORD		dwExecCount	= 0;
@@ -1380,8 +1400,8 @@ static UINT schedulerFunc() {
 				// レンダリング可否を判定(1or36)
 				pRender->EnableAct(dwExecTime >= dwTime);
 
-				if(pVM->Exec(1000 * 2)) {
-					if(pVM->IsPower()) {
+				if(cvm->exec(1000 * 2)) {
+					if(cvm->isPower()) {
 						dwExecCount++;
 						dwExecTime++;
 
@@ -1436,7 +1456,7 @@ static BOOL FASTCALL InitCmdSub(int nDrive, LPCTSTR lpszPath) {
 	Filepath path;
 	BOOL isExist = FALSE;
 	{
-		TCHAR szPath[_MAX_PATH];
+		TCHAR szPath[_MAX_PATH] = { 0 };
 		LPTSTR lpszFile;
 		::GetFullPathName(lpszPath, _MAX_PATH, szPath, &lpszFile);
 		path.SetPath(szPath);
@@ -1451,7 +1471,7 @@ static BOOL FASTCALL InitCmdSub(int nDrive, LPCTSTR lpszPath) {
 
 		{
 			::LockVM();
-			FDD* pFDD = (FDD*)::GetVM()->SearchDevice(MAKEID('F', 'D', 'D', ' '));
+			FDD* pFDD = (FDD*)cvm->getDevice(MAKEID('F', 'D', 'D', ' '));
 			if(pFDD && pFDD->Open(nDrive, path)) {
 				pFDI = pFDD->GetFDI(nDrive);
 			}
@@ -1471,10 +1491,6 @@ static BOOL FASTCALL InitCmdSub(int nDrive, LPCTSTR lpszPath) {
 
 
 
-//---------------------------------------------------------------------------
-//
-//	ウィンドウ削除
-//
 //---------------------------------------------------------------------------
 static void OnDraw(HDC hdc) {
 	// 内部ワーク定義
@@ -1565,7 +1581,7 @@ static void OnDraw(HDC hdc) {
 	}
 
 	if(m_Info.hBitmap && m_Info.pRender == 0) {
-		m_Info.pRender = (Render*)::GetVM()->SearchDevice(MAKEID('R', 'E', 'N', 'D'));
+		m_Info.pRender = (Render*)cvm->getDevice(MAKEID('R', 'E', 'N', 'D'));
 		ASSERT(m_Info.pRender);
 		m_Info.pWork = m_Info.pRender->GetWorkAddr();
 		ASSERT(m_Info.pWork);
@@ -1645,8 +1661,8 @@ static void OnDraw(HDC hdc) {
 			}
 
 			// 電源OFF対策
-			if (::GetVM()->IsPower() != m_Info.bPower) {
-				m_Info.bPower = ::GetVM()->IsPower();
+			if (cvm->isPower() != m_Info.bPower) {
+				m_Info.bPower = cvm->isPower();
 				if (!m_Info.bPower) {
 					// ビットマップをすべて消去
 					memset(m_Info.pBits, 0, m_Info.nBMPWidth * m_Info.nBMPHeight * 4);
@@ -1728,7 +1744,7 @@ extern "C" WORD cpudebug_fetch(DWORD addr)
 {
 	static Memory* pMemory = 0;
 	if(pMemory == 0) {
-		pMemory = (Memory*)::GetVM()->SearchDevice(MAKEID('M', 'E', 'M', ' '));
+		pMemory = (Memory*)cvm->getDevice(MAKEID('M', 'E', 'M', ' '));
 		ASSERT(pMemory);
 	}
 
@@ -1779,8 +1795,6 @@ INT WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, INT) {
 	};
 
 	::timeBeginPeriod(1);
-	scheduler_m_bExitReq		= FALSE;
-	scheduler_mm_bEnable		= FALSE;
 
 	RECT rc = { 0, 0, CW_WIDTH, CW_HEIGHT };
 	AdjustWindowRect(&rc, CW_STYLE, 0);
@@ -1788,20 +1802,18 @@ INT WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, INT) {
 	mainWindow = CreateWindow(_T("edit"), 0, CW_STYLE, 0, 0, rc.right-rc.left, rc.bottom-rc.top, 0, 0, 0, 0);
 	{
 		// VM初期化
-		VM* pVm = CreateVM();
-		pVm->Init();
+		cvm = new CVm();
+		cvm->init();
 
 		// 設定適用(OnOptionと同様、VMロックして)
-		::LockVM();
 		{
 			Config config;
 			configGetConfig(&config);
-			::GetVM()->ApplyCfg(&config);
+			cvm->applyCfg(&config);
 		}
-		::UnlockVM();
 
 		// リセット
-		::GetVM()->Reset();
+		cvm->reset();
 
 		// コンポーネントをイネーブル。ただしSchedulerは設定による
 		schedulerSetEnable(TRUE);
@@ -1809,27 +1821,29 @@ INT WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, INT) {
 		LPCTSTR	szPath0	= _T("C:\\projects\\github\\xm6_pid\\00proj.vc10_nomfc\\Debug\\bosconian.xdf");
 		LPCTSTR	szPath1	= _T("");
 
-		BOOL bReset = InitCmdSub(0, szPath0) || InitCmdSub(1, szPath1);
+		BOOL bReset0 = InitCmdSub(0, szPath0);
+		BOOL bReset1 = InitCmdSub(1, szPath1);
 
-		if(bReset) {
-			ResetVM();
+		if(bReset0 || bReset1) {
+			cvm->reset();
 		}
 	}
-	ready0 = true;
 
 	schedulerFunc();
 
 	// コンポーネントを止める
 	schedulerSetEnable(FALSE);
 
-	// スケジューラが実行をやめるまで待つ
-	for (int i=0; i<8; i++) {
-		::LockVM();
-		::UnlockVM();
-	}
+//	// スケジューラが実行をやめるまで待つ
+//	for (int i=0; i<8; i++) {
+//		::LockVM();
+//		::UnlockVM();
+//	}
 
 	// 仮想マシンを削除
-	::DestroyVM();
+	cvm->cleanup();
+	delete cvm;
+//	::DestroyVM();
 
 	return 0;
 }

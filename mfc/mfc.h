@@ -82,9 +82,6 @@ class VM;								// 仮想マシン
 class CApp;								// アプリケーション
 class CFrmWnd;							// フレームウィンドウ
 
-VM* FASTCALL CreateVM(void);
-void FASTCALL DestroyVM(void);
-VM* FASTCALL GetVM(void);																			// 仮想マシンを取得
 void FASTCALL LockVM(void);																			// 仮想マシンをロック
 void FASTCALL UnlockVM(void);																		// 仮想マシンをアンロック
 
