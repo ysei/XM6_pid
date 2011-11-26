@@ -28,7 +28,9 @@
 Sync::Sync()
 {
 	// クリティカルセクション作成
-	csect = new CCriticalSection;
+//	csect = new CCriticalSection;
+	pCriticalSection = new CRITICAL_SECTION;
+	InitializeCriticalSection(pCriticalSection);
 }
 
 //---------------------------------------------------------------------------
@@ -38,13 +40,16 @@ Sync::Sync()
 //---------------------------------------------------------------------------
 Sync::~Sync()
 {
-	// ロックして
-	Lock();
-
-	// クリティカルセクション削除
-	ASSERT(csect);
-	delete csect;
-	csect = NULL;
+//	// ロックして
+//	Lock();
+//
+//	// クリティカルセクション削除
+//	ASSERT(csect);
+//	delete csect;
+//	csect = NULL;
+	DeleteCriticalSection(pCriticalSection);
+	delete pCriticalSection;
+	pCriticalSection = 0;
 }
 
 //---------------------------------------------------------------------------
@@ -54,9 +59,9 @@ Sync::~Sync()
 //---------------------------------------------------------------------------
 void FASTCALL Sync::Lock()
 {
-	ASSERT(csect);
-
-	csect->Lock();
+//	ASSERT(csect);
+//	csect->Lock();
+	EnterCriticalSection(pCriticalSection);
 }
 
 //---------------------------------------------------------------------------
@@ -66,9 +71,9 @@ void FASTCALL Sync::Lock()
 //---------------------------------------------------------------------------
 void FASTCALL Sync::Unlock()
 {
-	ASSERT(csect);
-
-	csect->Unlock();
+//	ASSERT(csect);
+//	csect->Unlock();
+	LeaveCriticalSection(pCriticalSection);
 }
 
 #endif	// _WIN32

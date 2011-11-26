@@ -8,7 +8,7 @@
 //---------------------------------------------------------------------------
 
 #include "stdafx.h"
-#if defined(_WIN32)
+#if defined(_WIN32) && defined(_AFXDLL)
 
 #include "os.h"
 #include "xm6.h"

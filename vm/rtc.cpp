@@ -16,6 +16,7 @@
 #include "schedule.h"
 #include "fileio.h"
 #include "rtc.h"
+#include <time.h>
 
 //===========================================================================
 //

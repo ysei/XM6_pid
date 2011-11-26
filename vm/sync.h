@@ -17,6 +17,7 @@
 //
 //---------------------------------------------------------------------------
 class CCriticalSection;
+extern "C" typedef struct _RTL_CRITICAL_SECTION CRITICAL_SECTION;
 
 //===========================================================================
 //
@@ -36,8 +37,9 @@ public:
 										// アンロック
 
 private:
-	CCriticalSection *csect;
-										// クリティカルセクション
+//	CCriticalSection *csect;
+//										// クリティカルセクション
+	CRITICAL_SECTION*	pCriticalSection;
 };
 
 #endif	// _WIN32

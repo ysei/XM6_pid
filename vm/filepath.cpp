@@ -260,19 +260,27 @@ BOOL FASTCALL Filepath::IsClear() const
 //---------------------------------------------------------------------------
 const char* FASTCALL Filepath::GetShort() const
 {
-	char *lpszFile;
-	char *lpszExt;
-
 	ASSERT(this);
 
+#if 0
 	// TCHAR文字列からchar文字列へ変換
-	lpszFile = T2A((LPTSTR)&m_szFile[0]);
-	lpszExt = T2A((LPTSTR)&m_szExt[0]);
+	char *lpszFile = T2A((LPTSTR)&m_szFile[0]);
+	char *lpszExt = T2A((LPTSTR)&m_szExt[0]);
 
 	// 固定バッファへ合成
 	strcpy(ShortName, lpszFile);
 	strcat(ShortName, lpszExt);
+#else
+	TCHAR buf[256+1];
+	_tcscpy(buf, &m_szFile[0]);
+	_tcscpy(buf, &m_szExt[0]);
 
+#if !defined(_UNICODE)
+	strcpy(ShortName, buf);
+#else
+#error	not implemented
+#endif
+#endif
 	// strlenで調べたとき、最大59になるように細工
 	ShortName[59] = '\0';
 
@@ -361,7 +369,6 @@ LPCTSTR FASTCALL Filepath::GetDefaultDir()
 BOOL FASTCALL Filepath::Save(Fileio *fio, int /*ver*/)
 {
 	TCHAR szPath[_MAX_PATH];
-	CFile file;
 	FILETIME ft;
 
 	ASSERT(this);
@@ -378,11 +385,21 @@ BOOL FASTCALL Filepath::Save(Fileio *fio, int /*ver*/)
 
 	// ファイル日付を取得(2038年問題を避けるため、Win32より取得)
 	memset(&ft, 0, sizeof(ft));
+#if 0
+	CFile file;
 	if (file.Open(szPath, CFile::modeRead)) {
 		::GetFileTime((HANDLE)file.m_hFile, NULL, NULL, &ft);
 		file.Close();
 	}
-
+#else
+	{
+		HANDLE h = CreateFile(szPath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+		if(h != INVALID_HANDLE_VALUE) {
+			GetFileTime(h, 0, 0, &ft);
+			CloseHandle(h);
+		}
+	}
+#endif
 	// 最終書き込み日付を保存
 	if (!fio->Write(&ft, sizeof(ft))) {
 		return FALSE;
@@ -399,8 +416,6 @@ BOOL FASTCALL Filepath::Save(Fileio *fio, int /*ver*/)
 BOOL FASTCALL Filepath::Load(Fileio *fio, int /*ver*/)
 {
 	TCHAR szPath[_MAX_PATH];
-	CFile file;
-
 	ASSERT(this);
 	ASSERT(fio);
 
@@ -418,6 +433,8 @@ BOOL FASTCALL Filepath::Load(Fileio *fio, int /*ver*/)
 	}
 
 	// ファイル日付を取得(2038年問題を避けるため、Win32より取得)
+#if 0
+	CFile file;
 	if (!file.Open(szPath, CFile::modeRead)) {
 		// ファイルが存在しなくても、エラーとはしない
 		return TRUE;
@@ -426,7 +443,18 @@ BOOL FASTCALL Filepath::Load(Fileio *fio, int /*ver*/)
 		return FALSE;
 	}
 	file.Close();
-
+#else
+	{
+		HANDLE h = CreateFile(szPath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+		if(h == INVALID_HANDLE_VALUE) {
+			return TRUE;
+		} else if(! GetFileTime(h, 0, 0, &m_CurrentTime)) {
+			CloseHandle(h);
+			return FALSE;
+		}
+		CloseHandle(h);
+	}
+#endif
 	// ftの方が新しかった場合、更新フラグUp
 	if (::CompareFileTime(&m_CurrentTime, &m_SavedTime) <= 0) {
 		m_bUpdate = FALSE;

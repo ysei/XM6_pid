@@ -12,6 +12,9 @@
 #if !defined(mfc_h)
 #define mfc_h
 
+#pragma warning(disable : 4127)
+#pragma warning(disable : 4702)
+
 //---------------------------------------------------------------------------
 //
 //	#include
@@ -24,14 +27,19 @@
 #define VC_EXTRALEAN
 
 // MFC
+#if defined(_AFXDLL)
 #include <afxwin.h>
 #include <afxext.h>
 #include <afxdlgs.h>
 #include <afxcmn.h>
 #include <afxmt.h>
 #include <afxconv.h>
+#else
+#include <assert.h>
+#endif
 
 // Win32API
+#include <windows.h>
 #include <imm.h>
 #include <mmsystem.h>
 #include <shlobj.h>
@@ -44,6 +52,7 @@
 #include <dinput.h>
 
 // C Runtime
+#include <stdio.h>
 #include <math.h>
 #include <io.h>
 #include <fcntl.h>
@@ -54,9 +63,9 @@
 //	#define
 //
 //---------------------------------------------------------------------------
-#if defined(_DEBUG)
-#define new		DEBUG_NEW
-#endif	// _DEBUG
+//#if defined(_DEBUG)
+//#define new		DEBUG_NEW
+//#endif	// _DEBUG
 
 #if defined(_MSC_VER) && defined(_M_IX86)
 #define FASTCALL	__fastcall
@@ -72,14 +81,6 @@
 class VM;								// 仮想マシン
 class CApp;								// アプリケーション
 class CFrmWnd;							// フレームウィンドウ
-
-//---------------------------------------------------------------------------
-//
-//	グローバル
-//
-//---------------------------------------------------------------------------
-void FASTCALL GetMsg(UINT uID, CString& string);													// メッセージ取得
-BOOL FASTCALL FileOpenDlg(CWnd *pParent, LPTSTR lpszPath, UINT nFilterID);							// ファイルオープンダイアログ
 
 VM* FASTCALL CreateVM(void);
 void FASTCALL DestroyVM(void);

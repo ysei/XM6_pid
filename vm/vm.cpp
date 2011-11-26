@@ -45,6 +45,7 @@
 #include "filepath.h"
 #include "fileio.h"
 #include "vm.h"
+#include <stdio.h>
 
 //===========================================================================
 //

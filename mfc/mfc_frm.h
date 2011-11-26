@@ -7,7 +7,7 @@
 //
 //---------------------------------------------------------------------------
 
-#if defined(_WIN32)
+#if defined(_WIN32) && defined(_AFXDLL)
 
 #if !defined(mfc_frm_h)
 #define mfc_frm_h

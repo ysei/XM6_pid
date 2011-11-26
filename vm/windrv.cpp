@@ -18,6 +18,7 @@
 #include "cpu.h"
 #include "config.h"
 #include "windrv.h"
+#include <stdio.h>
 
 //===========================================================================
 //
