@@ -32,5 +32,11 @@ public:
 void FASTCALL GetMsg(UINT uID, CString& string);													// メッセージ取得
 BOOL FASTCALL FileOpenDlg(CWnd *pParent, LPTSTR lpszPath, UINT nFilterID);							// ファイルオープンダイアログ
 
+VM* FASTCALL CreateVM(void);
+void FASTCALL DestroyVM(void);
+VM* FASTCALL GetVM(void);
+void FASTCALL LockVM(void);
+void FASTCALL UnlockVM(void);
+
 #endif	// mfc_app_h
 #endif	// _WIN32

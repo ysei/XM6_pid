@@ -82,8 +82,8 @@ class VM;								// 仮想マシン
 class CApp;								// アプリケーション
 class CFrmWnd;							// フレームウィンドウ
 
-void FASTCALL LockVM(void);																			// 仮想マシンをロック
-void FASTCALL UnlockVM(void);																		// 仮想マシンをアンロック
+//void FASTCALL LockVM(void);																			// 仮想マシンをロック
+//void FASTCALL UnlockVM(void);																		// 仮想マシンをアンロック
 
 #endif	// mfc_h
 #endif	// _WIN32

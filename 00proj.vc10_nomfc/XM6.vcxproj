@@ -174,22 +174,6 @@
     <ClCompile Include="..\vm\windrv.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="..\vm\core_asm.asm">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(ProgramFiles)\nasm\nasm" -f win32 -o $(IntDir)%(Filename).obj %(FullPath)
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(ProgramFiles)\nasm\nasm" -f win32 -o $(IntDir)%(Filename).obj %(FullPath)
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
-    </CustomBuild>
-    <CustomBuild Include="..\vm\rend_asm.asm">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(ProgramFiles)\nasm\nasm" -f win32 -o $(IntDir)%(Filename).obj %(FullPath)
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(ProgramFiles)\nasm\nasm" -f win32 -o $(IntDir)%(Filename).obj %(FullPath)
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
-    </CustomBuild>
     <CustomBuild Include="..\cpu\star.asm">
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(RootDir)%(Directory)\star %(RootDir)%(Directory)\star.asm
 "$(ProgramFiles)\nasm\nasm" -f win32 -o $(IntDir)%(Filename).obj %(FullPath)
@@ -199,77 +183,93 @@
 "$(ProgramFiles)\nasm\nasm" -f win32 -o $(IntDir)%(Filename).obj %(FullPath)
 </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
-    </CustomBuild>
-    <CustomBuild Include="..\mfc\mfc_asm.asm">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(ProgramFiles)\nasm\nasm" -f win32 -o $(IntDir)%(Filename).obj %(FullPath)
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(ProgramFiles)\nasm\nasm" -f win32 -o $(IntDir)%(Filename).obj %(FullPath)
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\mfc\mfc_nomfc.h" />
     <ClInclude Include="..\mfc\stdafx.h" />
-    <ClInclude Include="adpcm.h" />
-    <ClInclude Include="areaset.h" />
-    <ClInclude Include="cisc.h" />
-    <ClInclude Include="config.h" />
-    <ClInclude Include="core_asm.h" />
-    <ClInclude Include="cpu.h" />
-    <ClInclude Include="crtc.h" />
-    <ClInclude Include="device.h" />
-    <ClInclude Include="disk.h" />
-    <ClInclude Include="dmac.h" />
-    <ClInclude Include="event.h" />
-    <ClInclude Include="fdc.h" />
-    <ClInclude Include="fdd.h" />
-    <ClInclude Include="fdi.h" />
-    <ClInclude Include="fileio.h" />
-    <ClInclude Include="filepath.h" />
-    <ClInclude Include="fmgen.h" />
-    <ClInclude Include="fmgeninl.h" />
-    <ClInclude Include="fmtimer.h" />
-    <ClInclude Include="gvram.h" />
-    <ClInclude Include="iosc.h" />
-    <ClInclude Include="keyboard.h" />
-    <ClInclude Include="log.h" />
-    <ClInclude Include="memory.h" />
-    <ClInclude Include="mfp.h" />
-    <ClInclude Include="midi.h" />
-    <ClInclude Include="mouse.h" />
-    <ClInclude Include="opm.h" />
-    <ClInclude Include="opmif.h" />
-    <ClInclude Include="os.h" />
-    <ClInclude Include="ppi.h" />
-    <ClInclude Include="printer.h" />
-    <ClInclude Include="rend_asm.h" />
-    <ClInclude Include="render.h" />
-    <ClInclude Include="renderin.h" />
-    <ClInclude Include="rtc.h" />
-    <ClInclude Include="sasi.h" />
-    <ClInclude Include="scc.h" />
-    <ClInclude Include="schedule.h" />
-    <ClInclude Include="sprite.h" />
-    <ClInclude Include="sram.h" />
-    <ClInclude Include="starcpu.h" />
-    <ClInclude Include="sync.h" />
-    <ClInclude Include="sysport.h" />
-    <ClInclude Include="tvram.h" />
-    <ClInclude Include="vc.h" />
-    <ClInclude Include="vm.h" />
-    <ClInclude Include="windrv.h" />
-    <ClInclude Include="xm6.h" />
-    <ClInclude Include="cpudebug.h" />
+    <ClInclude Include="..\vm\adpcm.h" />
+    <ClInclude Include="..\vm\areaset.h" />
+    <ClInclude Include="..\vm\cisc.h" />
+    <ClInclude Include="..\vm\config.h" />
+    <ClInclude Include="..\vm\core_asm.h" />
+    <ClInclude Include="..\vm\cpu.h" />
+    <ClInclude Include="..\vm\cpudebug.h" />
+    <ClInclude Include="..\vm\crtc.h" />
+    <ClInclude Include="..\vm\device.h" />
+    <ClInclude Include="..\vm\disk.h" />
+    <ClInclude Include="..\vm\dmac.h" />
+    <ClInclude Include="..\vm\event.h" />
+    <ClInclude Include="..\vm\fdc.h" />
+    <ClInclude Include="..\vm\fdd.h" />
+    <ClInclude Include="..\vm\fdi.h" />
+    <ClInclude Include="..\vm\fileio.h" />
+    <ClInclude Include="..\vm\filepath.h" />
+    <ClInclude Include="..\vm\fmgen.h" />
+    <ClInclude Include="..\vm\fmgeninl.h" />
+    <ClInclude Include="..\vm\fmtimer.h" />
+    <ClInclude Include="..\vm\gvram.h" />
+    <ClInclude Include="..\vm\iosc.h" />
+    <ClInclude Include="..\vm\keyboard.h" />
+    <ClInclude Include="..\vm\log.h" />
+    <ClInclude Include="..\vm\memory.h" />
+    <ClInclude Include="..\vm\mercury.h" />
+    <ClInclude Include="..\vm\mfp.h" />
+    <ClInclude Include="..\vm\midi.h" />
+    <ClInclude Include="..\vm\mouse.h" />
+    <ClInclude Include="..\vm\neptune.h" />
+    <ClInclude Include="..\vm\opm.h" />
+    <ClInclude Include="..\vm\opmif.h" />
+    <ClInclude Include="..\vm\os.h" />
+    <ClInclude Include="..\vm\ppi.h" />
+    <ClInclude Include="..\vm\printer.h" />
+    <ClInclude Include="..\vm\render.h" />
+    <ClInclude Include="..\vm\renderin.h" />
+    <ClInclude Include="..\vm\rend_asm.h" />
+    <ClInclude Include="..\vm\rtc.h" />
+    <ClInclude Include="..\vm\sasi.h" />
+    <ClInclude Include="..\vm\scc.h" />
+    <ClInclude Include="..\vm\schedule.h" />
+    <ClInclude Include="..\vm\scsi.h" />
+    <ClInclude Include="..\vm\sprite.h" />
+    <ClInclude Include="..\vm\sram.h" />
+    <ClInclude Include="..\vm\starcpu.h" />
+    <ClInclude Include="..\vm\sync.h" />
+    <ClInclude Include="..\vm\sysport.h" />
+    <ClInclude Include="..\vm\tvram.h" />
+    <ClInclude Include="..\vm\vc.h" />
+    <ClInclude Include="..\vm\vm.h" />
+    <ClInclude Include="..\vm\windrv.h" />
+    <ClInclude Include="..\vm\xm6.h" />
     <ClInclude Include="mfc.h" />
-    <ClInclude Include="mfc_asm.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="star.vcxproj">
       <Project>{73cb5212-2ebc-4b6f-9b40-8daa46fb0ab2}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\vm\core_asm.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(ProgramFiles)\nasm\nasm" -f win32 -o $(IntDir)%(Filename).obj %(FullPath)</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename).obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(ProgramFiles)\nasm\nasm" -f win32 -o $(IntDir)%(Filename).obj %(FullPath)</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename).obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\vm\rend_asm.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(ProgramFiles)\nasm\nasm" -f win32 -o $(IntDir)%(Filename).obj %(FullPath)</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename).obj</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(ProgramFiles)\nasm\nasm" -f win32 -o $(IntDir)%(Filename).obj %(FullPath)</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nasm assembling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename).obj</Outputs>
+    </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

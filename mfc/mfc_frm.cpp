@@ -23,6 +23,7 @@
 #include "render.h"
 #include "fileio.h"
 #include "mfc_frm.h"
+#include "mfc_app.h"
 #include "mfc_res.h"
 
 #include "crtc.h"

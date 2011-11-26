@@ -30,7 +30,6 @@
 #include "config.h"
 #include "sram.h"
 
-#include "mfc_asm.h"
 #include "mfc_nomfc.h"
 
 
@@ -47,42 +46,12 @@ HWND getMainWindow() {
 
 //---------------------------------------------------------------------------
 //
-//	Critical section
-//
-//---------------------------------------------------------------------------
-class CCriticalSection {
-public:
-	CCriticalSection() {
-		InitializeCriticalSection(&c);
-	}
-	~CCriticalSection() {
-		DeleteCriticalSection(&c);
-	}
-
-	void enter() {
-		EnterCriticalSection(&c);
-	}
-	void leave() {
-		LeaveCriticalSection(&c);
-	}
-
-protected:
-	CRITICAL_SECTION c;
-};
-
-
-
-//---------------------------------------------------------------------------
-//
 //	VM Interface
 //
 //---------------------------------------------------------------------------
 class CVm {
 public:
-	CVm()
-		: cs(0)
-		, vm(0)
-	{
+	CVm() : vm(0) {
 	}
 
 	~CVm() {
@@ -90,54 +59,25 @@ public:
 	}
 
 	void init() {
-		if(!cs) {
-			cs = new CCriticalSection;
-		}
 		if(!vm) {
-			lock();
 			vm = new VM;
 			vm->Init();
-			unlock();
 		}
 	}
 
 	void cleanup() {
 		if(vm) {
-			lock();
 			vm->Cleanup();
 			delete vm;
 			vm = 0;
-			unlock();
-		}
-		if(cs) {
-			delete cs;
-			cs = 0;
-		}
-	}
-
-	VM* get() {
-		return vm;
-	}
-
-	void lock() {
-		if(cs) {
-			cs->enter();
-		}
-	}
-
-	void unlock() {
-		if(cs) {
-			cs->leave();
 		}
 	}
 
 	void reset() {
 		if(vm) {
-			lock();
 			if(vm->IsPower()) {
 				vm->Reset();
 			}
-			unlock();
 		}
 	}
 
@@ -151,9 +91,7 @@ public:
 
 	void applyCfg(const Config* config) {
 		if(vm) {
-			lock();
 			vm->ApplyCfg(config);
-			unlock();
 		}
 	}
 
@@ -174,23 +112,10 @@ public:
 	}
 
 protected:
-	CCriticalSection*	cs;
 	VM*					vm;
 };
 
 static CVm* cvm = 0;
-
-void FASTCALL LockVM() {
-	if(cvm) {
-		cvm->lock();
-	}
-}
-
-void FASTCALL UnlockVM() {
-	if(cvm) {
-		cvm->unlock();
-	}
-}
 
 
 
@@ -199,16 +124,7 @@ void FASTCALL UnlockVM() {
 //	scheduler
 //
 //---------------------------------------------------------------------------
-static volatile	BOOL		scheduler_mm_bEnable = FALSE;
 static volatile BOOL		scheduler_m_bExitReq = FALSE;			// スレッド終了要求
-
-static BOOL schedulerIsEnable() {
-	return scheduler_mm_bEnable;
-}
-
-static void schedulerSetEnable(BOOL b) {
-	scheduler_mm_bEnable = b;
-}
 
 static DWORD FASTCALL GetTime() {
 	return timeGetTime();
@@ -219,100 +135,100 @@ static void configGetConfig(Config* c) {
 
 	//	Config200
 	// システム
-	c->system_clock			= 5;					// システムクロック(0～5)
-//	c->system_clock			= 0;					// システムクロック(0～5)
-	c->ram_size				= 0;					// メインRAMサイズ(0～5)
-	c->ram_sramsync			= TRUE;					// メモリスイッチ自動更新
+	c->system_clock			= 5;		// システムクロック(0～5)
+//	c->system_clock			= 0;		// システムクロック(0～5)
+	c->ram_size				= 0;		// メインRAMサイズ(0～5)
+	c->ram_sramsync			= TRUE;		// メモリスイッチ自動更新
 
 	// スケジューラ
-	c->mpu_fullspeed		= FALSE;				// MPUフルスピード
-	c->vm_fullspeed			= FALSE;				// VMフルスピード
+	c->mpu_fullspeed		= FALSE;	// MPUフルスピード
+	c->vm_fullspeed			= FALSE;	// VMフルスピード
 
 	// サウンド
-	c->sound_device			= 0;					// サウンドデバイス(0～15)
-	c->sample_rate			= 5;					// サンプリングレート(0～4)
-	c->primary_buffer		= 10;					// バッファサイズ(2～100)
-	c->polling_buffer		= 5;					// ポーリング間隔(0～99)
-	c->adpcm_interp			= TRUE;					// ADPCM線形補間あり
+	c->sound_device			= 0;		// サウンドデバイス(0～15)
+	c->sample_rate			= 5;		// サンプリングレート(0～4)
+	c->primary_buffer		= 10;		// バッファサイズ(2～100)
+	c->polling_buffer		= 5;		// ポーリング間隔(0～99)
+	c->adpcm_interp			= TRUE;		// ADPCM線形補間あり
 
 	// 描画
-	c->aspect_stretch		= TRUE;					// アスペクト比にあわせ拡大
+	c->aspect_stretch		= TRUE;		// アスペクト比にあわせ拡大
 
 	// 音量
-	c->master_volume		= 100;					// マスタ音量(0～100)
-	c->fm_enable			= TRUE;					// FM有効
-	c->fm_volume			= 54;					// FM音量(0～100)
-	c->adpcm_enable			= TRUE;					// ADPCM有効
-	c->adpcm_volume			= 52;					// ADPCM音量(0～100)
+	c->master_volume		= 100;		// マスタ音量(0～100)
+	c->fm_enable			= TRUE;		// FM有効
+	c->fm_volume			= 54;		// FM音量(0～100)
+	c->adpcm_enable			= TRUE;		// ADPCM有効
+	c->adpcm_volume			= 52;		// ADPCM音量(0～100)
 
 	// キーボード
-	c->kbd_connect			= TRUE;					// 接続
+	c->kbd_connect			= TRUE;		// 接続
 
 	// マウス
-	c->mouse_speed			= 205;					// スピード
-	c->mouse_port			= 1;					// 接続ポート
-	c->mouse_swap			= FALSE;				// ボタンスワップ
-	c->mouse_mid			= TRUE;					// 中ボタンイネーブル
-	c->mouse_trackb			= FALSE;				// トラックボールモード
+	c->mouse_speed			= 205;		// スピード
+	c->mouse_port			= 1;		// 接続ポート
+	c->mouse_swap			= FALSE;	// ボタンスワップ
+	c->mouse_mid			= TRUE;		// 中ボタンイネーブル
+	c->mouse_trackb			= FALSE;	// トラックボールモード
 
 	// ジョイスティック
-	c->joy_type[0]			= 1;					// ジョイスティックタイプ
-	c->joy_type[1]			= 1;					// ジョイスティックタイプ
-	c->joy_dev[0]			= 1;					// ジョイスティックデバイス
-	c->joy_dev[1]			= 2;					// ジョイスティックデバイス
-	c->joy_button0[0]		= 1;					// ジョイスティックボタン(デバイスA)
-	c->joy_button0[1]		= 2;					// ジョイスティックボタン(デバイスA)
-	c->joy_button0[2]		= 3;					// ジョイスティックボタン(デバイスA)
-	c->joy_button0[3]		= 4;					// ジョイスティックボタン(デバイスA)
-	c->joy_button0[4]		= 5;					// ジョイスティックボタン(デバイスA)
-	c->joy_button0[5]		= 6;					// ジョイスティックボタン(デバイスA)
-	c->joy_button0[6]		= 7;					// ジョイスティックボタン(デバイスA)
-	c->joy_button0[7]		= 8;					// ジョイスティックボタン(デバイスA)
-	c->joy_button0[8]		= 0;					// ジョイスティックボタン(デバイスA)
-	c->joy_button0[9]		= 0;					// ジョイスティックボタン(デバイスA)
-	c->joy_button0[10]		= 0;					// ジョイスティックボタン(デバイスA)
-	c->joy_button0[11]		= 0;					// ジョイスティックボタン(デバイスA)
-	c->joy_button1[0]		= 65537;				// ジョイスティックボタン(デバイスB)
-	c->joy_button1[1]		= 65538;				// ジョイスティックボタン(デバイスB)
-	c->joy_button1[2]		= 65539;				// ジョイスティックボタン(デバイスB)
-	c->joy_button1[3]		= 65540;				// ジョイスティックボタン(デバイスB)
-	c->joy_button1[4]		= 65541;				// ジョイスティックボタン(デバイスB)
-	c->joy_button1[5]		= 65542;				// ジョイスティックボタン(デバイスB)
-	c->joy_button1[6]		= 65543;				// ジョイスティックボタン(デバイスB)
-	c->joy_button1[7]		= 65544;				// ジョイスティックボタン(デバイスB)
-	c->joy_button1[8]		= 0;					// ジョイスティックボタン(デバイスB)
-	c->joy_button1[9]		= 0;					// ジョイスティックボタン(デバイスB)
-	c->joy_button1[10]		= 0;					// ジョイスティックボタン(デバイスB)
-	c->joy_button1[11]		= 0;					// ジョイスティックボタン(デバイスB)
+	c->joy_type[0]			= 1;		// ジョイスティックタイプ
+	c->joy_type[1]			= 1;		// ジョイスティックタイプ
+	c->joy_dev[0]			= 1;		// ジョイスティックデバイス
+	c->joy_dev[1]			= 2;		// ジョイスティックデバイス
+	c->joy_button0[0]		= 1;		// ジョイスティックボタン(デバイスA)
+	c->joy_button0[1]		= 2;		// ジョイスティックボタン(デバイスA)
+	c->joy_button0[2]		= 3;		// ジョイスティックボタン(デバイスA)
+	c->joy_button0[3]		= 4;		// ジョイスティックボタン(デバイスA)
+	c->joy_button0[4]		= 5;		// ジョイスティックボタン(デバイスA)
+	c->joy_button0[5]		= 6;		// ジョイスティックボタン(デバイスA)
+	c->joy_button0[6]		= 7;		// ジョイスティックボタン(デバイスA)
+	c->joy_button0[7]		= 8;		// ジョイスティックボタン(デバイスA)
+	c->joy_button0[8]		= 0;		// ジョイスティックボタン(デバイスA)
+	c->joy_button0[9]		= 0;		// ジョイスティックボタン(デバイスA)
+	c->joy_button0[10]		= 0;		// ジョイスティックボタン(デバイスA)
+	c->joy_button0[11]		= 0;		// ジョイスティックボタン(デバイスA)
+	c->joy_button1[0]		= 65537;	// ジョイスティックボタン(デバイスB)
+	c->joy_button1[1]		= 65538;	// ジョイスティックボタン(デバイスB)
+	c->joy_button1[2]		= 65539;	// ジョイスティックボタン(デバイスB)
+	c->joy_button1[3]		= 65540;	// ジョイスティックボタン(デバイスB)
+	c->joy_button1[4]		= 65541;	// ジョイスティックボタン(デバイスB)
+	c->joy_button1[5]		= 65542;	// ジョイスティックボタン(デバイスB)
+	c->joy_button1[6]		= 65543;	// ジョイスティックボタン(デバイスB)
+	c->joy_button1[7]		= 65544;	// ジョイスティックボタン(デバイスB)
+	c->joy_button1[8]		= 0;		// ジョイスティックボタン(デバイスB)
+	c->joy_button1[9]		= 0;		// ジョイスティックボタン(デバイスB)
+	c->joy_button1[10]		= 0;		// ジョイスティックボタン(デバイスB)
+	c->joy_button1[11]		= 0;		// ジョイスティックボタン(デバイスB)
 
 
 	// MIDI
-	c->midi_bid				= 0;							// MIDIボードID
-	c->midi_ilevel			= 0;							// MIDI割り込みレベル
-	c->midi_reset			= 0;							// MIDIリセットコマンド
-	c->midiin_device		= 0;							// MIDI INデバイス
-	c->midiin_delay			= 0;							// MIDI INディレイ(ms)
-	c->midiout_device		= 0;							// MIDI OUTデバイス
-	c->midiout_delay		= 84;							// MIDI OUTディレイ(ms)
+	c->midi_bid				= 0;		// MIDIボードID
+	c->midi_ilevel			= 0;		// MIDI割り込みレベル
+	c->midi_reset			= 0;		// MIDIリセットコマンド
+	c->midiin_device		= 0;		// MIDI INデバイス
+	c->midiin_delay			= 0;		// MIDI INディレイ(ms)
+	c->midiout_device		= 0;		// MIDI OUTデバイス
+	c->midiout_delay		= 84;		// MIDI OUTディレイ(ms)
 
 	// 改造
-	c->sram_64k				= FALSE;						// 64KB SRAM
-	c->scc_clkup			= FALSE;						// SCCクロックアップ
-	c->power_led			= FALSE;						// 青色電源LED
-	c->dual_fdd				= FALSE;						// 2DD/2HD兼用FDD
-	c->sasi_parity			= FALSE;						// SASIバスパリティ
+	c->sram_64k				= FALSE;	// 64KB SRAM
+	c->scc_clkup			= FALSE;	// SCCクロックアップ
+	c->power_led			= FALSE;	// 青色電源LED
+	c->dual_fdd				= FALSE;	// 2DD/2HD兼用FDD
+	c->sasi_parity			= FALSE;	// SASIバスパリティ
 
 	// TrueKey
-	c->tkey_mode			= 1;							// TrueKeyモード(bit0:VM bit1:WinApp)
-	c->tkey_com				= 0;							// キーボードCOMポート
-	c->tkey_rts				= FALSE;						// RTS反転モード
+	c->tkey_mode			= 1;		// TrueKeyモード(bit0:VM bit1:WinApp)
+	c->tkey_com				= 0;		// キーボードCOMポート
+	c->tkey_rts				= FALSE;	// RTS反転モード
 
 	// その他
-	c->floppy_speed			= TRUE;							// フロッピーディスク高速
-	c->floppy_led			= TRUE;							// フロッピーディスクLEDモード
-	c->popup_swnd			= TRUE;							// ポップアップサブウィンドウ
-	c->auto_mouse			= FALSE;						// 自動マウスモード制御
-	c->power_off			= FALSE;						// 電源OFFで開始
+	c->floppy_speed			= TRUE;		// フロッピーディスク高速
+	c->floppy_led			= TRUE;		// フロッピーディスクLEDモード
+	c->popup_swnd			= TRUE;		// ポップアップサブウィンドウ
+	c->auto_mouse			= FALSE;	// 自動マウスモード制御
+	c->power_off			= FALSE;	// 電源OFFで開始
 
 	//	Config202
 	// システム
@@ -793,7 +709,7 @@ static KeyMapTargetToX68k km;
 //	
 //
 //---------------------------------------------------------------------------
-static void processInput(BOOL bRun, HWND hWnd) {
+static void processInput(HWND hWnd) {
 	static LPDIRECTINPUT	lpDi		= 0;
 	static CRTC*			m_pCRTC;		// CRTC
 	static DWORD			m_dwDispCount;	// CRTC表示カウント
@@ -827,9 +743,7 @@ static void processInput(BOOL bRun, HWND hWnd) {
 		int updateMode = TRUE;
 
 		// bRun = FALSEなら、スケジューラ停止中(10msおきに呼ばれる)
-		if (!bRun) {
-			updateMode = FALSE;
-		} else {
+		{
 			// CRTCの表示カウンタを見て、フレームごとに処理する
 			ASSERT(m_pCRTC);
 
@@ -959,10 +873,24 @@ static void processInput(BOOL bRun, HWND hWnd) {
 
 //---------------------------------------------------------------------------
 //
+//	conversion 32bit word array to 16bit word array
+//
+//---------------------------------------------------------------------------
+void soundPack(const DWORD* src, unsigned short* dst, int nDstBytes) {
+	int i = nDstBytes >> 1;
+	while(i-- > 0) {
+		*dst++ = static_cast<unsigned short>(*src++);
+	}
+}
+
+
+
+//---------------------------------------------------------------------------
+//
 //	進行
 //
 //---------------------------------------------------------------------------
-static void processSound(BOOL bRun, HWND hWnd) {
+static void processSound(HWND hWnd) {
 	HRESULT hr;
 	DWORD dwOffset;
 	DWORD dwWrite;
@@ -1232,7 +1160,7 @@ static void processSound(BOOL bRun, HWND hWnd) {
 
 	// カウント処理(m_nPoll回に１回、ただしVM停止中は常時)
 	m_uCount++;
-	if ((m_uCount < m_uPoll) && bRun) {
+	if ((m_uCount < m_uPoll)) {
 		return;
 	}
 	m_uCount = 0;
@@ -1282,11 +1210,7 @@ static void processSound(BOOL bRun, HWND hWnd) {
 	dwRequest /= 4;
 
 	// m_lpBufにバッファデータを作成。まずbRunチェック
-	if (!bRun) {
-		memset(m_lpBuf, 0, m_uBufSize * 2);
-		m_pOPMIF->InitBuf(m_uRate);
-	}
-	else {
+	{
 		// OPMに対して、処理要求と速度制御
 		dwReady = m_pOPMIF->ProcessBuf();
 		m_pOPMIF->GetBuf(m_lpBuf, (int)dwRequest);
@@ -1328,12 +1252,10 @@ static void processSound(BOOL bRun, HWND hWnd) {
 	ASSERT((dwSize1 & 1) == 0);
 	ASSERT((dwSize2 & 1) == 0);
 
-	// MMX命令によるパック(dwSize1+dwSize2で、平均5000～15000程度は処理する)
-	SoundMMX(m_lpBuf, pBuf1, dwSize1);
+	soundPack(m_lpBuf, pBuf1, dwSize1);
 	if (dwSize2 > 0) {
-		SoundMMX(&m_lpBuf[dwSize1 / 2], pBuf2, dwSize2);
+		soundPack(&m_lpBuf[dwSize1 / 2], pBuf2, dwSize2);
 	}
-	SoundEMMS();
 
 	// アンロック
 	m_lpDSb->Unlock(pBuf1, dwSize1, pBuf2, dwSize2);
@@ -1375,53 +1297,38 @@ static UINT schedulerFunc() {
 
 		bool requestRefresh	= false;
 
-		::LockVM();
-
-		// 有効フラグが上がっていなければ、停止中
-		if(! schedulerIsEnable()) {
-			// 描画
+		DWORD dwTime = GetTime();
+		if(dwExecTime > dwTime) {
 			requestRefresh = true;
 			dwExecCount = 0;
-
-			// 他コンポーネントの処理、時間あわせ
-			processSound(FALSE, hFrmWnd);
-			processInput(FALSE, hFrmWnd);
-			dwExecTime = GetTime();
-			postSleep = 10;
+			if(dwExecTime > GetTime()) {
+				postSleep = 1;
+			}
 		} else {
-			DWORD dwTime = GetTime();
-			if(dwExecTime > dwTime) {
-				requestRefresh = true;
-				dwExecCount = 0;
-				if(dwExecTime > GetTime()) {
-					postSleep = 1;
-				}
-			} else {
-				// レンダリング可否を判定(1or36)
-				pRender->EnableAct(dwExecTime >= dwTime);
+			// レンダリング可否を判定(1or36)
+			pRender->EnableAct(dwExecTime >= dwTime);
 
-				if(cvm->exec(1000 * 2)) {
-					if(cvm->isPower()) {
-						dwExecCount++;
-						dwExecTime++;
+			if(cvm->exec(1000 * 2)) {
+				if(cvm->isPower()) {
+					dwExecCount++;
+					dwExecTime++;
 
-						// 他コンポーネントの処理
-						processSound(TRUE, hFrmWnd);
-						processInput(TRUE, hFrmWnd);
+					// 他コンポーネントの処理
+					processSound(hFrmWnd);
+					processInput(hFrmWnd);
 
-						// dwExecCountが規定数を超えたら、一度表示して強制時間合わせ
-						if (dwExecCount > 400) {
-							requestRefresh = true;
-							dwExecCount = 0;
-							dwExecTime = GetTime();
-						}
+					// dwExecCountが規定数を超えたら、一度表示して強制時間合わせ
+					if (dwExecCount > 400) {
+						requestRefresh = true;
+						dwExecCount = 0;
+						dwExecTime = GetTime();
 					}
 				}
 			}
 		}
 
 		if(requestRefresh) {
-			if(! schedulerIsEnable() || pRender->IsReady()) {
+			if(pRender->IsReady()) {
 				HDC hdc = GetDC(getMainWindow());	//m_pFrmWnd->m_hWnd);
 //				m_pFrmWnd->OnDraw(hdc);
 				OnDraw(hdc);
@@ -1429,8 +1336,6 @@ static UINT schedulerFunc() {
 				pRender->Complete();
 			}
 		}
-
-		::UnlockVM();
 
 		if(postSleep >= 0) {
 			::Sleep(postSleep);
@@ -1470,12 +1375,10 @@ static BOOL FASTCALL InitCmdSub(int nDrive, LPCTSTR lpszPath) {
 		FDI *pFDI = NULL;
 
 		{
-			::LockVM();
 			FDD* pFDD = (FDD*)cvm->getDevice(MAKEID('F', 'D', 'D', ' '));
 			if(pFDD && pFDD->Open(nDrive, path)) {
 				pFDI = pFDD->GetFDI(nDrive);
 			}
-			::UnlockVM();
 		}
 
 		if(pFDI) {
@@ -1815,9 +1718,6 @@ INT WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, INT) {
 		// リセット
 		cvm->reset();
 
-		// コンポーネントをイネーブル。ただしSchedulerは設定による
-		schedulerSetEnable(TRUE);
-
 		LPCTSTR	szPath0	= _T("C:\\projects\\github\\xm6_pid\\00proj.vc10_nomfc\\Debug\\bosconian.xdf");
 		LPCTSTR	szPath1	= _T("");
 
@@ -1831,19 +1731,9 @@ INT WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, INT) {
 
 	schedulerFunc();
 
-	// コンポーネントを止める
-	schedulerSetEnable(FALSE);
-
-//	// スケジューラが実行をやめるまで待つ
-//	for (int i=0; i<8; i++) {
-//		::LockVM();
-//		::UnlockVM();
-//	}
-
 	// 仮想マシンを削除
 	cvm->cleanup();
 	delete cvm;
-//	::DestroyVM();
 
 	return 0;
 }
