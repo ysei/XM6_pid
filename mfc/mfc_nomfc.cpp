@@ -37,19 +37,7 @@
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-class CFrmWnd {
-public:
-	CFrmWnd();
-	~CFrmWnd();
-
-	void OnDraw(HDC hdc);
-	int OnCreate(LPCREATESTRUCT);	// ウィンドウ作成
-	void OnDestroy();				// ウィンドウ削除
-
-private:
-	BOOL FASTCALL	InitCmdSub(int nDrive, LPCTSTR lpszPath);
-};
-
+static void OnDraw(HDC hdc);
 static CFrmWnd*	globalFrmWnd	= 0;
 static bool		ready0			= false;
 
@@ -1343,10 +1331,7 @@ static void processSound(BOOL bRun, HWND hWnd) {
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-static UINT scheduler_ThreadFunc(LPVOID pParam) {
-	extern CFrmWnd*	globalFrmWnd;
-	CFrmWnd*	m_pFrmWnd	= globalFrmWnd;
-
+static UINT schedulerFunc() {
 	VM*			pVM			= ::GetVM();
 	Render*		pRender		= (Render*)pVM->SearchDevice(MAKEID('R', 'E', 'N', 'D'));
 	HWND		hFrmWnd		= getMainWindow();	//m_pFrmWnd->m_hWnd;
@@ -1355,6 +1340,12 @@ static UINT scheduler_ThreadFunc(LPVOID pParam) {
 
 	// 終了リクエストが上がるまでループ
 	while (!scheduler_m_bExitReq) {
+		if(!scheduler_m_bExitReq) {
+			if(GetAsyncKeyState(VK_ESCAPE)) {
+				scheduler_m_bExitReq = true;
+			}
+		}
+
 		int	preSleep	= 0;
 		int postSleep	= -1;
 
@@ -1412,7 +1403,8 @@ static UINT scheduler_ThreadFunc(LPVOID pParam) {
 		if(requestRefresh) {
 			if(! schedulerIsEnable() || pRender->IsReady()) {
 				HDC hdc = GetDC(getMainWindow());	//m_pFrmWnd->m_hWnd);
-				m_pFrmWnd->OnDraw(hdc);
+//				m_pFrmWnd->OnDraw(hdc);
+				OnDraw(hdc);
 				ReleaseDC(getMainWindow(), hdc);
 				pRender->Complete();
 			}
@@ -1427,87 +1419,7 @@ static UINT scheduler_ThreadFunc(LPVOID pParam) {
 	return 0;
 }
 
-static void schedulerInit() {
-	scheduler_m_bExitReq		= FALSE;
-	scheduler_mm_bEnable		= FALSE;
 
-	::timeBeginPeriod(1);
-//	AfxBeginThread(scheduler_ThreadFunc, 0);
-	DWORD dw;
-	CreateThread(0, 0, (LPTHREAD_START_ROUTINE) scheduler_ThreadFunc, 0, 0, &dw);
-}
-
-
-
-//---------------------------------------------------------------------------
-//
-//	シェル定数定義
-//	※includeファイルではなく、アプリケーション側で定義するよう定められている
-//
-//---------------------------------------------------------------------------
-#define SHCNRF_InterruptLevel			0x0001
-#define SHCNRF_ShellLevel				0x0002
-#define SHCNRF_NewDelivery				0x8000
-
-//---------------------------------------------------------------------------
-//
-//	コンストラクタ
-//
-//---------------------------------------------------------------------------
-CFrmWnd::CFrmWnd()
-{
-	globalFrmWnd = this;
-}
-
-CFrmWnd::~CFrmWnd()
-{
-}
-
-//---------------------------------------------------------------------------
-//
-//	ウィンドウ作成
-//
-//---------------------------------------------------------------------------
-int CFrmWnd::OnCreate(LPCREATESTRUCT)
-{
-	// VM初期化
-	VM* pVm = CreateVM();
-	pVm->Init();
-
-	// デバイス記憶
-//	FDD* pFDD = (FDD*)::GetVM()->SearchDevice(MAKEID('F', 'D', 'D', ' '));
-
-	// コンポーネント作成、初期化
-	schedulerInit();
-
-	// 設定適用(OnOptionと同様、VMロックして)
-	::LockVM();
-	{
-		Config config;
-		configGetConfig(&config);
-		::GetVM()->ApplyCfg(&config);
-	}
-	::UnlockVM();
-
-	// リセット
-	::GetVM()->Reset();
-
-	// コンポーネントをイネーブル。ただしSchedulerは設定による
-	schedulerSetEnable(TRUE);
-
-	LPCTSTR	szPath0	= _T("C:\\projects\\github\\xm6_pid\\00proj.vc10_nomfc\\Debug\\bosconian.xdf");
-	LPCTSTR	szPath1	= _T("");
-
-	BOOL bReset = FALSE;
-	bReset = bReset || InitCmdSub(0, szPath0);
-	bReset = bReset || InitCmdSub(1, szPath1);
-
-	if(bReset) {
-		ResetVM();
-	}
-
-	return 0;
-}
 
 //---------------------------------------------------------------------------
 //
@@ -1515,92 +1427,46 @@ int CFrmWnd::OnCreate(LPCREATESTRUCT)
 //	※コマンドライン、WM_COPYDATA、ドラッグ&ドロップで共通
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL CFrmWnd::InitCmdSub(int nDrive, LPCTSTR lpszPath)
-{
-	Filepath path;
-	Fileio fio;
-	LPTSTR lpszFile;
-	DWORD dwSize;
-	TCHAR szPath[_MAX_PATH];
-	FDI *pFDI;
-
-	ASSERT(this);
+static BOOL FASTCALL InitCmdSub(int nDrive, LPCTSTR lpszPath) {
 	ASSERT((nDrive == 0) || (nDrive == 1));
 	ASSERT(lpszPath);
 
-	// pFDI初期化
-	pFDI = NULL;
+	BOOL ret = FALSE;
 
-	// ファイルオープンチェック
-	path.SetPath(lpszPath);
-	if (!fio.Open(path, Fileio::ReadOnly)) {
-		return FALSE;
-	}
-	dwSize = fio.GetFileSize();
-	fio.Close();
-
-	// フルパス化
-	::GetFullPathName(lpszPath, _MAX_PATH, szPath, &lpszFile);
-	path.SetPath(szPath);
-
-	// VMロック
-	::LockVM();
-
+	Filepath path;
+	BOOL isExist = FALSE;
 	{
-		// FDの割り当てを試みる
-		FDD* pFDD = (FDD*)::GetVM()->SearchDevice(MAKEID('F', 'D', 'D', ' '));
-		if (!pFDD->Open(nDrive, path)) {
+		TCHAR szPath[_MAX_PATH];
+		LPTSTR lpszFile;
+		::GetFullPathName(lpszPath, _MAX_PATH, szPath, &lpszFile);
+		path.SetPath(szPath);
+
+		Fileio fio;
+		isExist = fio.Open(path, Fileio::ReadOnly);
+		fio.Close();
+	}
+
+	if(isExist) {
+		FDI *pFDI = NULL;
+
+		{
+			::LockVM();
+			FDD* pFDD = (FDD*)::GetVM()->SearchDevice(MAKEID('F', 'D', 'D', ' '));
+			if(pFDD && pFDD->Open(nDrive, path)) {
+				pFDI = pFDD->GetFDI(nDrive);
+			}
 			::UnlockVM();
-			return FALSE;
-		}
-		pFDI = pFDD->GetFDI(nDrive);
-	}
-
-	// VMリセット、ロック解除
-//	GetScheduler()->Reset();
-//	ResetCaption();
-	::UnlockVM();
-
-	// 成功。ディレクトリ保存＆MRU追加
-	Filepath::SetDefaultDir(szPath);
-//	GetConfig()->SetMRUFile(nDrive, szPath);
-
-	// フロッピーなら、BADイメージ警告
-	if (pFDI) {
-		if (pFDI->GetID() == MAKEID('B', 'A', 'D', ' ')) {
-		//	CString strMsg;
-		//	::GetMsg(IDS_BADFDI_WARNING, strMsg);
-		//	MessageBox(strMsg, NULL, MB_ICONSTOP | MB_OK);
 		}
 
-		// フロッピーを割り当てたときだけ、リセットする
-		return TRUE;
+		if(pFDI) {
+			if (pFDI->GetID() == MAKEID('B', 'A', 'D', ' ')) {
+				//	bad image
+			}
+			ret = TRUE;
+		}
 	}
 
-	// 終了
-	return FALSE;
-}
-
-//---------------------------------------------------------------------------
-//
-//	ウィンドウ削除
-//
-//---------------------------------------------------------------------------
-void CFrmWnd::OnDestroy()
-{
-	ASSERT(this);
-
-	// コンポーネントを止める
-	schedulerSetEnable(FALSE);
-
-	// スケジューラが実行をやめるまで待つ
-	for (int i=0; i<8; i++) {
-		::LockVM();
-		::UnlockVM();
-	}
-
-	// 仮想マシンを削除
-	::DestroyVM();
+	return ret;
 }
 
 
@@ -1610,7 +1476,7 @@ void CFrmWnd::OnDestroy()
 //	ウィンドウ削除
 //
 //---------------------------------------------------------------------------
-void CFrmWnd::OnDraw(HDC hdc) {
+static void OnDraw(HDC hdc) {
 	// 内部ワーク定義
 	struct DRAWINFO {
 		BOOL bPower;					// 電源
@@ -1912,17 +1778,58 @@ INT WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, INT) {
 		CW_STYLE	= (WS_OVERLAPPED | WS_CAPTION | WS_VISIBLE),
 	};
 
-	globalFrmWnd = new CFrmWnd();
+	::timeBeginPeriod(1);
+	scheduler_m_bExitReq		= FALSE;
+	scheduler_mm_bEnable		= FALSE;
 
 	RECT rc = { 0, 0, CW_WIDTH, CW_HEIGHT };
 	AdjustWindowRect(&rc, CW_STYLE, 0);
 
 	mainWindow = CreateWindow(_T("edit"), 0, CW_STYLE, 0, 0, rc.right-rc.left, rc.bottom-rc.top, 0, 0, 0, 0);
-	globalFrmWnd->OnCreate(0);
+	{
+		// VM初期化
+		VM* pVm = CreateVM();
+		pVm->Init();
+
+		// 設定適用(OnOptionと同様、VMロックして)
+		::LockVM();
+		{
+			Config config;
+			configGetConfig(&config);
+			::GetVM()->ApplyCfg(&config);
+		}
+		::UnlockVM();
+
+		// リセット
+		::GetVM()->Reset();
+
+		// コンポーネントをイネーブル。ただしSchedulerは設定による
+		schedulerSetEnable(TRUE);
+
+		LPCTSTR	szPath0	= _T("C:\\projects\\github\\xm6_pid\\00proj.vc10_nomfc\\Debug\\bosconian.xdf");
+		LPCTSTR	szPath1	= _T("");
+
+		BOOL bReset = InitCmdSub(0, szPath0) || InitCmdSub(1, szPath1);
+
+		if(bReset) {
+			ResetVM();
+		}
+	}
 	ready0 = true;
 
-	while(! GetAsyncKeyState(VK_ESCAPE)) {
+	schedulerFunc();
+
+	// コンポーネントを止める
+	schedulerSetEnable(FALSE);
+
+	// スケジューラが実行をやめるまで待つ
+	for (int i=0; i<8; i++) {
+		::LockVM();
+		::UnlockVM();
 	}
+
+	// 仮想マシンを削除
+	::DestroyVM();
 
 	return 0;
 }
