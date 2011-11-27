@@ -13,13 +13,6 @@
 #include "device.h"
 #include "cpu.h"
 
-//---------------------------------------------------------------------------
-//
-//	高速ウェイト(Starscream専用)
-//
-//---------------------------------------------------------------------------
-#define SCHEDULER_FASTWAIT
-
 //===========================================================================
 //
 //	スケジューラ
@@ -94,13 +87,8 @@ public:
 										// トレース
 	void FASTCALL Break()				{ sch.brk = TRUE; }
 										// 実行中止
-#ifdef SCHEDULER_FASTWAIT
-	void FASTCALL Wait(DWORD cycle)		{ sch.cycle += cycle; if (CPU_IOCYCLE_GET() != (DWORD)-1) CPU_IOCYCLE_SUBTRACT(cycle); }
-										// CPUウェイト(すべてインライン)
-#else
-	void FASTCALL Wait(DWORD cycle)		{ CPU_WAIT(cycle); sch.cycle += cycle; }
+	void FASTCALL Wait(DWORD cycle)		{ cpu->Wait(cycle); sch.cycle += cycle; }
 										// CPUウェイト
-#endif	// SCHEDULER_FASTWAIT
 
 	// 特殊操作(DMAC向け)
 	int FASTCALL GetCPUCycle() const	{ return sch.cycle; }

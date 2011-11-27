@@ -21,6 +21,37 @@
 #include "scsi.h"
 #include "fileio.h"
 #include "cpu.h"
+#include "starcpu.h"
+
+struct CPU::Region {
+	enum {
+		REGION_MAX = 10
+	};
+	STARSCREAM_PROGRAMREGION u_pgr[REGION_MAX];
+										// プログラムリージョン(User)
+	STARSCREAM_PROGRAMREGION s_pgr[REGION_MAX];
+										// プログラムリージョン(Super)
+	STARSCREAM_DATAREGION u_rbr[REGION_MAX];
+										// Read Byteリージョン(User)
+	STARSCREAM_DATAREGION s_rbr[REGION_MAX];
+										// Read Byteリージョン(Super)
+	STARSCREAM_DATAREGION u_rwr[REGION_MAX];
+										// Read Wordリージョン(User)
+	STARSCREAM_DATAREGION s_rwr[REGION_MAX];
+										// Read Wordリージョン(Super)
+	STARSCREAM_DATAREGION u_wbr[REGION_MAX];
+										// Write Byteリージョン(User)
+	STARSCREAM_DATAREGION s_wbr[REGION_MAX];
+										// Write Byteリージョン(Super)
+	STARSCREAM_DATAREGION u_wwr[REGION_MAX];
+										// Write Wordリージョン(User)
+	STARSCREAM_DATAREGION s_wwr[REGION_MAX];
+										// Write Wordリージョン(Super)
+	STARSCREAM_PROGRAMREGION* pProgramRegion;
+	int	iProgramRegion;
+	STARSCREAM_DATAREGION* pDataRegion;
+	int	iDataRegion;
+};
 
 //---------------------------------------------------------------------------
 //
@@ -48,6 +79,8 @@ DWORD s68000fbpc(void);
 										// PCフィードバック
 void s68000buserr(DWORD addr, DWORD param);
 										// バスエラー
+extern DWORD s68000getcounter();		// クロックカウンタ取得
+extern DWORD s68000iocycle;				// __io_cycle_counter(Starscream)
 
 //---------------------------------------------------------------------------
 //
@@ -127,10 +160,7 @@ CPU::CPU(VM *p) : Device(p)
 	scsi = NULL;
 	scheduler = NULL;
 
-	pProgramRegion = NULL;
-	iProgramRegion = -1;
-	pDataRegion = NULL;
-	iDataRegion = -1;
+	pRegion = NULL;
 }
 
 //---------------------------------------------------------------------------
@@ -183,20 +213,22 @@ BOOL FASTCALL CPU::Init()
 	ASSERT(scheduler);
 
 	// リージョンエリアを設定
-	::s68000context.u_fetch = u_pgr;
-	::s68000context.s_fetch = s_pgr;
-	::s68000context.u_readbyte = u_rbr;
-	::s68000context.s_readbyte = s_rbr;
-	::s68000context.u_readword = u_rwr;
-	::s68000context.s_readword = s_rwr;
-	::s68000context.u_writebyte = u_wbr;
-	::s68000context.s_writebyte = s_wbr;
-	::s68000context.u_writeword = u_wwr;
-	::s68000context.s_writeword = s_wwr;
-	pProgramRegion = NULL;
-	iProgramRegion = -1;
-	pDataRegion = NULL;
-	iDataRegion = -1;
+	ASSERT(pRegion == 0);
+	pRegion = new Region;
+	::s68000context.u_fetch			= pRegion->u_pgr;
+	::s68000context.s_fetch			= pRegion->s_pgr;
+	::s68000context.u_readbyte		= pRegion->u_rbr;
+	::s68000context.s_readbyte		= pRegion->s_rbr;
+	::s68000context.u_readword		= pRegion->u_rwr;
+	::s68000context.s_readword		= pRegion->s_rwr;
+	::s68000context.u_writebyte		= pRegion->u_wbr;
+	::s68000context.s_writebyte		= pRegion->s_wbr;
+	::s68000context.u_writeword		= pRegion->u_wwr;
+	::s68000context.s_writeword		= pRegion->s_wwr;
+	pRegion->pProgramRegion = NULL;
+	pRegion->iProgramRegion = -1;
+	pRegion->pDataRegion = NULL;
+	pRegion->iDataRegion = -1;
 
 	// CPUコアのジャンプテーブルを作成
 	::s68000init();
@@ -212,6 +244,11 @@ BOOL FASTCALL CPU::Init()
 void FASTCALL CPU::Cleanup()
 {
 	ASSERT(this);
+
+	if(pRegion) {
+		delete pRegion;
+		pRegion = 0;
+	}
 
 	// 基本クラスへ
 	Device::Cleanup();
@@ -740,23 +777,23 @@ void FASTCALL CPU::AddrErrLog(DWORD addr, DWORD stat)
 }
 
 void CPU::BeginProgramRegion(BOOL isSuper) {
-	ASSERT(iProgramRegion == -1);
-	ASSERT(pProgramRegion == 0);
+	ASSERT(pRegion->iProgramRegion == -1);
+	ASSERT(pRegion->pProgramRegion == 0);
 
-	iProgramRegion = 0;
+	pRegion->iProgramRegion = 0;
 	if(isSuper) {
-		pProgramRegion = &s_pgr[0];
+		pRegion->pProgramRegion = &pRegion->s_pgr[0];
 	} else {
-		pProgramRegion = &u_pgr[0];
+		pRegion->pProgramRegion = &pRegion->u_pgr[0];
 	}
 }
 
 int  CPU::AddProgramRegion(unsigned int lowaddr, unsigned int highaddr, unsigned int offset) {
-	ASSERT(iProgramRegion >= 0 && iProgramRegion < REGION_MAX);
-	ASSERT(pProgramRegion);
+	ASSERT(pRegion->iProgramRegion >= 0 && pRegion->iProgramRegion < Region::REGION_MAX);
+	ASSERT(pRegion->pProgramRegion);
 
-	int i = iProgramRegion++;
-	STARSCREAM_PROGRAMREGION* p = &pProgramRegion[i];
+	int i = pRegion->iProgramRegion++;
+	STARSCREAM_PROGRAMREGION* p = &pRegion->pProgramRegion[i];
 	p->lowaddr	= lowaddr;
 	p->highaddr	= highaddr;
 	p->offset	= offset;
@@ -764,41 +801,41 @@ int  CPU::AddProgramRegion(unsigned int lowaddr, unsigned int highaddr, unsigned
 }
 
 void CPU::EndProgramRegion() {
-	ASSERT(iProgramRegion >= 0 && iProgramRegion < REGION_MAX);
-	ASSERT(pProgramRegion);
+	ASSERT(pRegion->iProgramRegion >= 0 && pRegion->iProgramRegion < Region::REGION_MAX);
+	ASSERT(pRegion->pProgramRegion);
 
 	AddProgramRegion((unsigned int)-1, (unsigned int)-1, 0);
 
-	iProgramRegion = -1;
-	pProgramRegion = 0;
+	pRegion->iProgramRegion = -1;
+	pRegion->pProgramRegion = 0;
 }
 
 void CPU::BeginDataRegion(BOOL isSuper, BOOL isWrite, BOOL isWord) {
-	ASSERT(iDataRegion == -1);
-	ASSERT(pDataRegion == 0);
+	ASSERT(pRegion->iDataRegion == -1);
+	ASSERT(pRegion->pDataRegion == 0);
 
 	STARSCREAM_DATAREGION* p = 0;
 
-	iDataRegion = 0;
+	pRegion->iDataRegion = 0;
 	if(isSuper) {
 		//	super
 		if(! isWrite) {
 			//	super, read
 			if(! isWord) {
 				//	super, read, byte
-				p = &s_rbr[0];
+				p = &pRegion->s_rbr[0];
 			} else {
 				//	super, read, word
-				p = &s_rwr[0];
+				p = &pRegion->s_rwr[0];
 			}
 		} else {
 			//	super, write
 			if(! isWord) {
 				//	super, write, byte
-				p = &s_wbr[0];
+				p = &pRegion->s_wbr[0];
 			} else {
 				//	super, write, word
-				p = &s_wwr[0];
+				p = &pRegion->s_wwr[0];
 			}
 		}
 	} else {
@@ -807,33 +844,33 @@ void CPU::BeginDataRegion(BOOL isSuper, BOOL isWrite, BOOL isWord) {
 			//	user, read
 			if(! isWord) {
 				//	user, read, byte
-				p = &u_rbr[0];
+				p = &pRegion->u_rbr[0];
 			} else {
 				//	user, read, word
-				p = &u_rwr[0];
+				p = &pRegion->u_rwr[0];
 			}
 		} else {
 			//	user, write
 			if(! isWord) {
 				//	user, write, byte
-				p = &u_wbr[0];
+				p = &pRegion->u_wbr[0];
 			} else {
 				//	user, write, word
-				p = &u_wwr[0];
+				p = &pRegion->u_wwr[0];
 			}
 		}
 	}
 
 	ASSERT(p);
-	pDataRegion = p;
+	pRegion->pDataRegion = p;
 }
 
 int  CPU::AddDataRegion(unsigned int lowaddr, unsigned int highaddr, void* memorycall, void* userdata) {
-	ASSERT(iDataRegion >= 0 && iDataRegion < REGION_MAX);
-	ASSERT(pDataRegion);
+	ASSERT(pRegion->iDataRegion >= 0 && pRegion->iDataRegion < Region::REGION_MAX);
+	ASSERT(pRegion->pDataRegion);
 
-	int i = iDataRegion++;
-	STARSCREAM_DATAREGION* p = &pDataRegion[i];
+	int i = pRegion->iDataRegion++;
+	STARSCREAM_DATAREGION* p = &pRegion->pDataRegion[i];
 	p->lowaddr		= lowaddr;
 	p->highaddr		= highaddr;
 	p->memorycall	= memorycall;
@@ -842,11 +879,50 @@ int  CPU::AddDataRegion(unsigned int lowaddr, unsigned int highaddr, void* memor
 }
 
 void CPU::EndDataRegion() {
-	ASSERT(iDataRegion >= 0 && iDataRegion < REGION_MAX);
-	ASSERT(pDataRegion);
+	ASSERT(pRegion->iDataRegion >= 0 && pRegion->iDataRegion < Region::REGION_MAX);
+	ASSERT(pRegion->pDataRegion);
 
 	AddDataRegion((unsigned int)-1, (unsigned int)-1, 0, 0);
 
-	iDataRegion = -1;
-	pDataRegion = 0;
+	pRegion->iDataRegion = -1;
+	pRegion->pDataRegion = 0;
+}
+
+DWORD FASTCALL CPU::Exec(int cycle) {
+	DWORD result;
+
+	if (::s68000exec(cycle) <= 0x80000000) {
+		result = ::s68000context.odometer;
+		::s68000context.odometer = 0;
+		return result;
+	}
+
+	result = ::s68000context.odometer;
+	result |= 0x80000000;
+	::s68000context.odometer = 0;
+	return result;
+}
+
+void FASTCALL CPU::Wait(DWORD cycle) {
+	//	TODO : This function is called very frequently. So, original Scheduler::Wait() calls StarScream directly. Like this :
+	//
+	//		void FASTCALL Wait(DWORD cycle)		{ sch.cycle += cycle; if (CPU_IOCYCLE_GET() != (DWORD)-1) CPU_IOCYCLE_SUBTRACT(cycle); }
+	//
+	::s68000wait(cycle);
+}
+
+DWORD FASTCALL CPU::GetIOCycle() const {
+	return ::s68000getcounter();
+}
+
+void FASTCALL CPU::Release() {
+	::s68000releaseTimeslice();
+}
+
+DWORD FASTCALL CPU::GetCycle() const {
+	return ::s68000readOdometer();
+}
+
+DWORD FASTCALL CPU::GetPC() const {
+	return ::s68000readPC();
 }

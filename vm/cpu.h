@@ -11,31 +11,7 @@
 #define cpu_h
 
 #include "device.h"
-#include "starcpu.h"
-
-//---------------------------------------------------------------------------
-//
-//	外部定義
-//
-//---------------------------------------------------------------------------
-#if defined(__cplusplus)
-extern "C" {
-#endif	// __cplusplus
-
-extern DWORD s68000getcounter();
-										// クロックカウンタ取得
-extern void s68000setcounter(DWORD c);
-										// クロックカウンタ設定
-extern DWORD s68000iocycle;
-										// __io_cycle_counter(Starscream)
-#if defined(__cplusplus)
-}
-#endif	// __cplusplus
-
-#define	CPU_IOCYCLE()						::s68000iocycle
-#define	CPU_IOCYCLE_GET()					CPU_IOCYCLE()
-#define	CPU_IOCYCLE_SUBTRACT(c)				CPU_IOCYCLE() -= (c)
-#define	CPU_WAIT(c)							::s68000wait(c)
+//#include "starcpu.h"
 
 //===========================================================================
 //
@@ -96,20 +72,7 @@ public:
 										// CPUレジスタ取得
 	void FASTCALL SetCPU(const cpu_t *buffer);
 										// CPUレジスタ設定
-	DWORD FASTCALL Exec(int cycle) {
-		DWORD result;
-
-		if (::s68000exec(cycle) <= 0x80000000) {
-			result = ::s68000context.odometer;
-			::s68000context.odometer = 0;
-			return result;
-		}
-
-		result = ::s68000context.odometer;
-		result |= 0x80000000;
-		::s68000context.odometer = 0;
-		return result;
-	}
+	DWORD FASTCALL Exec(int cycle);
 										// 実行
 	BOOL FASTCALL Interrupt(int level, int vector);
 										// 割り込み
@@ -117,17 +80,15 @@ public:
 										// 割り込みACK
 	void FASTCALL IntCancel(int level);
 										// 割り込みキャンセル
-	DWORD FASTCALL GetCycle() const		{ return ::s68000readOdometer(); }
+	DWORD FASTCALL GetCycle() const;
 										// サイクル数取得
-	DWORD FASTCALL GetPC() const		{ return ::s68000readPC(); }
+	DWORD FASTCALL GetPC() const;
 										// プログラムカウンタ取得
 	void FASTCALL ResetInst();
 										// RESET命令
-	DWORD FASTCALL GetIOCycle()	const	{ return ::s68000getcounter(); }
+	DWORD FASTCALL GetIOCycle()	const;	// dma.cpp
 										// I/Oサイクル取得
-	void FASTCALL SetIOCycle(DWORD c)	{ ::s68000setcounter(c); }
-										// I/Oサイクル設定
-	void FASTCALL Release()				{ ::s68000releaseTimeslice(); }
+	void FASTCALL Release();
 										// CPU実行を現命令で強制終了
 	void FASTCALL BusErr(DWORD addr, BOOL read);
 										// バスエラー
@@ -137,7 +98,8 @@ public:
 										// バスエラー記録
 	void FASTCALL AddrErrLog(DWORD addr, DWORD stat);
 										// アドレスエラー記録
-
+	void FASTCALL Wait(DWORD cycle);
+										// CPUウェイト
 private:
 	cpusub_t sub;
 										// 内部データ
@@ -158,33 +120,8 @@ private:
 	Scheduler *scheduler;
 										// スケジューラ
 	// リージョン (Starscream特有)
-	enum {
-		REGION_MAX = 10
-	};
-	STARSCREAM_PROGRAMREGION u_pgr[REGION_MAX];
-										// プログラムリージョン(User)
-	STARSCREAM_PROGRAMREGION s_pgr[REGION_MAX];
-										// プログラムリージョン(Super)
-	STARSCREAM_DATAREGION u_rbr[REGION_MAX];
-										// Read Byteリージョン(User)
-	STARSCREAM_DATAREGION s_rbr[REGION_MAX];
-										// Read Byteリージョン(Super)
-	STARSCREAM_DATAREGION u_rwr[REGION_MAX];
-										// Read Wordリージョン(User)
-	STARSCREAM_DATAREGION s_rwr[REGION_MAX];
-										// Read Wordリージョン(Super)
-	STARSCREAM_DATAREGION u_wbr[REGION_MAX];
-										// Write Byteリージョン(User)
-	STARSCREAM_DATAREGION s_wbr[REGION_MAX];
-										// Write Byteリージョン(Super)
-	STARSCREAM_DATAREGION u_wwr[REGION_MAX];
-										// Write Wordリージョン(User)
-	STARSCREAM_DATAREGION s_wwr[REGION_MAX];
-										// Write Wordリージョン(Super)
-	STARSCREAM_PROGRAMREGION* pProgramRegion;
-	int	iProgramRegion;
-	STARSCREAM_DATAREGION* pDataRegion;
-	int	iDataRegion;
+	struct Region;
+	Region* pRegion;
 };
 
 #endif	// cpu_h
