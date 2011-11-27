@@ -1408,6 +1408,8 @@ extern "C" void MemInitDecode(Memory *mem, MemDevice* list[]) {
 	unsigned int* ebx = (unsigned int*) &MemDecodeTable[0];
 	const unsigned int* edx = (unsigned int*) &MemDecodeData[0];
 
+	MemoryPtr = (unsigned int) mem;
+
 	for(int i = 0; i < 384; ++i) {
 		unsigned int eax = *edx;
 		edx += 1;
@@ -1418,12 +1420,131 @@ extern "C" void MemInitDecode(Memory *mem, MemDevice* list[]) {
 	}
 }
 
-extern "C" DWORD ReadByteC(DWORD addr);										// バイト読み込み
-extern "C" DWORD ReadWordC(DWORD addr);										// ワード読み込み
-extern "C" void WriteByteC(DWORD addr, DWORD data);							// バイト書き込み
-extern "C" void WriteWordC(DWORD addr, DWORD data);							// ワード書き込み
-extern "C" void ReadErrC(DWORD addr);										// バスエラー読み込み
-extern "C" void WriteErrC(DWORD addr, DWORD data);							// バスエラー書き込み
+
+// バイト読み込み
+//	; EAX	DWORD戻り値
+//	; ECX	this
+//	; EDX	アドレス
+
+#pragma runtime_checks("scu", off)
+extern "C" __declspec(naked) void ReadByteC(DWORD addr) {
+	static unsigned int k = 0;
+	__asm {
+		mov k, edx
+	}
+
+	if(k >= 0x00c00000) {
+		((MemDevice*)MemDecodeTable[(k-0x00c00000)>>13])->ReadByte(k);
+	} else {
+		((MemDevice*)MemoryPtr)->ReadByte(k);
+	}
+
+	__asm {
+		ret
+	}
+}
+
+// ワード読み込み
+//	; EAX	DWORD戻り値
+//	; ECX	this
+//	; EDX	アドレス
+extern "C" __declspec(naked) void ReadWordC(DWORD addr) {
+	static unsigned int k = 0;
+	__asm {
+		mov k, edx
+	}
+
+	if(k >= 0x00c00000) {
+		((MemDevice*)MemDecodeTable[(k-0x00c00000)>>13])->ReadWord(k);
+	} else {
+		((MemDevice*)MemoryPtr)->ReadWord(k);
+	}
+
+	__asm {
+		ret
+	}
+}
+
+//	バイト書き込み
+//	;
+//	; EBX	データ
+//	; ECX	this
+//	; EDX	アドレス
+extern "C" __declspec(naked) void WriteByteC(DWORD addr, DWORD data) {
+	static unsigned int k = 0;
+	static unsigned int j = 0;
+	__asm {
+		mov k, edx
+		mov j, ebx
+	}
+
+	if(k >= 0x00c00000) {
+		((MemDevice*)MemDecodeTable[(k-0x00c00000)>>13])->WriteByte(k, j);
+	} else {
+		((MemDevice*)MemoryPtr)->WriteByte(k, j);
+	}
+
+	__asm {
+		ret
+	}
+}
+
+//	ワード書き込み
+//	;
+//	; EBX	データ
+//	; ECX	this
+//	; EDX	アドレス
+extern "C" __declspec(naked) void WriteWordC(DWORD addr, DWORD data) {
+	static unsigned int k = 0;
+	static unsigned int j = 0;
+	__asm {
+		mov k, edx
+		mov j, ebx
+	}
+
+	if(k >= 0x00c00000) {
+		((MemDevice*)MemDecodeTable[(k-0x00c00000)>>13])->WriteWord(k, j);
+	} else {
+		((MemDevice*)MemoryPtr)->WriteWord(k, j);
+	}
+
+	__asm {
+		ret
+	}
+}
+
+//	バスエラー読み込み
+//	; EDX	アドレス
+extern "C" __declspec(naked) void ReadErrC(DWORD addr) {
+	static unsigned int k = 0;
+	__asm {
+		mov k, edx
+	}
+
+	ReadBusErr(k);
+
+	__asm {
+		ret
+	}
+}
+
+// バスエラー書き込み
+//	; EBX	データ
+//	; EDX	アドレス
+extern "C" __declspec(naked) void WriteErrC(DWORD addr, DWORD data) {
+	static unsigned int k = 0;
+	__asm {
+		mov k, edx
+	}
+
+	WriteBusErr(k);
+
+	__asm {
+		ret
+	}
+}
+#pragma runtime_checks("scu", restore)
+
 
 // イベント群 指定
 extern "C" void NotifyEvent(Event *first) {

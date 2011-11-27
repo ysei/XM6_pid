@@ -23,9 +23,9 @@ extern "C" {
 //---------------------------------------------------------------------------
 void MemInitDecode(Memory *mem, MemDevice* list[]);
 										// メモリデコーダ初期化
-DWORD ReadByteC(DWORD addr);
+void ReadByteC(DWORD addr);
 										// バイト読み込み
-DWORD ReadWordC(DWORD addr);
+void ReadWordC(DWORD addr);
 										// ワード読み込み
 void WriteByteC(DWORD addr, DWORD data);
 										// バイト書き込み

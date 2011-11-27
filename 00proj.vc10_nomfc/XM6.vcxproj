@@ -252,15 +252,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="..\vm\core_asm.asm">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(ProgramFiles)\nasm\nasm" -f win32 -o $(IntDir)%(Filename).obj %(FullPath)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename).obj</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(ProgramFiles)\nasm\nasm" -f win32 -o $(IntDir)%(Filename).obj %(FullPath)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename).obj</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
-    </CustomBuild>
     <CustomBuild Include="..\vm\rend_asm.asm">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(ProgramFiles)\nasm\nasm" -f win32 -o $(IntDir)%(Filename).obj %(FullPath)</Command>
