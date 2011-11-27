@@ -126,6 +126,11 @@ CPU::CPU(VM *p) : Device(p)
 	midi = NULL;
 	scsi = NULL;
 	scheduler = NULL;
+
+	pProgramRegion = NULL;
+	iProgramRegion = -1;
+	pDataRegion = NULL;
+	iDataRegion = -1;
 }
 
 //---------------------------------------------------------------------------
@@ -176,6 +181,22 @@ BOOL FASTCALL CPU::Init()
 	// スケジューラ取得
 	scheduler = (Scheduler*)vm->SearchDevice(MAKEID('S', 'C', 'H', 'E'));
 	ASSERT(scheduler);
+
+	// リージョンエリアを設定
+	::s68000context.u_fetch = u_pgr;
+	::s68000context.s_fetch = s_pgr;
+	::s68000context.u_readbyte = u_rbr;
+	::s68000context.s_readbyte = s_rbr;
+	::s68000context.u_readword = u_rwr;
+	::s68000context.s_readword = s_rwr;
+	::s68000context.u_writebyte = u_wbr;
+	::s68000context.s_writebyte = s_wbr;
+	::s68000context.u_writeword = u_wwr;
+	::s68000context.s_writeword = s_wwr;
+	pProgramRegion = NULL;
+	iProgramRegion = -1;
+	pDataRegion = NULL;
+	iDataRegion = -1;
 
 	// CPUコアのジャンプテーブルを作成
 	::s68000init();
@@ -716,4 +737,116 @@ void FASTCALL CPU::AddrErrLog(DWORD addr, DWORD stat)
 	else {
 		LOG1(Log::Warning, "アドレスエラー(書き込み) $%06X", addr);
 	}
+}
+
+void CPU::BeginProgramRegion(BOOL isSuper) {
+	ASSERT(iProgramRegion == -1);
+	ASSERT(pProgramRegion == 0);
+
+	iProgramRegion = 0;
+	if(isSuper) {
+		pProgramRegion = &s_pgr[0];
+	} else {
+		pProgramRegion = &u_pgr[0];
+	}
+}
+
+int  CPU::AddProgramRegion(unsigned int lowaddr, unsigned int highaddr, unsigned int offset) {
+	ASSERT(iProgramRegion >= 0 && iProgramRegion < REGION_MAX);
+	ASSERT(pProgramRegion);
+
+	int i = iProgramRegion++;
+	STARSCREAM_PROGRAMREGION* p = &pProgramRegion[i];
+	p->lowaddr	= lowaddr;
+	p->highaddr	= highaddr;
+	p->offset	= offset;
+	return i;
+}
+
+void CPU::EndProgramRegion() {
+	ASSERT(iProgramRegion >= 0 && iProgramRegion < REGION_MAX);
+	ASSERT(pProgramRegion);
+
+	AddProgramRegion((unsigned int)-1, (unsigned int)-1, 0);
+
+	iProgramRegion = -1;
+	pProgramRegion = 0;
+}
+
+void CPU::BeginDataRegion(BOOL isSuper, BOOL isWrite, BOOL isWord) {
+	ASSERT(iDataRegion == -1);
+	ASSERT(pDataRegion == 0);
+
+	STARSCREAM_DATAREGION* p = 0;
+
+	iDataRegion = 0;
+	if(isSuper) {
+		//	super
+		if(! isWrite) {
+			//	super, read
+			if(! isWord) {
+				//	super, read, byte
+				p = &s_rbr[0];
+			} else {
+				//	super, read, word
+				p = &s_rwr[0];
+			}
+		} else {
+			//	super, write
+			if(! isWord) {
+				//	super, write, byte
+				p = &s_wbr[0];
+			} else {
+				//	super, write, word
+				p = &s_wwr[0];
+			}
+		}
+	} else {
+		//	user
+		if(! isWrite) {
+			//	user, read
+			if(! isWord) {
+				//	user, read, byte
+				p = &u_rbr[0];
+			} else {
+				//	user, read, word
+				p = &u_rwr[0];
+			}
+		} else {
+			//	user, write
+			if(! isWord) {
+				//	user, write, byte
+				p = &u_wbr[0];
+			} else {
+				//	user, write, word
+				p = &u_wwr[0];
+			}
+		}
+	}
+
+	ASSERT(p);
+	pDataRegion = p;
+}
+
+int  CPU::AddDataRegion(unsigned int lowaddr, unsigned int highaddr, void* memorycall, void* userdata) {
+	ASSERT(iDataRegion >= 0 && iDataRegion < REGION_MAX);
+	ASSERT(pDataRegion);
+
+	int i = iDataRegion++;
+	STARSCREAM_DATAREGION* p = &pDataRegion[i];
+	p->lowaddr		= lowaddr;
+	p->highaddr		= highaddr;
+	p->memorycall	= memorycall;
+	p->userdata		= userdata;
+	return i;
+}
+
+void CPU::EndDataRegion() {
+	ASSERT(iDataRegion >= 0 && iDataRegion < REGION_MAX);
+	ASSERT(pDataRegion);
+
+	AddDataRegion((unsigned int)-1, (unsigned int)-1, 0, 0);
+
+	iDataRegion = -1;
+	pDataRegion = 0;
 }

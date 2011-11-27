@@ -11,7 +11,7 @@
 #define scheduler_h
 
 #include "device.h"
-#include "starcpu.h"
+#include "cpu.h"
 
 //---------------------------------------------------------------------------
 //
@@ -19,12 +19,6 @@
 //
 //---------------------------------------------------------------------------
 #define SCHEDULER_FASTWAIT
-#if defined(SCHEDULER_FASTWAIT)
-extern "C" {
-extern DWORD s68000iocycle;
-										// __io_cycle_counter(Starscream)
-}
-#endif	// SCHEDULER_FASTWAIT
 
 //===========================================================================
 //
@@ -101,10 +95,10 @@ public:
 	void FASTCALL Break()				{ sch.brk = TRUE; }
 										// 実行中止
 #ifdef SCHEDULER_FASTWAIT
-	void FASTCALL Wait(DWORD cycle)		{ sch.cycle += cycle; if (::s68000iocycle != (DWORD)-1) ::s68000iocycle -= cycle; }
+	void FASTCALL Wait(DWORD cycle)		{ sch.cycle += cycle; if (CPU_IOCYCLE_GET() != (DWORD)-1) CPU_IOCYCLE_SUBTRACT(cycle); }
 										// CPUウェイト(すべてインライン)
 #else
-	void FASTCALL Wait(DWORD cycle)		{ ::s68000wait(cycle); sch.cycle += cycle; }
+	void FASTCALL Wait(DWORD cycle)		{ CPU_WAIT(cycle); sch.cycle += cycle; }
 										// CPUウェイト
 #endif	// SCHEDULER_FASTWAIT
 

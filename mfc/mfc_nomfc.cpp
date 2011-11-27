@@ -876,7 +876,7 @@ static void processInput(HWND hWnd) {
 //	conversion 32bit word array to 16bit word array
 //
 //---------------------------------------------------------------------------
-void soundPack(const DWORD* src, unsigned short* dst, int nDstBytes) {
+static void soundPack(const DWORD* src, unsigned short* dst, int nDstBytes) {
 	int i = nDstBytes >> 1;
 	while(i-- > 0) {
 		*dst++ = static_cast<unsigned short>(*src++);
@@ -891,457 +891,207 @@ void soundPack(const DWORD* src, unsigned short* dst, int nDstBytes) {
 //
 //---------------------------------------------------------------------------
 static void processSound(HWND hWnd) {
-	HRESULT hr;
-	DWORD dwOffset;
-	DWORD dwWrite;
-	DWORD dwRequest;
-	DWORD dwReady;
-	WORD *pBuf1;
-	WORD *pBuf2;
-	DWORD dwSize1;
-	DWORD dwSize2;
 
 	static BOOL			m_bEnable	= TRUE;
 
-	// デバイス
-	static LPGUID m_lpGUID[16];				// DirectSoundデバイスのGUID
-	static int m_nDeviceNum;				// 検出したデバイス数
-
 	// 再生
-	static UINT m_uRate;					// サンプリングレート
-	static UINT m_uTick;					// バッファサイズ(ms)
-	static UINT m_uPoll;					// ポーリング間隔(ms)
-	static UINT m_uCount;					// ポーリングカウント
-	static UINT m_uBufSize;					// バッファサイズ(バイト)
-	static BOOL m_bPlay;					// 再生フラグ
-	static DWORD m_dwWrite;					// 書き込み完了位置
-	static int m_nMaster;					// マスタ音量
-	static int m_nFMVol;					// FM音量(0～100)
-	static int m_nADPCMVol;					// ADPCM音量(0～100)
-	static LPDIRECTSOUND m_lpDS;			// DirectSound
-	static LPDIRECTSOUNDBUFFER m_lpDSp;		// DirectSoundBuffer(プライマリ)
-	static LPDIRECTSOUNDBUFFER m_lpDSb;		// DirectSoundBuffer(セカンダリ)
-	static DWORD *m_lpBuf;					// サウンドバッファ
+	static UINT					m_uRate;				// サンプリングレート
+	static UINT					m_bufBytes;				// バッファサイズ(バイト)
+	static DWORD*				m_lpBuf;				// サウンドバッファ
+	static LPDIRECTSOUND		m_lpDS;					// DirectSound
+	static LPDIRECTSOUNDBUFFER	m_lpDSb;				// DirectSoundBuffer(セカンダリ)
 
-	static OPMIF*		m_pOPMIF;			// OPMインタフェース
-	static ADPCM*		m_pADPCM;			// ADPCM
-	static SCSI*		m_pSCSI;			// SCSI
-	static FM::OPM*		m_pOPM;				// OPMデバイス
-	static Scheduler*	m_pScheduler = 0;	// スケジューラ
+	static OPMIF*				m_pOPMIF		= 0;	// OPMインタフェース
+	static ADPCM*				m_pADPCM		= 0;	// ADPCM
+	static SCSI*				m_pSCSI			= 0;	// SCSI
+	static FM::OPM*				m_pOPM			= 0;	// OPMデバイス
+	static Scheduler*			m_pScheduler	= 0;	// スケジューラ
 
 	if(m_pScheduler == 0) {
-		// スケジューラ取得
-		m_pScheduler = (Scheduler*)cvm->getDevice(MAKEID('S', 'C', 'H', 'E'));
-		ASSERT(m_pScheduler);
-
-		// OPMIF取得
-		m_pOPMIF = (OPMIF*)cvm->getDevice(MAKEID('O', 'P', 'M', ' '));
-		ASSERT(m_pOPMIF);
-
-		// ADPCM取得
-		m_pADPCM = (ADPCM*)cvm->getDevice(MAKEID('A', 'P', 'C', 'M'));
-		ASSERT(m_pADPCM);
-
-		// SCSI取得
-		m_pSCSI = (SCSI*)cvm->getDevice(MAKEID('S', 'C', 'S', 'I'));
-		ASSERT(m_pSCSI);
+		m_pScheduler	= (Scheduler*)cvm->getDevice(MAKEID('S', 'C', 'H', 'E'));
+		m_pOPMIF		= (OPMIF*)cvm->getDevice(MAKEID('O', 'P', 'M', ' '));
+		m_pADPCM		= (ADPCM*)cvm->getDevice(MAKEID('A', 'P', 'C', 'M'));
+		m_pSCSI			= (SCSI*)cvm->getDevice(MAKEID('S', 'C', 'S', 'I'));
 
 		// デバイス列挙
-	//	EnumDevice();
-		{
-			//
-			//	DirectSound Device enumerator
-			//
-			class DsEnumerator {
-				enum {
-					ENTRY_MAX	= 16,
-				};
-
-			public:
-				struct Entry {
-					LPGUID	lpGuid;
-					LPCSTR	lpcstrDescription;
-					LPCSTR	lpcstrModule;
-					LPVOID	lpContext;
-				};
-
-				DsEnumerator() : nEntry(0) {
-				}
-
-				void enumerate() {
-					nEntry = 0;
-					DirectSoundEnumerate(DSEnumCallback_static, this);
-				}
-
-				int getEntryCount() const {
-					return nEntry;
-				}
-
-				const Entry* getEntry(int index) const {
-					const Entry* e = 0;
-					if(index >= 0 && index < nEntry) {
-						e = &entry[index];
-					}
-					return e;
-				}
-
-			protected:
-				static BOOL CALLBACK DSEnumCallback_static(LPGUID lpGuid, LPCSTR lpcstrDescription, LPCSTR lpcstrModule, LPVOID lpContext) {
-					return reinterpret_cast<DsEnumerator*>(lpContext)->DSEnumCallback(lpGuid, lpcstrDescription, lpcstrModule, lpContext);
-				}
-
-				BOOL DSEnumCallback(LPGUID lpGuid, LPCSTR lpcstrDescription, LPCSTR lpcstrModule, LPVOID lpContext) {
-					if(nEntry < ENTRY_MAX) {
-						///	@note	bad code. fix this.
-						//	See "Remarks" section :
-						//		DSEnumCallback
-						//		http://msdn.microsoft.com/en-us/library/windows/desktop/microsoft.directx_sdk.reference.dsenumcallback(v=vs.85).aspx
-						//	Callback argument memories are local memory.
-						//	We must do some allocations for save these variables.
-						Entry& e = entry[nEntry++];
-						e.lpGuid			= lpGuid;
-						e.lpcstrDescription	= lpcstrDescription;
-						e.lpcstrModule		= lpcstrModule;
-						e.lpContext			= lpContext;
-					}
-					return TRUE;
-				}
-
-				//
-				int		nEntry;
-				Entry	entry[ENTRY_MAX];
-			};
-
-			DsEnumerator de;
-			de.enumerate();
-			m_nDeviceNum = de.getEntryCount();
-			for(int i = 0; i < m_nDeviceNum; ++i) {
-				m_lpGUID[i] = de.getEntry(i)->lpGuid;
+		class DsEnumerator {
+		public:
+			DsEnumerator() : lpGuid(0) {}
+			LPGUID enumerate() {
+				DirectSoundEnumerate(DSEnumCallback_static, this);
+				return lpGuid;
 			}
-		}
+		protected:
+			static BOOL CALLBACK DSEnumCallback_static(LPGUID lpGuid, LPCSTR, LPCSTR, LPVOID lpContext) {
+				DsEnumerator* p = reinterpret_cast<DsEnumerator*>(lpContext);
+				if(!p->lpGuid) {
+					p->lpGuid = lpGuid;
+				}
+				return TRUE;
+			}
+			LPGUID	lpGuid;
+		};
+
+		DsEnumerator de;
+		LPGUID lpGuid = de.enumerate();
 
 		m_bEnable = TRUE;
 
 		// ここでは初期化しない(ApplyCfgに任せる)
 
 		//VC2010//	面倒なのでここで初期化
-		{
-			int m_nSelectDevice		= 0;
-			m_uRate				= 44100;
-			m_uTick				= 100;
+		m_uRate				= 44100;
 
-	//		InitSub();
-			{
-				bool b = true;
+		UINT m_uTick		= 100;
 
-				// rate==0なら、何もしない
-				if(b && m_uRate == 0) {
-					b = false;
-				}
+		if(   m_uRate
+		   && lpGuid
+		   && SUCCEEDED(DirectSoundCreate(lpGuid, &m_lpDS, NULL))
+		   && SUCCEEDED(m_lpDS->SetCooperativeLevel(hWnd, DSSCL_PRIORITY))
+		) {
+			DSBUFFERDESC pbbd = { 0 };
+			pbbd.dwSize				= sizeof(pbbd);
+			pbbd.dwFlags			= DSBCAPS_PRIMARYBUFFER;
 
-				if(b) {
-					ASSERT(!m_lpDS);
-					ASSERT(!m_lpDSp);
-					ASSERT(!m_lpDSb);
-					ASSERT(!m_lpBuf);
-					ASSERT(!m_pOPM);
+			WAVEFORMATEX wfex = { 0 };
+			wfex.wFormatTag			= WAVE_FORMAT_PCM;
+			wfex.nChannels			= 2;
+			wfex.nSamplesPerSec		= m_uRate;
+			wfex.nBlockAlign		= 4;
+			wfex.nAvgBytesPerSec	= wfex.nSamplesPerSec * wfex.nBlockAlign;
+			wfex.wBitsPerSample		= 16;
 
-					// デバイスがなければ0で試し、それでもなければreturn
-					if (m_nDeviceNum <= m_nSelectDevice) {
-						if (m_nDeviceNum == 0) {
-							b = false;
-						} else {
-							m_nSelectDevice = 0;
+			DSBUFFERDESC dsbd = { 0 };
+			dsbd.dwSize				= sizeof(dsbd);
+			dsbd.dwFlags			= DSBCAPS_STICKYFOCUS | DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_CTRLVOLUME;
+			dsbd.dwBufferBytes		= (wfex.nAvgBytesPerSec * m_uTick) / 1000;
+			dsbd.dwBufferBytes		= ((dsbd.dwBufferBytes + 7) >> 3) << 3;	// 8バイト境界
+			dsbd.lpwfxFormat		= &wfex;
+			m_bufBytes				= dsbd.dwBufferBytes;
+
+			bool b = true;
+
+			LPDIRECTSOUNDBUFFER	m_lpDSp = 0;				// DirectSoundBuffer(プライマリ)
+			b = b && SUCCEEDED(m_lpDS->CreateSoundBuffer(&pbbd, &m_lpDSp, NULL));
+			b = b && SUCCEEDED(m_lpDSp->SetFormat(&wfex));
+			b = b && SUCCEEDED(m_lpDS->CreateSoundBuffer(&dsbd, &m_lpDSb, NULL));
+
+			// サウンドバッファを作成(セカンダリバッファと同一の長さ、1単位DWORD)
+			if(b) {
+				int nbuf = m_bufBytes / 2;
+				m_lpBuf = new DWORD [nbuf];
+				memset(m_lpBuf, 0, sizeof(*m_lpBuf) * nbuf);
+
+				// OPMデバイス(標準)を作成
+				m_pOPM = new FM::OPM;
+				m_pOPM->Init(4000000, m_uRate, true);
+				m_pOPM->Reset();
+				m_pOPM->SetVolume(54);		//pConfig->fm_volume);
+
+				// OPMIFへ通知
+				m_pOPMIF->InitBuf(m_uRate);
+				m_pOPMIF->SetEngine(m_pOPM);
+				m_pOPMIF->EnableFM(1);		//pConfig->fm_enable);
+
+				m_pADPCM->EnableADPCM(1);	//pConfig->adpcm_enable);
+				m_pADPCM->SetVolume(52);	//pConfig->adpcm_volume);
+
+				m_lpDSb->Play(0, 0, DSBPLAY_LOOPING);
+			}
+		}
+	}
+
+	static UINT					m_uPoll			= 5;	// ポーリング間隔(ms)
+	static UINT					m_uCount		= 0;	// ポーリングカウント
+	static DWORD				m_dwWrite		= 0;	// 書き込み完了位置
+	if(++m_uCount >= m_uPoll) {
+		m_uCount = 0;
+		if(m_bEnable) {
+			// 初期化されていなければ、何もしない
+			// プレイ状態でなければ、関係なし
+			if (!m_pOPM) {
+				m_pScheduler->SetSoundTime(0);
+			} else {
+				// 現在のプレイ位置を得る(バイト単位)
+				DWORD dwOffset = 0;
+				DWORD dwWrite = 0;
+				if(SUCCEEDED(m_lpDSb->GetCurrentPosition(&dwOffset, &dwWrite))) {
+					// 前回書き込んだ位置から、空きサイズを計算(バイト単位)
+					DWORD dwRequest = 0;
+					if (m_dwWrite <= dwOffset) {
+						dwRequest = dwOffset - m_dwWrite;
+					} else {
+						dwRequest = m_bufBytes - m_dwWrite;
+						dwRequest += dwOffset;
+					}
+
+					// 空きサイズが全体の1/4を超えていなければ、次の機会に
+					if (dwRequest >= (m_bufBytes / 4)) {
+						// 空きサンプルに換算(L,Rで1つと数える)
+						ASSERT((dwRequest & 3) == 0);
+						dwRequest /= 4;
+
+						// m_lpBufにバッファデータを作成。まずbRunチェック
+						{
+							// OPMに対して、処理要求と速度制御
+							DWORD dwReady = m_pOPMIF->ProcessBuf();
+							m_pOPMIF->GetBuf(m_lpBuf, (int)dwRequest);
+							if (dwReady < dwRequest) {
+								dwRequest = dwReady;
+							}
+
+							// ADPCMに対して、データを要求(加算すること)
+							m_pADPCM->GetBuf(m_lpBuf, (int)dwRequest);
+
+							// ADPCMの同期処理
+							if (dwReady > dwRequest) {
+								m_pADPCM->Wait(dwReady - dwRequest);
+							} else {
+								m_pADPCM->Wait(0);
+							}
+
+							// SCSIに対して、データを要求(加算すること)
+							m_pSCSI->GetBuf(m_lpBuf, (int)dwRequest, m_uRate);
+						}
+
+						// 次いでロック
+						{
+							WORD *pBuf1;
+							WORD *pBuf2;
+							DWORD dwSize1;
+							DWORD dwSize2;
+							HRESULT hr = m_lpDSb->Lock(m_dwWrite, (dwRequest * 4), (void**)&pBuf1, &dwSize1, (void**)&pBuf2, &dwSize2, 0);
+							// バッファが失われていれば、リストア
+							if (hr == DSERR_BUFFERLOST) {
+								m_lpDSb->Restore();
+							}
+
+							// ロック成功しなければ、続けても意味がない
+							if (FAILED(hr)) {
+								m_dwWrite = dwOffset;
+							} else {
+								soundPack(m_lpBuf, pBuf1, dwSize1);
+								if(dwSize2 > 0) {
+									soundPack(&m_lpBuf[dwSize1 / 2], pBuf2, dwSize2);
+								}
+
+								// アンロック
+								m_lpDSb->Unlock(pBuf1, dwSize1, pBuf2, dwSize2);
+
+								// m_dwWrite更新
+								m_dwWrite += dwSize1;
+								m_dwWrite += dwSize2;
+								if (m_dwWrite >= m_bufBytes) {
+									m_dwWrite -= m_bufBytes;
+								}
+								ASSERT(m_dwWrite < m_bufBytes);
+							}
 						}
 					}
 				}
-
-				// DiectSoundオブジェクト作成
-				if(b && FAILED(DirectSoundCreate(m_lpGUID[m_nSelectDevice], &m_lpDS, NULL))) {
-					// デバイスは使用中
-					b = false;
-				}
-
-				// 協調レベルを設定(優先協調)
-				if(b && FAILED(m_lpDS->SetCooperativeLevel(hWnd, DSSCL_PRIORITY))) {
-					b = false;
-				}
-
-				// プライマリバッファを作成
-				if(b) {
-					DSBUFFERDESC dsbd = { 0 };
-					dsbd.dwSize		= sizeof(dsbd);
-					dsbd.dwFlags	= DSBCAPS_PRIMARYBUFFER;
-
-					b = SUCCEEDED(m_lpDS->CreateSoundBuffer(&dsbd, &m_lpDSp, NULL));
-				}
-
-				// プライマリバッファのフォーマットを指定
-				if(b) {
-					WAVEFORMATEX wfex = { 0 };
-					wfex.wFormatTag			= WAVE_FORMAT_PCM;
-					wfex.nChannels			= 2;
-					wfex.nSamplesPerSec		= m_uRate;
-					wfex.nBlockAlign		= 4;
-					wfex.nAvgBytesPerSec	= wfex.nSamplesPerSec * wfex.nBlockAlign;
-					wfex.wBitsPerSample		= 16;
-
-					b = SUCCEEDED(m_lpDSp->SetFormat(&wfex));
-				}
-
-				// セカンダリバッファを作成
-				if(b) {
-					PCMWAVEFORMAT pcmwf = { 0 };
-					pcmwf.wf.wFormatTag			= WAVE_FORMAT_PCM;
-					pcmwf.wf.nChannels			= 2;
-					pcmwf.wf.nSamplesPerSec		= m_uRate;
-					pcmwf.wf.nBlockAlign		= 4;
-					pcmwf.wf.nAvgBytesPerSec	= pcmwf.wf.nSamplesPerSec * pcmwf.wf.nBlockAlign;
-					pcmwf.wBitsPerSample		= 16;
-
-					DSBUFFERDESC dsbd = { 0 };
-					dsbd.dwSize					= sizeof(dsbd);
-					dsbd.dwFlags				= DSBCAPS_STICKYFOCUS | DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_CTRLVOLUME;
-					dsbd.dwBufferBytes			= (pcmwf.wf.nAvgBytesPerSec * m_uTick) / 1000;
-					dsbd.dwBufferBytes			= ((dsbd.dwBufferBytes + 7) >> 3) << 3;	// 8バイト境界
-					dsbd.lpwfxFormat			= (LPWAVEFORMATEX)&pcmwf;
-
-					m_uBufSize					= dsbd.dwBufferBytes;
-
-					b = SUCCEEDED(m_lpDS->CreateSoundBuffer(&dsbd, &m_lpDSb, NULL));
-				}
-
-				// サウンドバッファを作成(セカンダリバッファと同一の長さ、1単位DWORD)
-				if(b) {
-					m_lpBuf = new DWORD [ m_uBufSize / 2 ];
-					memset(m_lpBuf, sizeof(DWORD) * (m_uBufSize / 2), m_uBufSize);
-
-					// OPMデバイス(標準)を作成
-					m_pOPM = new FM::OPM;
-					m_pOPM->Init(4000000, m_uRate, true);
-					m_pOPM->Reset();
-					m_pOPM->SetVolume(m_nFMVol);
-
-					// OPMIFへ通知
-					m_pOPMIF->InitBuf(m_uRate);
-					m_pOPMIF->SetEngine(m_pOPM);
-
-					// イネーブルなら演奏開始
-				//	if (m_bEnable)
-					{
-//						Play();
-						//
-						m_lpDSb->Play(0, 0, DSBPLAY_LOOPING);
-						m_bPlay = TRUE;
-						m_uCount = 0;
-						m_dwWrite = 0;
-					}
-				}
-			}
-
-			// 常に設定
-			if (m_pOPM) {
-				{
-					int lVolume = 100;		//pConfig->master_volume;
-					lVolume = 100 - lVolume;
-					lVolume *= (DSBVOLUME_MAX - DSBVOLUME_MIN);
-					lVolume /= -200;
-					m_lpDSb->SetVolume(lVolume);
-				}
-				m_pOPMIF->EnableFM(1);		//pConfig->fm_enable);
-				m_pOPM->SetVolume(54);		//pConfig->fm_volume);
-				m_pADPCM->EnableADPCM(1);	//pConfig->adpcm_enable);
-				m_pADPCM->SetVolume(52);	//pConfig->adpcm_volume);
-			}
-			m_nMaster	= 100;	//pConfig->master_volume;
-			m_uPoll		= 5;	//(UINT)pConfig->polling_buffer;
-		}
-	}
-
-	// カウント処理(m_nPoll回に１回、ただしVM停止中は常時)
-	m_uCount++;
-	if ((m_uCount < m_uPoll)) {
-		return;
-	}
-	m_uCount = 0;
-
-	// ディセーブルなら、何もしない
-	if (!m_bEnable) {
-		return;
-	}
-
-	// 初期化されていなければ、何もしない
-	if (!m_pOPM) {
-		m_pScheduler->SetSoundTime(0);
-		return;
-	}
-
-	// プレイ状態でなければ、関係なし
-	if (!m_bPlay) {
-		m_pScheduler->SetSoundTime(0);
-		return;
-	}
-
-	// 現在のプレイ位置を得る(バイト単位)
-	ASSERT(m_lpDSb);
-	ASSERT(m_lpBuf);
-	if (FAILED(m_lpDSb->GetCurrentPosition(&dwOffset, &dwWrite))) {
-		return;
-	}
-	ASSERT(m_lpDSb);
-	ASSERT(m_lpBuf);
-
-	// 前回書き込んだ位置から、空きサイズを計算(バイト単位)
-	if (m_dwWrite <= dwOffset) {
-		dwRequest = dwOffset - m_dwWrite;
-	}
-	else {
-		dwRequest = m_uBufSize - m_dwWrite;
-		dwRequest += dwOffset;
-	}
-
-	// 空きサイズが全体の1/4を超えていなければ、次の機会に
-	if (dwRequest < (m_uBufSize / 4)) {
-		return;
-	}
-
-	// 空きサンプルに換算(L,Rで1つと数える)
-	ASSERT((dwRequest & 3) == 0);
-	dwRequest /= 4;
-
-	// m_lpBufにバッファデータを作成。まずbRunチェック
-	{
-		// OPMに対して、処理要求と速度制御
-		dwReady = m_pOPMIF->ProcessBuf();
-		m_pOPMIF->GetBuf(m_lpBuf, (int)dwRequest);
-		if (dwReady < dwRequest) {
-			dwRequest = dwReady;
-		}
-
-		// ADPCMに対して、データを要求(加算すること)
-		m_pADPCM->GetBuf(m_lpBuf, (int)dwRequest);
-
-		// ADPCMの同期処理
-		if (dwReady > dwRequest) {
-			m_pADPCM->Wait(dwReady - dwRequest);
-		}
-		else {
-			m_pADPCM->Wait(0);
-		}
-
-		// SCSIに対して、データを要求(加算すること)
-		m_pSCSI->GetBuf(m_lpBuf, (int)dwRequest, m_uRate);
-	}
-
-	// 次いでロック
-	hr = m_lpDSb->Lock(m_dwWrite, (dwRequest * 4),
-						(void**)&pBuf1, &dwSize1,
-						(void**)&pBuf2, &dwSize2,
-						0);
-	// バッファが失われていれば、リストア
-	if (hr == DSERR_BUFFERLOST) {
-		m_lpDSb->Restore();
-	}
-	// ロック成功しなければ、続けても意味がない
-	if (FAILED(hr)) {
-		m_dwWrite = dwOffset;
-		return;
-	}
-
-	// 量子化bit=16を前提とする
-	ASSERT((dwSize1 & 1) == 0);
-	ASSERT((dwSize2 & 1) == 0);
-
-	soundPack(m_lpBuf, pBuf1, dwSize1);
-	if (dwSize2 > 0) {
-		soundPack(&m_lpBuf[dwSize1 / 2], pBuf2, dwSize2);
-	}
-
-	// アンロック
-	m_lpDSb->Unlock(pBuf1, dwSize1, pBuf2, dwSize2);
-
-	// m_dwWrite更新
-	m_dwWrite += dwSize1;
-	m_dwWrite += dwSize2;
-	if (m_dwWrite >= m_uBufSize) {
-		m_dwWrite -= m_uBufSize;
-	}
-	ASSERT(m_dwWrite < m_uBufSize);
-}
-
-
-
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-static UINT schedulerFunc() {
-//	VM*			pVM			= ::GetVM();
-	Render*		pRender		= (Render*)cvm->getDevice(MAKEID('R', 'E', 'N', 'D'));
-	HWND		hFrmWnd		= getMainWindow();	//m_pFrmWnd->m_hWnd;
-	DWORD		dwExecTime	= GetTime();
-	DWORD		dwExecCount	= 0;
-
-	// 終了リクエストが上がるまでループ
-	while (!scheduler_m_bExitReq) {
-		if(!scheduler_m_bExitReq) {
-			if(GetAsyncKeyState(VK_ESCAPE)) {
-				scheduler_m_bExitReq = true;
 			}
 		}
-
-		int	preSleep	= 0;
-		int postSleep	= -1;
-
-		if(preSleep >= 0) {
-			::Sleep(preSleep);
-		}
-
-		bool requestRefresh	= false;
-
-		DWORD dwTime = GetTime();
-		if(dwExecTime > dwTime) {
-			requestRefresh = true;
-			dwExecCount = 0;
-			if(dwExecTime > GetTime()) {
-				postSleep = 1;
-			}
-		} else {
-			// レンダリング可否を判定(1or36)
-			pRender->EnableAct(dwExecTime >= dwTime);
-
-			if(cvm->exec(1000 * 2)) {
-				if(cvm->isPower()) {
-					dwExecCount++;
-					dwExecTime++;
-
-					// 他コンポーネントの処理
-					processSound(hFrmWnd);
-					processInput(hFrmWnd);
-
-					// dwExecCountが規定数を超えたら、一度表示して強制時間合わせ
-					if (dwExecCount > 400) {
-						requestRefresh = true;
-						dwExecCount = 0;
-						dwExecTime = GetTime();
-					}
-				}
-			}
-		}
-
-		if(requestRefresh) {
-			if(pRender->IsReady()) {
-				HDC hdc = GetDC(getMainWindow());	//m_pFrmWnd->m_hWnd);
-//				m_pFrmWnd->OnDraw(hdc);
-				OnDraw(hdc);
-				ReleaseDC(getMainWindow(), hdc);
-				pRender->Complete();
-			}
-		}
-
-		if(postSleep >= 0) {
-			::Sleep(postSleep);
-		}
 	}
-	return 0;
 }
 
 
@@ -1715,6 +1465,28 @@ INT WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, INT) {
 			cvm->applyCfg(&config);
 		}
 
+		{
+			const TCHAR* err = 0;
+			Memory* pMemory = (Memory*)cvm->getDevice(MAKEID('M', 'E', 'M', ' '));
+			ASSERT(pMemory);
+			if(err == 0 && pMemory->GetIPL()[0] == 0xff) {
+				err = _T("IPL ROM LOADING ERROR (THERE IS NO 'IPLROM.DAT')");
+			}
+			if(err == 0 && pMemory->GetCG()[0] == 0xff) {
+				err = _T("CG ROM LOADING ERROR (THERE IS NO 'CGROM.DAT')");
+			}
+//			if (err == 0 && !pMemory->CheckIPL()) {
+//				err = _T("IPL ROM VERION ERROR");
+//			}
+//			if (err == 0 && !pMemory->CheckCG()) {
+//				err = _T("CG ROM VERSION ERROR");
+//			}
+			if(err) {
+				MessageBox(mainWindow, err, err, MB_OK);
+				return 0;
+			}
+		}
+
 		// リセット
 		cvm->reset();
 
@@ -1727,9 +1499,74 @@ INT WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, INT) {
 		if(bReset0 || bReset1) {
 			cvm->reset();
 		}
-	}
 
-	schedulerFunc();
+		Render*		pRender		= (Render*)cvm->getDevice(MAKEID('R', 'E', 'N', 'D'));
+		HWND		hFrmWnd		= getMainWindow();	//m_pFrmWnd->m_hWnd;
+		DWORD		dwExecTime	= GetTime();
+		DWORD		dwExecCount	= 0;
+
+		// 終了リクエストが上がるまでループ
+		while (!scheduler_m_bExitReq) {
+			if(!scheduler_m_bExitReq) {
+				if(GetAsyncKeyState(VK_ESCAPE)) {
+					scheduler_m_bExitReq = true;
+				}
+			}
+
+			int	preSleep	= 0;
+			int postSleep	= -1;
+
+			if(preSleep >= 0) {
+				::Sleep(preSleep);
+			}
+
+			bool requestRefresh	= false;
+
+			DWORD dwTime = GetTime();
+			if(dwExecTime > dwTime) {
+				requestRefresh = true;
+				dwExecCount = 0;
+				if(dwExecTime > GetTime()) {
+					postSleep = 1;
+				}
+			} else {
+				// レンダリング可否を判定(1or36)
+				pRender->EnableAct(dwExecTime >= dwTime);
+
+				if(cvm->exec(1000 * 2)) {
+					if(cvm->isPower()) {
+						dwExecCount++;
+						dwExecTime++;
+
+						// 他コンポーネントの処理
+						processSound(hFrmWnd);
+						processInput(hFrmWnd);
+
+						// dwExecCountが規定数を超えたら、一度表示して強制時間合わせ
+						if (dwExecCount > 400) {
+							requestRefresh = true;
+							dwExecCount = 0;
+							dwExecTime = GetTime();
+						}
+					}
+				}
+			}
+
+			if(requestRefresh) {
+				if(pRender->IsReady()) {
+					HDC hdc = GetDC(getMainWindow());	//m_pFrmWnd->m_hWnd);
+	//				m_pFrmWnd->OnDraw(hdc);
+					OnDraw(hdc);
+					ReleaseDC(getMainWindow(), hdc);
+					pRender->Complete();
+				}
+			}
+
+			if(postSleep >= 0) {
+				::Sleep(postSleep);
+			}
+		}
+	}
 
 	// 仮想マシンを削除
 	cvm->cleanup();

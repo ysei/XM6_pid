@@ -26,10 +26,16 @@ extern DWORD s68000getcounter();
 										// クロックカウンタ取得
 extern void s68000setcounter(DWORD c);
 										// クロックカウンタ設定
-
+extern DWORD s68000iocycle;
+										// __io_cycle_counter(Starscream)
 #if defined(__cplusplus)
 }
 #endif	// __cplusplus
+
+#define	CPU_IOCYCLE()						::s68000iocycle
+#define	CPU_IOCYCLE_GET()					CPU_IOCYCLE()
+#define	CPU_IOCYCLE_SUBTRACT(c)				CPU_IOCYCLE() -= (c)
+#define	CPU_WAIT(c)							::s68000wait(c)
 
 //===========================================================================
 //
@@ -77,6 +83,14 @@ public:
 										// 設定適用
 
 public:
+	void BeginProgramRegion(BOOL isSuper);
+	int  AddProgramRegion(unsigned int lowaddr, unsigned int highaddr, unsigned int offset);
+	void EndProgramRegion();
+
+	void BeginDataRegion(BOOL isSuper, BOOL isWrite, BOOL isWord);
+	int  AddDataRegion(unsigned int lowaddr, unsigned int highaddr, void* memorycall, void* userdata);
+	void EndDataRegion();
+
 	// 外部API
 	void FASTCALL GetCPU(cpu_t *buffer) const;
 										// CPUレジスタ取得
@@ -143,6 +157,34 @@ private:
 										// SCSI
 	Scheduler *scheduler;
 										// スケジューラ
+	// リージョン (Starscream特有)
+	enum {
+		REGION_MAX = 10
+	};
+	STARSCREAM_PROGRAMREGION u_pgr[REGION_MAX];
+										// プログラムリージョン(User)
+	STARSCREAM_PROGRAMREGION s_pgr[REGION_MAX];
+										// プログラムリージョン(Super)
+	STARSCREAM_DATAREGION u_rbr[REGION_MAX];
+										// Read Byteリージョン(User)
+	STARSCREAM_DATAREGION s_rbr[REGION_MAX];
+										// Read Byteリージョン(Super)
+	STARSCREAM_DATAREGION u_rwr[REGION_MAX];
+										// Read Wordリージョン(User)
+	STARSCREAM_DATAREGION s_rwr[REGION_MAX];
+										// Read Wordリージョン(Super)
+	STARSCREAM_DATAREGION u_wbr[REGION_MAX];
+										// Write Byteリージョン(User)
+	STARSCREAM_DATAREGION s_wbr[REGION_MAX];
+										// Write Byteリージョン(Super)
+	STARSCREAM_DATAREGION u_wwr[REGION_MAX];
+										// Write Wordリージョン(User)
+	STARSCREAM_DATAREGION s_wwr[REGION_MAX];
+										// Write Wordリージョン(Super)
+	STARSCREAM_PROGRAMREGION* pProgramRegion;
+	int	iProgramRegion;
+	STARSCREAM_DATAREGION* pDataRegion;
+	int	iDataRegion;
 };
 
 #endif	// cpu_h

@@ -195,18 +195,6 @@ BOOL FASTCALL Memory::Init()
 		mem.now = SASI;
 	}
 
-	// リージョンエリアを設定
-	::s68000context.u_fetch = u_pgr;
-	::s68000context.s_fetch = s_pgr;
-	::s68000context.u_readbyte = u_rbr;
-	::s68000context.s_readbyte = s_rbr;
-	::s68000context.u_readword = u_rwr;
-	::s68000context.s_readword = s_rwr;
-	::s68000context.u_writebyte = u_wbr;
-	::s68000context.s_writebyte = s_wbr;
-	::s68000context.u_writeword = u_wwr;
-	::s68000context.s_writeword = s_wwr;
-
 	// エリアセット取得
 	areaset = (AreaSet*)vm->SearchDevice(MAKEID('A', 'R', 'E', 'A'));
 	ASSERT(areaset);
@@ -1048,11 +1036,6 @@ DWORD FASTCALL Memory::ReadOnly(DWORD addr) const
 //---------------------------------------------------------------------------
 void FASTCALL Memory::MakeContext(BOOL reset)
 {
-	int index;
-	int area;
-	GVRAM *gvram;
-	TVRAM *tvram;
-
 	ASSERT(this);
 
 	// リセットか
@@ -1062,283 +1045,165 @@ void FASTCALL Memory::MakeContext(BOOL reset)
 		areaset->Reset();
 
 		// リセット専用コンテキスト($FF00000～が、$0000000～に見える)
-		s_pgr[0].lowaddr = 0;
-		s_pgr[0].highaddr = 0xffff;
-		s_pgr[0].offset = ((DWORD)mem.ipl) + 0x10000;
-		u_pgr[0].lowaddr = 0;
-		u_pgr[0].highaddr = 0xffff;
-		u_pgr[0].offset = ((DWORD)mem.ipl) + 0x10000;
+		pCPU->BeginProgramRegion(TRUE);
+		pCPU->AddProgramRegion(0x0000, 0xffff, ((DWORD)mem.ipl) + 0x10000);
+		pCPU->EndProgramRegion();
 
-		// プログラム終了
-		TerminateProgramRegion(1, s_pgr);
-		TerminateProgramRegion(1, u_pgr);
+		pCPU->BeginProgramRegion(FALSE);
+		pCPU->AddProgramRegion(0x0000, 0xffff, ((DWORD)mem.ipl) + 0x10000);
+		pCPU->EndProgramRegion();
 
 		// データは全て無し
-		TerminateDataRegion(0, u_rbr);
-		TerminateDataRegion(0, s_rbr);
-		TerminateDataRegion(0, u_rwr);
-		TerminateDataRegion(0, s_rwr);
-		TerminateDataRegion(0, u_wbr);
-		TerminateDataRegion(0, s_wbr);
-		TerminateDataRegion(0, u_wwr);
-		TerminateDataRegion(0, s_wwr);
-		return;
-	}
-
-	// 通常コンテキスト - プログラム(User)
-	index = 0;
-	area = areaset->GetArea();
-	u_pgr[index].lowaddr = (area + 1) << 13;
-	u_pgr[index].highaddr = mem.length - 1;
-	u_pgr[index].offset = (DWORD)mem.ram;
-	index++;
-	TerminateProgramRegion(index, u_pgr);
-
-	// 通常コンテキスト - プログラム(Super)
-	index = 0;
-	s_pgr[index].lowaddr = 0;
-	s_pgr[index].highaddr = mem.length - 1;
-	s_pgr[index].offset = (DWORD)mem.ram;
-	index++;
-
-	// IPL
-	s_pgr[index].lowaddr = 0xfe0000;
-	s_pgr[index].highaddr = 0xffffff;
-	s_pgr[index].offset = ((DWORD)mem.ipl) - 0xfe0000;
-	index++;
-
-	// SCSI外付
-	if (mem.now == SCSIExt) {
-		s_pgr[index].lowaddr = 0xea0000;
-		s_pgr[index].highaddr = 0xea1fff;
-		s_pgr[index].offset = ((DWORD)mem.scsi) - 0xea0000;
-		index++;
-	}
-
-	// IPLイメージ or SCSI内蔵
-	if ((mem.now == SASI) || (mem.now == SCSIExt)) {
-		// IPLイメージ
-		s_pgr[index].lowaddr = 0xfc0000;
-		s_pgr[index].highaddr = 0xfdffff;
-		s_pgr[index].offset = ((DWORD)mem.ipl) - 0xfc0000;
-		index++;
-	}
-	else {
-		// SCSI内蔵
-		s_pgr[index].lowaddr = 0xfc0000;
-		s_pgr[index].highaddr = 0xfc1fff;
-		s_pgr[index].offset = ((DWORD)mem.scsi) - 0xfc0000;
-		if (mem.now == X68030) {
-			// X68030 IPL前半
-			s_pgr[index].lowaddr = 0xfc0000;
-			s_pgr[index].highaddr = 0xfdffff;
-			s_pgr[index].offset = ((DWORD)mem.scsi) - 0xfc0000;
+		pCPU->BeginDataRegion(FALSE, FALSE, FALSE);	pCPU->EndDataRegion();
+		pCPU->BeginDataRegion(TRUE,  FALSE, FALSE);	pCPU->EndDataRegion();
+		pCPU->BeginDataRegion(FALSE, FALSE, TRUE);	pCPU->EndDataRegion();
+		pCPU->BeginDataRegion(TRUE,  FALSE, TRUE);	pCPU->EndDataRegion();
+		pCPU->BeginDataRegion(FALSE, TRUE, FALSE);	pCPU->EndDataRegion();
+		pCPU->BeginDataRegion(TRUE,  TRUE, FALSE);	pCPU->EndDataRegion();
+		pCPU->BeginDataRegion(FALSE, TRUE, TRUE);	pCPU->EndDataRegion();
+		pCPU->BeginDataRegion(TRUE,  TRUE, TRUE);	pCPU->EndDataRegion();
+	} else {
+		{
+			// 通常コンテキスト - プログラム(User)
+			int area = areaset->GetArea();
+			pCPU->BeginProgramRegion(FALSE);	// Program region (User)
+			pCPU->AddProgramRegion((area + 1) << 13, mem.length - 1, (unsigned int)mem.ram);
+			pCPU->EndProgramRegion();
 		}
-		index++;
-	}
 
-	// グラフィックVRAM
-	gvram = (GVRAM*)vm->SearchDevice(MAKEID('G', 'V', 'R', 'M'));
-	ASSERT(gvram);
-	s_pgr[index].lowaddr = 0xc00000;
-	s_pgr[index].highaddr = 0xdfffff;
-	s_pgr[index].offset = ((DWORD)gvram->GetGVRAM()) - 0xc00000;
-	index++;
+		{
+			// 通常コンテキスト - プログラム(Super)
+			pCPU->BeginProgramRegion(TRUE);	// Program region (Super)
+			pCPU->AddProgramRegion(0, mem.length - 1, (unsigned int)mem.ram);
+			pCPU->AddProgramRegion(0xfe0000, 0xffffff, ((unsigned int)mem.ipl) - 0xfe0000);	// IPL
 
-	// テキストVRAM
-	tvram = (TVRAM*)vm->SearchDevice(MAKEID('T', 'V', 'R', 'M'));
-	ASSERT(tvram);
-	s_pgr[index].lowaddr = 0xe00000;
-	s_pgr[index].highaddr = 0xe7ffff;
-	s_pgr[index].offset = ((DWORD)tvram->GetTVRAM()) - 0xe00000;
-	index++;
+			// SCSI外付
+			if (mem.now == SCSIExt) {
+				pCPU->AddProgramRegion(0xea0000, 0xea1fff, ((unsigned int)mem.scsi) - 0xea0000);
+			}
 
-	// SRAM
-	ASSERT(sram);
-	s_pgr[index].lowaddr = 0xed0000;
-	s_pgr[index].highaddr = 0xed0000 + (sram->GetSize() << 10) - 1;
-	s_pgr[index].offset = ((DWORD)sram->GetSRAM()) - 0xed0000;
-	index++;
-	TerminateProgramRegion(index, s_pgr);
+			// IPLイメージ or SCSI内蔵
+			if ((mem.now == SASI) || (mem.now == SCSIExt)) {
+				pCPU->AddProgramRegion(0xfc0000, 0xfdffff, ((unsigned int)mem.ipl) - 0xfc0000);	//	IPL Image
+			} else {
+				// SCSI内蔵
+				if(mem.now != X68030) {
+					pCPU->AddProgramRegion(0xfc0000, 0xfc1fff, ((unsigned int)mem.scsi) - 0xfc0000);	// SCSI Internal
+				} else {
+					pCPU->AddProgramRegion(0xfc0000, 0xfdffff, ((unsigned int)mem.scsi) - 0xfc0000);	// X68030 first half
+				}
+			}
 
-	// 通常コンテキスト - 読み出し(User)
-	index = 0;
-	area = areaset->GetArea();
+			// グラフィックVRAM
+			GVRAM *gvram = (GVRAM*)vm->SearchDevice(MAKEID('G', 'V', 'R', 'M'));
+			ASSERT(gvram);
+			pCPU->AddProgramRegion(0xc00000, 0xdfffff, ((unsigned int)gvram->GetGVRAM()) - 0xc00000);
 
-	// ユーザアクセス可能空間
-	u_rbr[index].lowaddr = (area + 1) << 13;
-	u_rbr[index].highaddr = mem.length - 1;
-	u_rbr[index].memorycall = NULL;
-	u_rbr[index].userdata = (void*)&mem.ram[(area + 1) << 13];
-	index++;
+			// テキストVRAM
+			TVRAM* tvram = (TVRAM*)vm->SearchDevice(MAKEID('T', 'V', 'R', 'M'));
+			ASSERT(tvram);
+			pCPU->AddProgramRegion(0xe00000, 0xe7ffff, ((unsigned int)tvram->GetTVRAM()) - 0xe00000);
 
-	// スーパバイザ空間
-	u_rbr[index].lowaddr = 0;
-	u_rbr[index].highaddr = ((area + 1) << 13) - 1;
-	u_rbr[index].memorycall = ::ReadErrC;
-	u_rbr[index].userdata = NULL;
-	index++;
-
-	// メインメモリ未実装空間＋スーパーバイザI/O空間
-	u_rbr[index].lowaddr = (mem.size << 20);
-	u_rbr[index].highaddr = 0xebffff;
-	u_rbr[index].memorycall = ::ReadErrC;
-	s_rbr[index].userdata = NULL;
-	index++;
-
-	// ユーザI/O空間($EC0000-$ECFFFF)
-	u_rbr[index].lowaddr = 0xec0000;
-	u_rbr[index].highaddr = 0xecffff;
-	u_rbr[index].memorycall = ::ReadByteC;
-	s_rbr[index].userdata = NULL;
-	index++;
-
-	// スーパバイザ空間(SRAM,CG,IPL,SCSI)
-	u_rbr[index].lowaddr = 0xed0000;
-	u_rbr[index].highaddr = 0xffffff;
-	u_rbr[index].memorycall = ReadErrC;
-	s_rbr[index].userdata = NULL;
-	index++;
-	TerminateDataRegion(index, u_rbr);
-
-	// 他へ移す(ReadWord, User)
-	memcpy(u_rwr, u_rbr, sizeof(u_rbr));
-	u_rwr[index - 2].memorycall = ::ReadWordC;
-
-	// 他へ移す(WriteByte, User)
-	memcpy(u_wbr, u_rbr, sizeof(u_rbr));
-	u_wbr[index - 2].memorycall = ::WriteByteC;
-	u_wbr[index - 1].memorycall = ::WriteErrC;
-	u_wbr[index - 3].memorycall = ::WriteErrC;
-	u_wbr[index - 4].memorycall = ::WriteErrC;
-
-	// 他へ移す(WriteWord, User)
-	memcpy(u_wwr, u_wbr, sizeof(u_wbr));
-	u_wwr[index - 2].memorycall = ::WriteWordC;
-
-	// 通常コンテキスト - 読み出し(Super)
-	index = 0;
-	s_rbr[index].lowaddr = 0;
-	s_rbr[index].highaddr = mem.length - 1;
-	s_rbr[index].memorycall = NULL;
-	s_rbr[index].userdata = (void*)mem.ram;
-	index++;
-
-	// CG
-	s_rbr[index].lowaddr = 0xf00000;
-	s_rbr[index].highaddr = 0xfbffff;
-	s_rbr[index].memorycall = NULL;
-	s_rbr[index].userdata = (void*)mem.cg;
-	index++;
-
-	// IPL
-	s_rbr[index].lowaddr = 0xfe0000;
-	s_rbr[index].highaddr = 0xffffff;
-	s_rbr[index].memorycall = NULL;
-	s_rbr[index].userdata = (void*)mem.ipl;
-	index++;
-
-	// SCSI外付
-	if (mem.now == SCSIExt) {
-		s_rbr[index].lowaddr = 0xea0020;
-		s_rbr[index].highaddr = 0xea1fff;
-		s_rbr[index].memorycall = NULL;
-		s_rbr[index].userdata = (void*)(&mem.scsi[0x20]);
-		index++;
-	}
-
-	// IPLイメージ or SCSI内蔵
-	if ((mem.now == SASI) || (mem.now == SCSIExt)) {
-		// IPLイメージ
-		s_rbr[index].lowaddr = 0xfc0000;
-		s_rbr[index].highaddr = 0xfdffff;
-		s_rbr[index].memorycall = NULL;
-		s_rbr[index].userdata = (void*)mem.ipl;
-		index++;
-	}
-	else {
-		// SCSI内蔵
-		s_rbr[index].lowaddr = 0xfc0000;
-		s_rbr[index].highaddr = 0xfc1fff;
-		s_rbr[index].memorycall = NULL;
-		s_rbr[index].userdata = (void*)mem.scsi;
-		if (mem.now == X68030) {
-			// X68030 IPL前半
-			s_rbr[index].lowaddr = 0xfc0000;
-			s_rbr[index].highaddr = 0xfdffff;
-			s_rbr[index].memorycall = NULL;
-			s_rbr[index].userdata = (void*)mem.scsi;
+			// SRAM
+			ASSERT(sram);
+			pCPU->AddProgramRegion(0xed0000, 0xed0000 + (sram->GetSize() << 10) - 1, ((unsigned int)sram->GetSRAM()) - 0xed0000);
+			pCPU->EndProgramRegion();
 		}
-		index++;
+
+		{
+			// 通常コンテキスト - 読み出し(User)
+			int area = areaset->GetArea();
+
+			pCPU->BeginDataRegion(FALSE, FALSE, FALSE);		// User, Read, Byte
+			pCPU->AddDataRegion((area + 1) << 13, mem.length - 1, NULL, (void*)&mem.ram[(area + 1) << 13]);	// ユーザアクセス可能空間
+			pCPU->AddDataRegion(0, ((area + 1) << 13) - 1, ::ReadErrC, NULL);			// スーパバイザ空間
+			pCPU->AddDataRegion((mem.size << 20), 0xebffff, ::ReadErrC, NULL);			// メインメモリ未実装空間＋スーパーバイザI/O空間
+			pCPU->AddDataRegion(0xec0000, 0xecffff, ::ReadByteC, NULL);					// ユーザI/O空間($EC0000-$ECFFFF)
+			pCPU->AddDataRegion(0xed0000, 0xffffff, ::ReadErrC, NULL);					// スーパバイザ空間(SRAM,CG,IPL,SCSI)
+			pCPU->EndDataRegion();
+
+			pCPU->BeginDataRegion(FALSE, FALSE, TRUE);		// User, Read, Word
+			pCPU->AddDataRegion((area + 1) << 13, mem.length - 1, NULL, (void*)&mem.ram[(area + 1) << 13]);	// ユーザアクセス可能空間
+			pCPU->AddDataRegion(0, ((area + 1) << 13) - 1, ::ReadErrC, NULL);			// スーパバイザ空間
+			pCPU->AddDataRegion((mem.size << 20), 0xebffff, ::ReadErrC, NULL);			// メインメモリ未実装空間＋スーパーバイザI/O空間
+			pCPU->AddDataRegion(0xec0000, 0xecffff, ::ReadWordC, NULL);					// ユーザI/O空間($EC0000-$ECFFFF)
+			pCPU->AddDataRegion(0xed0000, 0xffffff, ::ReadErrC, NULL);					// スーパバイザ空間(SRAM,CG,IPL,SCSI)
+			pCPU->EndDataRegion();
+
+			pCPU->BeginDataRegion(FALSE, TRUE, FALSE);		// User, Write, Byte
+			pCPU->AddDataRegion((area + 1) << 13, mem.length - 1, NULL, (void*)&mem.ram[(area + 1) << 13]);	// ユーザアクセス可能空間
+			pCPU->AddDataRegion(0, ((area + 1) << 13) - 1, ::WriteErrC, NULL);			// スーパバイザ空間
+			pCPU->AddDataRegion((mem.size << 20), 0xebffff, ::WriteErrC, NULL);			// メインメモリ未実装空間＋スーパーバイザI/O空間
+			pCPU->AddDataRegion(0xec0000, 0xecffff, ::WriteByteC, NULL);				// ユーザI/O空間($EC0000-$ECFFFF)
+			pCPU->AddDataRegion(0xed0000, 0xffffff, ::WriteErrC, NULL);					// スーパバイザ空間(SRAM,CG,IPL,SCSI)
+			pCPU->EndDataRegion();
+
+			pCPU->BeginDataRegion(FALSE, TRUE, TRUE);		// User, Write, Word
+			pCPU->AddDataRegion((area + 1) << 13, mem.length - 1, NULL, (void*)&mem.ram[(area + 1) << 13]);	// ユーザアクセス可能空間
+			pCPU->AddDataRegion(0, ((area + 1) << 13) - 1, ::WriteErrC, NULL);			// スーパバイザ空間
+			pCPU->AddDataRegion((mem.size << 20), 0xebffff, ::WriteErrC, NULL);			// メインメモリ未実装空間＋スーパーバイザI/O空間
+			pCPU->AddDataRegion(0xec0000, 0xecffff, ::WriteWordC, NULL);				// ユーザI/O空間($EC0000-$ECFFFF)
+			pCPU->AddDataRegion(0xed0000, 0xffffff, ::WriteErrC, NULL);					// スーパバイザ空間(SRAM,CG,IPL,SCSI)
+			pCPU->EndDataRegion();
+		}
+
+		{
+			// 通常コンテキスト - 読み出し(Super)
+			for(int isWord = 0; isWord < 2; ++isWord) {
+				pCPU->BeginDataRegion(TRUE, FALSE, (BOOL) isWord);		// Super, Read, {Byte|Word}
+				pCPU->AddDataRegion(0, mem.length - 1, NULL, (void*)mem.ram);
+				pCPU->AddDataRegion(0xf00000, 0xfbffff, NULL, (void*)mem.cg);			// CG
+				pCPU->AddDataRegion(0xfe0000, 0xffffff, NULL, (void*)mem.ipl);			// IPL
+
+				// SCSI外付
+				if (mem.now == SCSIExt) {
+					pCPU->AddDataRegion(0xea0020, 0xea1fff, NULL, (void*)(&mem.scsi[0x20]));
+				}
+
+				// IPLイメージ or SCSI内蔵
+				if ((mem.now == SASI) || (mem.now == SCSIExt)) {
+					// IPLイメージ
+					pCPU->AddDataRegion(0xfc0000, 0xfdffff, NULL, (void*)mem.ipl);
+				} else {
+					// SCSI内蔵
+					if (mem.now != X68030) {
+						pCPU->AddDataRegion(0xfc0000, 0xfc1fff, NULL, (void*)mem.scsi);
+					} else {
+						// X68030 IPL前半
+						pCPU->AddDataRegion(0xfc0000, 0xfdffff, NULL, (void*)mem.scsi);
+					}
+				}
+
+				// それ以外(外部コール)
+				if(!isWord) {
+					pCPU->AddDataRegion((mem.size << 20), 0xefffff, ::ReadByteC, NULL);
+				} else {
+					pCPU->AddDataRegion((mem.size << 20), 0xefffff, ::ReadWordC, NULL);
+				}
+				pCPU->EndDataRegion();
+			}
+		}
+
+		{
+			// 通常コンテキスト - 書き込み(Super)
+			for(int isWord = 0; isWord < 2; ++isWord) {
+				pCPU->BeginDataRegion(TRUE, TRUE, (BOOL) isWord);		// Super, Write, {Byte|Word}
+
+				pCPU->AddDataRegion(0, mem.length - 1, NULL, (void*)mem.ram);
+
+				// それ以外(外部コール)
+				if(!isWord) {
+					pCPU->AddDataRegion((mem.size << 20), 0xefffff, ::WriteByteC, NULL);
+				} else {
+					pCPU->AddDataRegion((mem.size << 20), 0xefffff, ::WriteWordC, NULL);
+				}
+				pCPU->EndDataRegion();
+			}
+		}
+
+		// cpu->Releaseを忘れずに
+		cpu->Release();
 	}
-
-	// それ以外(外部コール)
-	s_rbr[index].lowaddr = (mem.size << 20);
-	s_rbr[index].highaddr = 0xefffff;
-	s_rbr[index].memorycall = ::ReadByteC;
-	s_rbr[index].userdata = NULL;
-	index++;
-	TerminateDataRegion(index, s_rbr);
-
-	// 他へ移す
-	memcpy(s_rwr, s_rbr, sizeof(s_rbr));
-	s_rwr[index - 1].memorycall = ::ReadWordC;
-
-	// 通常コンテキスト - 書き込み(Super)
-	index = 0;
-	s_wbr[index].lowaddr = 0;
-	s_wbr[index].highaddr = mem.length - 1;
-	s_wbr[index].memorycall = NULL;
-	s_wbr[index].userdata = (void*)mem.ram;
-	index++;
-
-	// それ以外(外部コール)
-	s_wbr[index].lowaddr = (mem.size << 20);
-	s_wbr[index].highaddr = 0xefffff;
-	s_wbr[index].memorycall = ::WriteByteC;
-	s_wbr[index].userdata = NULL;
-	index++;
-	TerminateDataRegion(index, s_wbr);
-
-	// 他へ移す
-	memcpy(s_wwr, s_wbr, sizeof(s_wbr));
-	s_wwr[index - 1].memorycall = ::WriteWordC;
-
-	// cpu->Releaseを忘れずに
-	cpu->Release();
-}
-
-//---------------------------------------------------------------------------
-//
-//	プログラムリージョン終了
-//
-//---------------------------------------------------------------------------
-void FASTCALL Memory::TerminateProgramRegion(int index, STARSCREAM_PROGRAMREGION *spr)
-{
-	ASSERT(this);
-	ASSERT((index >= 0) && (index < 10));
-	ASSERT(spr);
-
-	spr[index].lowaddr = (DWORD)-1;
-	spr[index].highaddr = (DWORD)-1;
-	spr[index].offset = 0;
-}
-
-//---------------------------------------------------------------------------
-//
-//	データリージョン終了
-//
-//---------------------------------------------------------------------------
-void FASTCALL Memory::TerminateDataRegion(int index, STARSCREAM_DATAREGION *sdr)
-{
-	ASSERT(this);
-	ASSERT((index >= 0) && (index < 10));
-	ASSERT(sdr);
-
-	sdr[index].lowaddr = (DWORD)-1;
-	sdr[index].highaddr = (DWORD)-1;
-	sdr[index].memorycall = NULL;
-	sdr[index].userdata = NULL;
 }
 
 //---------------------------------------------------------------------------
@@ -1441,4 +1306,17 @@ const BYTE* FASTCALL Memory::GetSCSI() const
 	ASSERT(mem.scsi);
 
 	return mem.scsi;
+}
+
+//---------------------------------------------------------------------------
+//
+//	IPL取得
+//
+//---------------------------------------------------------------------------
+const BYTE* FASTCALL Memory::GetIPL() const
+{
+	ASSERT(this);
+	ASSERT(mem.ipl);
+
+	return mem.ipl;
 }

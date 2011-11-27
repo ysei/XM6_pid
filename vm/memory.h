@@ -11,7 +11,6 @@
 #define memory_h
 
 #include "device.h"
-#include "starcpu.h"
 
 //===========================================================================
 //
@@ -48,6 +47,7 @@ public:
 		X68030							// v1.50-SCSI内蔵(X68030)
 	};
 
+protected:
 	// 内部データ定義
 	typedef struct {
 		MemDevice* table[0x180];		// ジャンプテーブル
@@ -103,6 +103,8 @@ public:
 										// CG取得
 	const BYTE* FASTCALL GetSCSI() const;
 										// SCSI取得
+	const BYTE* FASTCALL GetIPL() const;
+										// IPL取得
 	memtype FASTCALL GetMemType() const { return mem.now; }
 										// メモリ種別取得
 
@@ -111,38 +113,12 @@ private:
 										// ROMロード
 	void FASTCALL InitTable();
 										// デコードテーブル初期化
-	void FASTCALL TerminateProgramRegion(int index, STARSCREAM_PROGRAMREGION *spr);
-										// プログラムリージョン終了
-	void FASTCALL TerminateDataRegion(int index, STARSCREAM_DATAREGION *sdr);
-										// データリージョン終了
 	AreaSet *areaset;
 										// エリアセット
 	SRAM *sram;
 										// SRAM
 	memory_t mem;
 										// 内部データ
-
-	// リージョン (Starscream特有)
-	STARSCREAM_PROGRAMREGION u_pgr[10];
-										// プログラムリージョン(User)
-	STARSCREAM_PROGRAMREGION s_pgr[10];
-										// プログラムリージョン(Super)
-	STARSCREAM_DATAREGION u_rbr[10];
-										// Read Byteリージョン(User)
-	STARSCREAM_DATAREGION s_rbr[10];
-										// Read Byteリージョン(Super)
-	STARSCREAM_DATAREGION u_rwr[10];
-										// Read Wordリージョン(User)
-	STARSCREAM_DATAREGION s_rwr[10];
-										// Read Wordリージョン(Super)
-	STARSCREAM_DATAREGION u_wbr[10];
-										// Write Byteリージョン(User)
-	STARSCREAM_DATAREGION s_wbr[10];
-										// Write Byteリージョン(Super)
-	STARSCREAM_DATAREGION u_wwr[10];
-										// Write Wordリージョン(User)
-	STARSCREAM_DATAREGION s_wwr[10];
-										// Write Wordリージョン(Super)
 };
 
 #endif	// memory_h
