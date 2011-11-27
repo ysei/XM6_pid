@@ -47,7 +47,6 @@ public:
 		X68030							// v1.50-SCSI内蔵(X68030)
 	};
 
-protected:
 	// 内部データ定義
 	typedef struct {
 		MemDevice* table[0x180];		// ジャンプテーブル

@@ -7,6 +7,7 @@
 ** how to compile.
 */
 #include "stdafx.h"
+#if 0
 #define _CRT_SECURE_NO_WARNINGS //VC2010//
 #include <stdio.h>
 #include <stdlib.h>
@@ -1862,3 +1863,4 @@ void cpudebug_disassemble(int n) {
 }
 
 }// extern "C"
+#endif

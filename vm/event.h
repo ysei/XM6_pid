@@ -23,12 +23,12 @@ public:
 #pragma pack(push, 8)
 #endif	// _WIN32
 	typedef struct {
-		DWORD remain;					// 残り時間
-		DWORD time;						// トータル時間
-		DWORD user;						// ユーザ定義データ
-		Device *device;					// 親デバイス
-		Scheduler *scheduler;			// スケジューラ
-		Event *next;					// 次のイベント
+		DWORD remain;					// +4  残り時間
+		DWORD time;						// +8  トータル時間
+		DWORD user;						// +12 ユーザ定義データ
+		Device *device;					// +16 親デバイス
+		Scheduler *scheduler;			// +20 スケジューラ
+		Event *next;					// +24 次のイベント
 		char desc[0x20];				// 名称
 	} event_t;
 #if defined(_WIN32)

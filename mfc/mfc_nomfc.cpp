@@ -1382,6 +1382,7 @@ static void OnDraw(HDC hdc) {
 
 
 
+/*
 //---------------------------------------------------------------------------
 //
 //	cpudebug.c ÉèÅ[Éhì«Ç›èoÇµ (mfc_cpu.cpp)
@@ -1403,6 +1404,7 @@ extern "C" WORD cpudebug_fetch(DWORD addr)
 
 	return w;
 }
+*/
 
 
 

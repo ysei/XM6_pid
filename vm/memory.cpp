@@ -395,7 +395,7 @@ void FASTCALL Memory::InitTable()
 	MemInitDecode(this, devarray);
 
 	// アセンブラルーチンで出来たテーブルを逆に戻す(アラインメントに注意)
-	table = MemDecodeTable;
+	table = (BYTE*) MemDecodeTable;
 	for (i=0; i<0x180; i++) {
 		// 4バイトごとにDWORD値を取り込み、ポインタにキャスト
 		ptr = *(DWORD*)table;
@@ -1319,4 +1319,178 @@ const BYTE* FASTCALL Memory::GetIPL() const
 	ASSERT(mem.ipl);
 
 	return mem.ipl;
+}
+
+extern "C" unsigned int MemDecodeTable[384] = { 0 };								// メモリデコードテーブル
+extern "C" unsigned int EventTable[32] = { 0 };									
+extern "C" unsigned int MemoryPtr =  0;										
+extern "C" unsigned int EventNum = 0;										
+/*
+;
+; データエリア (8KB単位)
+;
+; 0	MEMORY
+; 1	GVRAM
+; 2	TVRAM
+; 3	CRTC
+; 4	VC
+; 5	DMAC
+; 6	AREA
+; 7	MFP
+; 8	RTC
+; 9	PRN
+; 10	SYSPORT
+; 11	OPM
+; 12	ADPCM
+; 13	FDC
+; 14	SASI
+; 15	SCC
+; 16	PPI
+; 17	IOSC
+; 18	WINDRV
+; 19	SCSI
+; 20	MIDI
+; 21	SPR
+; 22	MERCURY
+; 23	NEPTUNE
+; 24	SRAM
+;
+*/
+extern "C" DWORD MemDecodeData[] = {
+// $C00000 (GVRAM)
+			1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+			1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+			1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+			1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+			1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+			1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+			1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+			1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+			1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+			1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+			1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+			1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+			1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+			1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+			1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+			1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+// $E00000 (TVRAM)
+			2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+			2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+			2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+			2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+// $E80000 (CRTC - IOSC)
+			3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,
+// $E9E000 (WINDRV)
+			18,
+// $EA0000 (SCSI)
+			19,
+// $EA2000 (RESERVE)
+			0,0,0,0,0,0,
+// $EAE000 (MIDI)
+			20,
+// $EB0000 (SPRITE)
+			21,21,21,21,21,21,21,21,
+// $EC0000 (USER)
+			0,0,0,0,0,0,
+// $ECC000 (MERCURY)
+			22,
+// $ECE000 (NEPTUNE)
+			23,
+// $ED0000 (SRAM)
+			24,24,24,24,24,24,24,24,
+// $EE0000 (RESERVE)
+			0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+};
+
+// メモリデコーダ初期化
+extern "C" void MemInitDecode(Memory *mem, MemDevice* list[]) {
+	unsigned int* ebx = (unsigned int*) &MemDecodeTable[0];
+	const unsigned int* edx = (unsigned int*) &MemDecodeData[0];
+
+	for(int i = 0; i < 384; ++i) {
+		unsigned int eax = *edx;
+		edx += 1;
+		unsigned int edi = (unsigned int) list[eax];
+
+		*ebx = edi;
+		ebx += 1;
+	}
+}
+
+extern "C" DWORD ReadByteC(DWORD addr);										// バイト読み込み
+extern "C" DWORD ReadWordC(DWORD addr);										// ワード読み込み
+extern "C" void WriteByteC(DWORD addr, DWORD data);							// バイト書き込み
+extern "C" void WriteWordC(DWORD addr, DWORD data);							// ワード書き込み
+extern "C" void ReadErrC(DWORD addr);										// バスエラー読み込み
+extern "C" void WriteErrC(DWORD addr, DWORD data);							// バスエラー書き込み
+
+// イベント群 指定
+extern "C" void NotifyEvent(Event *first) {
+	Event* esi = first;
+	unsigned int ecx = 0;
+	unsigned int* edi = &EventTable[0];
+
+	while(esi != 0) {
+		*edi = (unsigned int) esi;
+		ecx += 1;
+
+		esi = esi->GetNextEvent();
+		edi += 1;
+	}
+	EventNum = ecx;
+}
+
+// イベント群 最小のものを探す
+extern "C" DWORD GetMinEvent(DWORD hus) {
+	unsigned int eax = hus;
+
+	const unsigned int* esi = &EventTable[0];
+	for(unsigned int i = 0, n = EventNum; i < n; ++i) {
+		unsigned int edi = *esi;
+		esi += 1;
+		unsigned int edx = * (unsigned int*) (edi + 4);
+		if(edx == 0) {
+			edx = eax;
+		}
+		if(edx < eax) {
+			eax = edx;
+		}
+	}
+
+	return eax;
+}
+
+// イベント群 減算＆実行
+extern "C" BOOL SubExecEvent(DWORD hus) {
+	unsigned int edi = hus;
+	const unsigned int* esi = &EventTable[0];
+
+	for(unsigned i = 0, n = EventNum; i < n; ++i) {
+	//	loop:
+		unsigned int ebp = *esi;
+		esi += 1;
+		unsigned int eax = * (unsigned int*) (ebp + 8);		// Event::event_t.time
+		if(eax != 0) {
+			* (int*) (ebp+4) -= edi;		// Event::event_t.remain
+			if(*(int*) (ebp+4) <= 0) {		// Event::event_t.remain
+				// exec
+				*(int*)(ebp+4) = (int) (eax);	// 	Event::event_t.remain
+
+				Event*	pe = (Event*) ebp;
+				Device* pd = pe->GetDevice();
+
+				unsigned int eax = pd->Callback(pe);
+				if(eax == 0) {
+					// ; 無効化(timeおよびremainを0クリア)
+					// .disable:
+					* (unsigned int*) (ebp+8) = 0;		// Event::event_t.time
+					* (unsigned int*) (ebp+4) = 0;		// Event::event_t.remain
+				}
+			}
+		}
+	//	next:
+	}
+
+	return FALSE;
 }

@@ -16,8 +16,13 @@
 		section	.text align=16
 		bits	32
 
-		global	_MemInitDecode
-		global	_MemDecodeTable
+		extern	_MemDecodeTable
+		extern	_EventTable
+		extern	_MemoryPtr
+		extern	_EventNum
+		extern	_MemDecodeData
+
+;		global	_MemInitDecode
 		global	_ReadByteC
 		global	_ReadWordC
 		global	_WriteByteC
@@ -28,56 +33,56 @@
 		extern	_ReadBusErr
 		extern	_WriteBusErr
 
-		global	_NotifyEvent
-		global	_GetMinEvent
-		global	_SubExecEvent
+;		global	_NotifyEvent
+;		global	_GetMinEvent
+;		global	_SubExecEvent
 
-		align	16
-
-;
-; メモリデコーダ
-; ジャンプテーブル作成
-;
-; void MemInitDecode(DWORD *mem, MemDevice *list[])
-;
-_MemInitDecode:
-		push	ebp
-		mov	ebp,esp
-		push	eax
-		push	ebx
-		push	ecx
-		push	edx
-		push	esi
-		push	edi
-; Memoryクラス記憶
-		mov	eax,[ebp+8]
-		mov	[Memory],eax
-; デバイスを順に設定
-		mov	ebx,_MemDecodeTable
-		mov	ecx,384
-		mov	edx,MemDecodeData
-		mov	esi,[ebp+12]
-; ループ
-.Loop:
-; デバイス番号(0:Memory 1:GVRAM .... SRAM)を取得
-		mov	eax,[edx]
-		add	edx,byte 4
-; list[]を使って、そのインスタンスのポインタをストア
-		mov	edi,[esi+eax*4]
-		mov	[ebx],edi
-		add	ebx,byte 4
-; 次へ
-		dec	ecx
-		jnz	.Loop
-; 終了
-		pop	edi
-		pop	esi
-		pop	edx
-		pop	ecx
-		pop	ebx
-		pop	eax
-		pop	ebp
-		ret
+;;;			align	16
+;;;	
+;;;	;
+;;;	; メモリデコーダ
+;;;	; ジャンプテーブル作成
+;;;	;
+;;;	; void MemInitDecode(DWORD *mem, MemDevice *list[])
+;;;	;
+;;;	_MemInitDecode:
+;;;			push	ebp
+;;;			mov	ebp,esp
+;;;			push	eax
+;;;			push	ebx
+;;;			push	ecx
+;;;			push	edx
+;;;			push	esi
+;;;			push	edi
+;;;	; Memoryクラス記憶
+;;;			mov	eax,[ebp+8]			; mem
+;;;			mov	[_MemoryPtr],eax
+;;;	; デバイスを順に設定
+;;;			mov	ebx,_MemDecodeTable
+;;;			mov	ecx,384
+;;;			mov	edx,_MemDecodeData
+;;;			mov	esi,[ebp+12]			; list[]
+;;;	; ループ
+;;;	.Loop:
+;;;	; デバイス番号(0:Memory 1:GVRAM .... SRAM)を取得
+;;;			mov	eax,[edx]
+;;;			add	edx,byte 4
+;;;	; list[]を使って、そのインスタンスのポインタをストア
+;;;			mov	edi,[esi+eax*4]			; list[eax]
+;;;			mov	[ebx],edi
+;;;			add	ebx,byte 4
+;;;	; 次へ
+;;;			dec	ecx
+;;;			jnz	.Loop
+;;;	; 終了
+;;;			pop	edi
+;;;			pop	esi
+;;;			pop	edx
+;;;			pop	ecx
+;;;			pop	ebx
+;;;			pop	eax
+;;;			pop	ebp
+;;;			ret
 
 		align	16
 
@@ -99,7 +104,7 @@ _ReadByteC:
 		jmp	[eax+32]
 ; メモリを呼ぶ
 .Memory:
-		mov	ecx,[Memory]
+		mov	ecx,[_MemoryPtr]
 		mov	eax,[ecx]
 		jmp	[eax+32]
 
@@ -123,7 +128,7 @@ _ReadWordC:
 		jmp	[eax+36]
 ; メモリを呼ぶ
 .Memory:
-		mov	ecx,[Memory]
+		mov	ecx,[_MemoryPtr]
 		mov	eax,[ecx]
 		jmp	[eax+36]
 
@@ -149,7 +154,7 @@ _WriteByteC:
 		ret
 ; メモリを呼ぶ
 .Memory:
-		mov	ecx,[Memory]
+		mov	ecx,[_MemoryPtr]
 		mov	eax,[ecx]
 		push	ebx
 		call	[eax+40]
@@ -177,7 +182,7 @@ _WriteWordC:
 		ret
 ; メモリを呼ぶ
 .Memory:
-		mov	ecx,[Memory]
+		mov	ecx,[_MemoryPtr]
 		mov	eax,[ecx]
 		push	ebx
 		call	[eax+44]
@@ -210,162 +215,163 @@ _WriteErrC:
 		add	esp,4
 		ret
 
-		align	16
+;			align	16
+;	
+;	;
+;	; イベント変更通知
+;	; ※最大イベント数は31まで(SubExecEventの最後でダミーリードするため)
+;	;
+;	; void NotifyEvent(Event *first)
+;	;
+;	_NotifyEvent:
+;			push	ebp
+;			mov	ebp,esp
+;			push	eax
+;			push	ecx
+;			push	esi
+;			push	edi
+;	; パラメータ受け取りとカウンタクリア
+;			mov	esi,[ebp+8]		; first
+;			xor	ecx,ecx
+;			mov	edi,_EventTable
+;	; ループ
+;	.loop:
+;			or	esi,esi
+;			jz	.exit
+;	; セット
+;			mov	[edi],esi
+;			inc	ecx
+;	; 次を取得
+;			mov	esi,[esi+24]
+;			add	edi,byte 4
+;			jmp	.loop
+;	; 個数を記録して
+;	.exit:
+;			mov	[_EventNum],ecx
+;	; 終了
+;			pop	edi
+;			pop	esi
+;			pop	ecx
+;			pop	eax
+;			pop	ebp
+;			ret
+;	
+;			align	16
+;	
+;	;
+;	; 最小のイベントを探す
+;	; ※CMOV使用
+;	;
+;	; void GetMinEvent(DWORD hus)
+;	;
+;	_GetMinEvent:
+;			push	ebp
+;			mov	ebp,esp
+;			push	esi
+;			push	edi
+;	; パラメータを受け取る
+;			mov	eax,[ebp+8]			; hus
+;			mov	esi,_EventTable
+;			mov	ecx,[_EventNum]
+;	; ループ
+;	.loop:
+;			mov	edi,[esi]
+;			add	esi,byte 4
+;	; GetRemain()呼び出し
+;			mov	edx,[edi+4]
+;			or	edx,edx
+;	; ゼロならこのイベントは考慮しない
+;			cmovz	edx,eax
+;	; 比較
+;			cmp	edx,eax
+;	; これを最小とする
+;			cmovc	eax,edx
+;	; 次へ
+;	.next:
+;			dec	ecx
+;			jnz	.loop
+;	;
+;			pop	edi
+;			pop	esi
+;			pop	ebp
+;			ret
 
+;			align	16
+;	
+;	;
+;	; イベント時間減少と実行
+;	;
+;	; DWORD SubExecEvent(DWORD hus)
+;	;
+;	_SubExecEvent_asm:
+;	;_SubExecEvent:
+;			push	ebp
+;			mov	ebp,esp
+;			push	esi
+;			push	edi
+;	; パラメータを受け取る
+;			mov	edi,[ebp+8]			; hus
+;			mov	esi,_EventTable
+;			mov	ecx,[_EventNum]
+;	; Eventオブジェクトを取得
+;			mov	ebp,[esi]
+;	; イベントループ
+;	.loop:
+;	; 時間未設定なら、何もしない
+;			mov	eax,[ebp+8]
+;			add	esi,byte 4
+;			or	eax,eax
+;			jz	.next
+;	; 時間を引く。0かマイナスならイベント実行
+;			sub	[ebp+4],edi
+;			jna	.exec
+;	; 次へ
+;	.next:
+;			dec	ecx
+;			mov	ebp,[esi]
+;			jnz	.loop
+;	; 終了
+;			pop	edi
+;			pop	esi
+;			pop	ebp
+;			ret
+;	; 実行
+;	.exec:
+;	; 時間をリセット
+;			mov	[ebp+4],eax
+;	; イベント実行(Device::Callback呼び出し)
+;			push	ecx
+;			mov	ecx,[ebp+16]
+;			mov	eax,[ecx]
+;			mov	edx,ebp
+;			call	[eax+28]
+;			pop	ecx
+;	; 結果が0なら、FALSEのため無効化
+;			or	eax,eax
+;			jz	.disable
+;	; 次のイベントへ
+;			dec	ecx
+;			mov	ebp,[esi]
+;			jnz	.loop
+;	; 終了
+;			pop	edi
+;			pop	esi
+;			pop	ebp
+;			ret
+;	; 無効化(timeおよびremainを0クリア)
+;	.disable:
+;			mov	[ebp+8],eax
+;			mov	[ebp+4],eax
+;	; 次のイベントへ
+;			dec	ecx
+;			mov	ebp,[esi]
+;			jnz	.loop
+;	; 終了
+;			pop	edi
+;			pop	esi
+;			pop	ebp
+;			ret
 ;
-; イベント変更通知
-; ※最大イベント数は31まで(SubExecEventの最後でダミーリードするため)
-;
-; void NotifyEvent(Event *first)
-;
-_NotifyEvent:
-		push	ebp
-		mov	ebp,esp
-		push	eax
-		push	ecx
-		push	esi
-		push	edi
-; パラメータ受け取りとカウンタクリア
-		mov	esi,[ebp+8]
-		xor	ecx,ecx
-		mov	edi,EventTable
-; ループ
-.loop:
-		or	esi,esi
-		jz	.exit
-; セット
-		mov	[edi],esi
-		inc	ecx
-; 次を取得
-		mov	esi,[esi+24]
-		add	edi,byte 4
-		jmp	.loop
-; 個数を記録して
-.exit:
-		mov	[EventNum],ecx
-; 終了
-		pop	edi
-		pop	esi
-		pop	ecx
-		pop	eax
-		pop	ebp
-		ret
-
-		align	16
-
-;
-; 最小のイベントを探す
-; ※CMOV使用
-;
-; void GetMinEvent(DWORD hus)
-;
-_GetMinEvent:
-		push	ebp
-		mov	ebp,esp
-		push	esi
-		push	edi
-; パラメータを受け取る
-		mov	eax,[ebp+8]
-		mov	esi,EventTable
-		mov	ecx,[EventNum]
-; ループ
-.loop:
-		mov	edi,[esi]
-		add	esi,byte 4
-; GetRemain()呼び出し
-		mov	edx,[edi+4]
-		or	edx,edx
-; ゼロならこのイベントは考慮しない
-		cmovz	edx,eax
-; 比較
-		cmp	edx,eax
-; これを最小とする
-		cmovc	eax,edx
-; 次へ
-.next:
-		dec	ecx
-		jnz	.loop
-;
-		pop	edi
-		pop	esi
-		pop	ebp
-		ret
-
-		align	16
-
-;
-; イベント時間減少と実行
-;
-; DWORD SubExecEvent(DWORD hus)
-;
-_SubExecEvent:
-		push	ebp
-		mov	ebp,esp
-		push	esi
-		push	edi
-; パラメータを受け取る
-		mov	edi,[ebp+8]
-		mov	esi,EventTable
-		mov	ecx,[EventNum]
-; Eventオブジェクトを取得
-		mov	ebp,[esi]
-; イベントループ
-.loop:
-; 時間未設定なら、何もしない
-		mov	eax,[ebp+8]
-		add	esi,byte 4
-		or	eax,eax
-		jz	.next
-; 時間を引く。0かマイナスならイベント実行
-		sub	[ebp+4],edi
-		jna	.exec
-; 次へ
-.next:
-		dec	ecx
-		mov	ebp,[esi]
-		jnz	.loop
-; 終了
-		pop	edi
-		pop	esi
-		pop	ebp
-		ret
-; 実行
-.exec:
-; 時間をリセット
-		mov	[ebp+4],eax
-; イベント実行(Device::Callback呼び出し)
-		push	ecx
-		mov	ecx,[ebp+16]
-		mov	eax,[ecx]
-		mov	edx,ebp
-		call	[eax+28]
-		pop	ecx
-; 結果が0なら、FALSEのため無効化
-		or	eax,eax
-		jz	.disable
-; 次のイベントへ
-		dec	ecx
-		mov	ebp,[esi]
-		jnz	.loop
-; 終了
-		pop	edi
-		pop	esi
-		pop	ebp
-		ret
-; 無効化(timeおよびremainを0クリア)
-.disable:
-		mov	[ebp+8],eax
-		mov	[ebp+4],eax
-; 次のイベントへ
-		dec	ecx
-		mov	ebp,[esi]
-		jnz	.loop
-; 終了
-		pop	edi
-		pop	esi
-		pop	ebp
-		ret
-
 ;
 ; データエリア (8KB単位)
 ;
@@ -395,71 +401,71 @@ _SubExecEvent:
 ; 23	NEPTUNE
 ; 24	SRAM
 ;
-		section	.data align=16
-		bits	32
-MemDecodeData:
-; $C00000 (GVRAM)
-		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-; $E00000 (TVRAM)
-		dd	2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
-		dd	2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
-		dd	2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
-		dd	2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
-; $E80000 (CRTC - IOSC)
-		dd	3,4,5,6,7,8,9,10,11,12,13,14,15,16,17
-; $E9E000 (WINDRV)
-		dd	18
-; $EA0000 (SCSI)
-		dd	19
-; $EA2000 (RESERVE)
-		dd	0,0,0,0,0,0
-; $EAE000 (MIDI)
-		dd	20
-; $EB0000 (SPRITE)
-		dd	21,21,21,21,21,21,21,21
-; $EC0000 (USER)
-		dd	0,0,0,0,0,0
-; $ECC000 (MERCURY)
-		dd	22
-; $ECE000 (NEPTUNE)
-		dd	23
-; $ED0000 (SRAM)
-		dd	24,24,24,24,24,24,24,24
-; $EE0000 (RESERVE)
-		dd	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-
+;		section	.data align=16
+;		bits	32
+;MemDecodeData:
+;; $C00000 (GVRAM)
+;		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+;		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+;		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+;		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+;		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+;		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+;		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+;		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+;		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+;		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+;		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+;		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+;		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+;		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+;		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+;		dd	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+;; $E00000 (TVRAM)
+;		dd	2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
+;		dd	2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
+;		dd	2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
+;		dd	2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
+;; $E80000 (CRTC - IOSC)
+;		dd	3,4,5,6,7,8,9,10,11,12,13,14,15,16,17
+;; $E9E000 (WINDRV)
+;		dd	18
+;; $EA0000 (SCSI)
+;		dd	19
+;; $EA2000 (RESERVE)
+;		dd	0,0,0,0,0,0
+;; $EAE000 (MIDI)
+;		dd	20
+;; $EB0000 (SPRITE)
+;		dd	21,21,21,21,21,21,21,21
+;; $EC0000 (USER)
+;		dd	0,0,0,0,0,0
+;; $ECC000 (MERCURY)
+;		dd	22
+;; $ECE000 (NEPTUNE)
+;		dd	23
+;; $ED0000 (SRAM)
+;		dd	24,24,24,24,24,24,24,24
+;; $EE0000 (RESERVE)
+;		dd	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+;
 ;
 ; BSSエリア
 ;
-		section	.bss align=16
-		bits	32
-Memory:
-		resb	4
-EventNum:
-		resb	4
+;		section	.bss align=16
+;		bits	32
+;Memory:
+;		resb	4
+;EventNum:
+;		resb	4
 ; ダミー(align 16)
-		resb	8
-
-_MemDecodeTable:
-		resb	384*4
-EventTable:
-		resb	32*4
-
+;		resb	8
+;
+;_MemDecodeTable:
+;		resb	384*4
+;_EventTable:
+;		resb	32*4
+;
 ;
 ; プログラム終了
 ;

@@ -41,7 +41,7 @@ DWORD GetMinEvent(DWORD hus);
 										// イベント群 最小のものを探す
 BOOL SubExecEvent(DWORD hus);
 										// イベント群 減算＆実行
-extern BYTE MemDecodeTable[];
+extern unsigned int MemDecodeTable[];
 										// メモリデコードテーブル
 
 #if defined(__cplusplus)
