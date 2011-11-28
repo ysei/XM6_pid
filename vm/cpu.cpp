@@ -14,7 +14,7 @@
 #include "mfp.h"
 #include "vm.h"
 #include "log.h"
-#include "memory.h"
+#include "memory_xm6.h"
 #include "dmac.h"
 #include "scc.h"
 #include "midi.h"
@@ -75,12 +75,12 @@ static CPU *cpu;
 //	外部定義
 //
 //---------------------------------------------------------------------------
-DWORD s68000fbpc(void);
+uint32_t s68000fbpc(void);
 										// PCフィードバック
-void s68000buserr(DWORD addr, DWORD param);
+void s68000buserr(uint32_t addr, uint32_t param);
 										// バスエラー
-extern DWORD s68000getcounter();		// クロックカウンタ取得
-extern DWORD s68000iocycle;				// __io_cycle_counter(Starscream)
+extern uint32_t s68000getcounter();		// クロックカウンタ取得
+extern uint32_t s68000iocycle;				// __io_cycle_counter(Starscream)
 
 //---------------------------------------------------------------------------
 //
@@ -113,7 +113,7 @@ void s68000intack(void)
 //	バスエラー記録
 //
 //---------------------------------------------------------------------------
-void s68000buserrlog(DWORD addr, DWORD stat)
+void s68000buserrlog(uint32_t addr, uint32_t stat)
 {
 	cpu->BusErrLog(addr, stat);
 }
@@ -123,7 +123,7 @@ void s68000buserrlog(DWORD addr, DWORD stat)
 //	アドレスエラー記録
 //
 //---------------------------------------------------------------------------
-void s68000addrerrlog(DWORD addr, DWORD stat)
+void s68000addrerrlog(uint32_t addr, uint32_t stat)
 {
 	cpu->AddrErrLog(addr, stat);
 }
@@ -168,7 +168,7 @@ CPU::CPU(VM *p) : Device(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL CPU::Init()
+int FASTCALL CPU::Init()
 {
 	ASSERT(this);
 
@@ -263,7 +263,7 @@ void FASTCALL CPU::Reset()
 {
 	int i;
 	S68000CONTEXT context;
-	DWORD bit;
+	uint32_t bit;
 
 	ASSERT(this);
 	LOG0(Log::Normal, "リセット");
@@ -291,7 +291,7 @@ void FASTCALL CPU::Reset()
 	for (i=1; i<=7; i++) {
 		bit = (1 << i);
 		if (context.interrupts[0] & bit) {
-			context.interrupts[0] &= (BYTE)(~bit);
+			context.interrupts[0] &= (uint8_t)(~bit);
 			context.interrupts[i] = 0;
 		}
 	}
@@ -306,7 +306,7 @@ void FASTCALL CPU::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL CPU::Save(Fileio *fio, int /*ver*/)
+int FASTCALL CPU::Save(Fileio *fio, int /*ver*/)
 {
 	size_t sz;
 	cpu_t cpu;
@@ -349,7 +349,7 @@ BOOL FASTCALL CPU::Save(Fileio *fio, int /*ver*/)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL CPU::Load(Fileio *fio, int /*ver*/)
+int FASTCALL CPU::Load(Fileio *fio, int /*ver*/)
 {
 	cpu_t cpu;
 	size_t sz;
@@ -426,7 +426,7 @@ void FASTCALL CPU::GetCPU(cpu_t *buffer) const
 
 	// 割り込み
 	for (i=0; i<8; i++) {
-		buffer->intr[i] = (DWORD)::s68000context.interrupts[i];
+		buffer->intr[i] = (uint32_t)::s68000context.interrupts[i];
 		buffer->intreq[i] = sub.intreq[i];
 		buffer->intack[i] = sub.intack[i];
 	}
@@ -434,7 +434,7 @@ void FASTCALL CPU::GetCPU(cpu_t *buffer) const
 	// その他
 	buffer->sp = ::s68000context.asp;
 	buffer->pc = ::s68000context.pc;
-	buffer->sr = (DWORD)::s68000context.sr;
+	buffer->sr = (uint32_t)::s68000context.sr;
 	buffer->odd = ::s68000context.odometer;
 }
 
@@ -462,7 +462,7 @@ void FASTCALL CPU::SetCPU(const cpu_t *buffer)
 
 	// 割り込み
 	for (i=0; i<8; i++) {
-		context.interrupts[i] = (BYTE)buffer->intr[i];
+		context.interrupts[i] = (uint8_t)buffer->intr[i];
 		sub.intreq[i] = buffer->intreq[i];
 		sub.intack[i] = buffer->intack[i];
 	}
@@ -470,7 +470,7 @@ void FASTCALL CPU::SetCPU(const cpu_t *buffer)
 	// その他
 	context.asp = buffer->sp;
 	context.pc = buffer->pc;
-	context.sr = (WORD)buffer->sr;
+	context.sr = (uint16_t)buffer->sr;
 	context.odometer = buffer->odd;
 
 	// コンテキスト設定
@@ -482,7 +482,7 @@ void FASTCALL CPU::SetCPU(const cpu_t *buffer)
 //	割り込み
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL CPU::Interrupt(int level, int vector)
+int FASTCALL CPU::Interrupt(int level, int vector)
 {
 	int ret;
 
@@ -572,7 +572,7 @@ void FASTCALL CPU::IntAck(int level)
 void FASTCALL CPU::IntCancel(int level)
 {
 	S68000CONTEXT context;
-	DWORD bit;
+	uint32_t bit;
 
 	ASSERT(this);
 	ASSERT((level >= 1) && (level <= 7));
@@ -588,7 +588,7 @@ void FASTCALL CPU::IntCancel(int level)
 #endif	// CPU_LOG
 
 		// ビットを降ろす
-		context.interrupts[0] &= (BYTE)(~bit);
+		context.interrupts[0] &= (uint8_t)(~bit);
 
 		// ベクタは0
 		context.interrupts[level] = 0;
@@ -632,10 +632,10 @@ void FASTCALL CPU::ResetInst()
 //	※CPUコア内部でバスエラーと判定した場合は、ここを経由しない
 //
 //---------------------------------------------------------------------------
-void FASTCALL CPU::BusErr(DWORD addr, BOOL read)
+void FASTCALL CPU::BusErr(uint32_t addr, int read)
 {
-	DWORD pc;
-	DWORD stat;
+	uint32_t pc;
+	uint32_t stat;
 
 	ASSERT(this);
 	ASSERT(addr <= 0xffffff);
@@ -686,10 +686,10 @@ void FASTCALL CPU::BusErr(DWORD addr, BOOL read)
 //	※CPUコア内部でアドレスエラーと判定した場合は、ここを経由しない
 //
 //---------------------------------------------------------------------------
-void FASTCALL CPU::AddrErr(DWORD addr, BOOL read)
+void FASTCALL CPU::AddrErr(uint32_t addr, int read)
 {
-	DWORD pc;
-	DWORD stat;
+	uint32_t pc;
+	uint32_t stat;
 
 	ASSERT(this);
 	ASSERT(addr <= 0xffffff);
@@ -740,7 +740,7 @@ void FASTCALL CPU::AddrErr(DWORD addr, BOOL read)
 //	※CPUコア内部でバスエラーと判定した場合も、ここを通る
 //
 //---------------------------------------------------------------------------
-void FASTCALL CPU::BusErrLog(DWORD addr, DWORD stat)
+void FASTCALL CPU::BusErrLog(uint32_t addr, uint32_t stat)
 {
 	ASSERT(this);
 
@@ -761,7 +761,7 @@ void FASTCALL CPU::BusErrLog(DWORD addr, DWORD stat)
 //	※CPUコア内部でアドレスエラーと判定した場合も、ここを通る
 //
 //---------------------------------------------------------------------------
-void FASTCALL CPU::AddrErrLog(DWORD addr, DWORD stat)
+void FASTCALL CPU::AddrErrLog(uint32_t addr, uint32_t stat)
 {
 	ASSERT(this);
 
@@ -776,7 +776,7 @@ void FASTCALL CPU::AddrErrLog(DWORD addr, DWORD stat)
 	}
 }
 
-void CPU::BeginProgramRegion(BOOL isSuper) {
+void CPU::BeginProgramRegion(int isSuper) {
 	ASSERT(pRegion->iProgramRegion == -1);
 	ASSERT(pRegion->pProgramRegion == 0);
 
@@ -810,7 +810,7 @@ void CPU::EndProgramRegion() {
 	pRegion->pProgramRegion = 0;
 }
 
-void CPU::BeginDataRegion(BOOL isSuper, BOOL isWrite, BOOL isWord) {
+void CPU::BeginDataRegion(int isSuper, int isWrite, int isWord) {
 	ASSERT(pRegion->iDataRegion == -1);
 	ASSERT(pRegion->pDataRegion == 0);
 
@@ -888,8 +888,8 @@ void CPU::EndDataRegion() {
 	pRegion->pDataRegion = 0;
 }
 
-DWORD FASTCALL CPU::Exec(int cycle) {
-	DWORD result;
+uint32_t FASTCALL CPU::Exec(int cycle) {
+	uint32_t result;
 
 	if (::s68000exec(cycle) <= 0x80000000) {
 		result = ::s68000context.odometer;
@@ -903,15 +903,15 @@ DWORD FASTCALL CPU::Exec(int cycle) {
 	return result;
 }
 
-void FASTCALL CPU::Wait(DWORD cycle) {
+void FASTCALL CPU::Wait(uint32_t cycle) {
 	//	TODO : This function is called very frequently. So, original Scheduler::Wait() calls StarScream directly. Like this :
 	//
-	//		void FASTCALL Wait(DWORD cycle)		{ sch.cycle += cycle; if (CPU_IOCYCLE_GET() != (DWORD)-1) CPU_IOCYCLE_SUBTRACT(cycle); }
+	//		void FASTCALL Wait(uint32_t cycle)		{ sch.cycle += cycle; if (CPU_IOCYCLE_GET() != (uint32_t)-1) CPU_IOCYCLE_SUBTRACT(cycle); }
 	//
 	::s68000wait(cycle);
 }
 
-DWORD FASTCALL CPU::GetIOCycle() const {
+uint32_t FASTCALL CPU::GetIOCycle() const {
 	return ::s68000getcounter();
 }
 
@@ -919,10 +919,10 @@ void FASTCALL CPU::Release() {
 	::s68000releaseTimeslice();
 }
 
-DWORD FASTCALL CPU::GetCycle() const {
+uint32_t FASTCALL CPU::GetCycle() const {
 	return ::s68000readOdometer();
 }
 
-DWORD FASTCALL CPU::GetPC() const {
+uint32_t FASTCALL CPU::GetPC() const {
 	return ::s68000readPC();
 }

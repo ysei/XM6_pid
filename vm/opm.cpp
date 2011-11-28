@@ -18,6 +18,15 @@ namespace FM
 int OPM::amtable[4][OPM_LFOENTS];
 int OPM::pmtable[4][OPM_LFOENTS];
 
+
+unsigned int rand_fm() {
+	static unsigned int y = 2463534242;
+	y ^= (y << 13);
+	y  = (y >> 17);
+	y ^= (y << 5);
+	return y;
+}
+
 // ---------------------------------------------------------------------------
 //	\’z
 //
@@ -144,7 +153,14 @@ void OPM::SetVolume(int db)
 	else
 		fmvolume = 0;
 #else
+#if 0
 	// XM6“ÆŽ©
+	//	db = [0,100]
+	{
+		char buf[256];
+		sprintf(buf, "OPM::SetVolume(%d)\n", db);
+		OutputDebugString(buf);
+	}
 	double offset;
 	double vol;
 
@@ -153,6 +169,26 @@ void OPM::SetVolume(int db)
 	vol = pow((double)10.0, offset);
 	vol *= (double)16384.0;
 	fmvolume = int(vol);
+#endif
+	static const int fmvolume_tbl[100] = {
+		3269,3306,3345,3383,3423,3462,3502,3543,
+		3584,3625,3667,3710,3753,3796,3840,3885,
+		3930,3975,4021,4068,4115,4163,4211,4260,
+		4309,4359,4409,4460,4512,4564,4617,4671,
+		4725,4779,4835,4891,4947,5005,5063,5121,
+		5181,5241,5301,5363,5425,5488,5551,5615,
+		5680,5746,5813,5880,5948,6017,6087,6157,
+		6229,6301,6374,6447,6522,6598,6674,6751,
+		6829,6909,6989,7070,7151,7234,7318,7403,
+		7488,7575,7663,7752,7841,7932,8024,8117,
+		8211,8306,8402,8500,8598,8698,8798,8900,
+		9003,9107,9213,9320,9428,9537,9647,9759,
+		9872,9986,10102,10219,
+	};
+
+	int fv = fmvolume_tbl[db];
+//	ASSERT(fmvolume == fv);
+	fmvolume = fv;
 #endif
 }
 
@@ -371,7 +407,8 @@ void OPM::BuildLFOTable()
 
 			case 3:
 				if (!(c & 3))
-					r = (rand() / 17) & 0xff;
+//					r = (rand() / 17) & 0xff;
+					r = (rand_fm() / 17) & 0xff;
 				a = r;
 				p = r - 0x80;
 				break;
@@ -386,6 +423,39 @@ void OPM::BuildLFOTable()
 //			printf("%d ", p);
 		}
 	}
+
+#if 0
+	static bool firstTime = true;
+	if(firstTime) {
+		firstTime = false;
+
+		static char sbuf[1*1024*1024];
+		char *sp = &sbuf[0];
+
+		sp += sprintf(sp, "static const int fmvolume_tbl[100] = {\n");
+
+		for(int db = 0; db < 100; ++db) {
+			double offset;
+			double vol;
+
+			offset = (double)(db - 140);
+			offset /= (double)200.0;
+			vol = pow((double)10.0, offset);
+			vol *= (double)16384.0;
+			int fmvolume = int(vol);
+
+			if((db & 7) == 0) {
+				sp += sprintf(sp, "\t\t\t");
+			}
+			sp += sprintf(sp, "%d,", fmvolume);
+			if((db & 7) == 7) {
+				sp += sprintf(sp, "\n");
+			}
+		}
+		sp += sprintf(sp, "};\n");
+		OutputDebugString(&sbuf[0]);
+	}
+#endif
 }
 
 // ---------------------------------------------------------------------------
@@ -406,7 +476,8 @@ inline void OPM::LFO()
 	{
 		if ((lfo_count_ ^ lfo_count_prev_) & ~((1 << 17) - 1))
 		{
-			int c = (rand() / 17) & 0xff;
+//			int c = (rand() / 17) & 0xff;
+			int c = (rand_fm() / 17) & 0xff;
 			chip.SetPML((c - 0x80) * pmd / 128 + 0x80);
 			chip.SetAML(c * amd / 128);
 		}

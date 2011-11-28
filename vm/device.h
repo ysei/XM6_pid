@@ -10,6 +10,8 @@
 #if !defined(device_h)
 #define device_h
 
+class VM;
+
 //===========================================================================
 //
 //	デバイス
@@ -20,7 +22,7 @@ class Device
 public:
 	// 内部データ定義
 	typedef struct {
-		DWORD id;						// ID
+		uint32_t id;						// ID
 		const char *desc;				// 名称
 		Device* next;					// 次のデバイス
 	} device_t;
@@ -31,15 +33,15 @@ public:
 										// コンストラクタ
 	virtual ~Device();
 										// デストラクタ
-	virtual BOOL FASTCALL Init();
+	virtual int FASTCALL Init();
 										// 初期化
 	virtual void FASTCALL Cleanup();
 										// クリーンアップ
 	virtual void FASTCALL Reset();
 										// リセット
-	virtual BOOL FASTCALL Save(Fileio *fio, int ver);
+	virtual int FASTCALL Save(Fileio *fio, int ver);
 										// セーブ
-	virtual BOOL FASTCALL Load(Fileio *fio, int ver);
+	virtual int FASTCALL Load(Fileio *fio, int ver);
 										// ロード
 	virtual void FASTCALL ApplyCfg(const Config *config);
 										// 設定適用
@@ -53,24 +55,26 @@ public:
 										// 次のデバイスを取得
 	void FASTCALL SetNextDevice(Device *p) { dev.next = p; }
 										// 次のデバイスを設定
-	DWORD FASTCALL GetID() const		{ return dev.id; }
+	uint32_t FASTCALL GetID() const		{ return dev.id; }
 										// デバイスID取得
 	const char* FASTCALL GetDesc() const { return dev.desc; }
 										// デバイス名称取得
 	VM* FASTCALL GetVM() const			{ return vm; }
 										// VM取得
-	virtual BOOL FASTCALL Callback(Event *ev);
+	virtual int FASTCALL Callback(Event *ev);
 										// イベントコールバック
 
 protected:
+#if defined(XM6_USE_LOG)
 	Log* FASTCALL GetLog() const		{ return log; }
 										// ログ取得
+	Log *log;
+										// ログ
+#endif
 	device_t dev;
 										// 内部データ
 	VM *vm;
 										// 仮想マシン本体
-	Log *log;
-										// ログ
 };
 
 //===========================================================================
@@ -83,27 +87,27 @@ class MemDevice : public Device
 public:
 	// 内部データ定義
 	typedef struct {
-		DWORD first;					// 開始アドレス
-		DWORD last;						// 最終アドレス
+		uint32_t first;					// 開始アドレス
+		uint32_t last;						// 最終アドレス
 	} memdev_t;
 
 public:
 	// 基本ファンクション
 	MemDevice(VM *p);
 										// コンストラクタ
-	virtual BOOL FASTCALL Init();
+	virtual int FASTCALL Init();
 										// 初期化
 
 	// メモリデバイス
-	virtual DWORD FASTCALL ReadByte(DWORD addr);
+	virtual uint32_t FASTCALL ReadByte(uint32_t addr);
 										// バイト読み込み
-	virtual DWORD FASTCALL ReadWord(DWORD addr);
+	virtual uint32_t FASTCALL ReadWord(uint32_t addr);
 										// ワード読み込み
-	virtual void FASTCALL WriteByte(DWORD addr, DWORD data);
+	virtual void FASTCALL WriteByte(uint32_t addr, uint32_t data);
 										// バイト書き込み
-	virtual void FASTCALL WriteWord(DWORD addr, DWORD data);
+	virtual void FASTCALL WriteWord(uint32_t addr, uint32_t data);
 										// ワード書き込み
-	virtual DWORD FASTCALL ReadOnly(DWORD addr) const;
+	virtual uint32_t FASTCALL ReadOnly(uint32_t addr) const;
 										// 読み込みのみ
 #if !defined(NDEBUG)
 	void FASTCALL AssertDiag() const;
@@ -111,9 +115,9 @@ public:
 #endif	// NDEBUG
 
 	// 外部API
-	DWORD FASTCALL GetFirstAddr() const	{ return memdev.first; }
+	uint32_t FASTCALL GetFirstAddr() const	{ return memdev.first; }
 										// 最初のアドレスを取得
-	DWORD FASTCALL GetLastAddr() const	{ return memdev.last; }
+	uint32_t FASTCALL GetLastAddr() const	{ return memdev.last; }
 										// 最後のアドレスを取得
 
 protected:

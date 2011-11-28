@@ -53,7 +53,7 @@ FDC::FDC(VM *p) : MemDevice(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDC::Init()
+int FASTCALL FDC::Init()
 {
 	ASSERT(this);
 
@@ -76,7 +76,9 @@ BOOL FASTCALL FDC::Init()
 
 	// イベント初期化
 	event.SetDevice(this);
+#if defined(XM6_USE_EVENT_DESC)
 	event.SetDesc("Data Transfer");
+#endif
 	event.SetUser(0);
 	event.SetTime(0);
 	scheduler->AddEvent(&event);
@@ -258,7 +260,7 @@ void FASTCALL FDC::SoftReset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDC::Save(Fileio *fio, int ver)
+int FASTCALL FDC::Save(Fileio *fio, int ver)
 {
 	size_t sz;
 
@@ -291,7 +293,7 @@ BOOL FASTCALL FDC::Save(Fileio *fio, int ver)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDC::Load(Fileio *fio, int ver)
+int FASTCALL FDC::Load(Fileio *fio, int ver)
 {
 	size_t sz;
 
@@ -361,12 +363,12 @@ void FASTCALL FDC::ApplyCfg(const Config *config)
 //	バイト読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL FDC::ReadByte(DWORD addr)
+uint32_t FASTCALL FDC::ReadByte(uint32_t addr)
 {
 	int i;
 	int status;
-	DWORD bit;
-	DWORD data;
+	uint32_t bit;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -430,7 +432,7 @@ DWORD FASTCALL FDC::ReadByte(DWORD addr)
 				if ((fdc.dcr & bit) != 0) {
 					// 該当ドライブのステータスをOR(b7,b6のみ)
 					status = fdd->GetStatus(i);
-					data |= (DWORD)(status & 0xc0);
+					data |= (uint32_t)(status & 0xc0);
 				}
 				bit >>= 1;
 			}
@@ -455,7 +457,7 @@ DWORD FASTCALL FDC::ReadByte(DWORD addr)
 //	ワード読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL FDC::ReadWord(DWORD addr)
+uint32_t FASTCALL FDC::ReadWord(uint32_t addr)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -469,10 +471,10 @@ DWORD FASTCALL FDC::ReadWord(DWORD addr)
 //	バイト書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDC::WriteByte(DWORD addr, DWORD data)
+void FASTCALL FDC::WriteByte(uint32_t addr, uint32_t data)
 {
 	int i;
-	DWORD bit;
+	uint32_t bit;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -580,7 +582,7 @@ void FASTCALL FDC::WriteByte(DWORD addr, DWORD data)
 		// ドライブセレクトレジスタ
 		case 3:
 			// 下位2bitでアクセスドライブ選択
-			fdc.dsr = (DWORD)(data & 0x03);
+			fdc.dsr = (uint32_t)(data & 0x03);
 
 			// 最上位でモータ制御
 			if (data & 0x80) {
@@ -614,13 +616,13 @@ void FASTCALL FDC::WriteByte(DWORD addr, DWORD data)
 //	ワード書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDC::WriteWord(DWORD addr, DWORD data)
+void FASTCALL FDC::WriteWord(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
 	ASSERT((addr & 1) == 0);
 
-	WriteByte(addr + 1, (BYTE)data);
+	WriteByte(addr + 1, (uint8_t)data);
 }
 
 //---------------------------------------------------------------------------
@@ -628,12 +630,12 @@ void FASTCALL FDC::WriteWord(DWORD addr, DWORD data)
 //	読み込みのみ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL FDC::ReadOnly(DWORD addr) const
+uint32_t FASTCALL FDC::ReadOnly(uint32_t addr) const
 {
 	int i;
 	int status;
-	DWORD bit;
-	DWORD data;
+	uint32_t bit;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -669,7 +671,7 @@ DWORD FASTCALL FDC::ReadOnly(DWORD addr) const
 				if ((fdc.dcr & bit) != 0) {
 					// 該当ドライブのステータスをOR(b7,b6のみ)
 					status = fdd->GetStatus(i);
-					data |= (DWORD)(status & 0xc0);
+					data |= (uint32_t)(status & 0xc0);
 				}
 				bit >>= 1;
 			}
@@ -688,7 +690,7 @@ DWORD FASTCALL FDC::ReadOnly(DWORD addr) const
 //	イベントコールバック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDC::Callback(Event *ev)
+int FASTCALL FDC::Callback(Event *ev)
 {
 	int i;
 	int thres;
@@ -801,7 +803,7 @@ const FDC::fdc_t* FASTCALL FDC::GetWork() const
 //	シーク完了
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDC::CompleteSeek(int drive, BOOL status)
+void FASTCALL FDC::CompleteSeek(int drive, int status)
 {
 	ASSERT(this);
 	ASSERT((drive >= 0) && (drive <= 3));
@@ -907,9 +909,9 @@ void FASTCALL FDC::Idle()
 //	コマンドフェーズ
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDC::Command(DWORD data)
+void FASTCALL FDC::Command(uint32_t data)
 {
-	DWORD mask;
+	uint32_t mask;
 
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1172,7 +1174,7 @@ void FASTCALL FDC::Command(DWORD data)
 //	コマンドフェーズ(Read/Write系)
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDC::CommandRW(fdccmd cmd, DWORD data)
+void FASTCALL FDC::CommandRW(fdccmd cmd, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1388,7 +1390,7 @@ void FASTCALL FDC::Execute()
 //---------------------------------------------------------------------------
 void FASTCALL FDC::ReadID()
 {
-	DWORD hus;
+	uint32_t hus;
 
 	ASSERT(this);
 
@@ -1441,9 +1443,9 @@ void FASTCALL FDC::ExecuteRW()
 //	実行フェーズ(Read)
 //
 //---------------------------------------------------------------------------
-BYTE FASTCALL FDC::Read()
+uint8_t FASTCALL FDC::Read()
 {
-	BYTE data;
+	uint8_t data;
 
 	ASSERT(fdc.len > 0);
 	ASSERT(fdc.offset < 0x4000);
@@ -1503,7 +1505,7 @@ BYTE FASTCALL FDC::Read()
 //	実行フェーズ(Write)
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDC::Write(DWORD data)
+void FASTCALL FDC::Write(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(fdc.len > 0);
@@ -1512,7 +1514,7 @@ void FASTCALL FDC::Write(DWORD data)
 
 	// WRITE IDの場合はバッファに溜めるのみ
 	if (fdc.cmd == write_id) {
-		fdc.buffer[fdc.offset] = (BYTE)data;
+		fdc.buffer[fdc.offset] = (uint8_t)data;
 		fdc.offset++;
 		fdc.len--;
 
@@ -1532,7 +1534,7 @@ void FASTCALL FDC::Write(DWORD data)
 	}
 
 	// バッファへデータを書き込む
-	fdc.buffer[fdc.offset] = (BYTE)data;
+	fdc.buffer[fdc.offset] = (uint8_t)data;
 	fdc.offset++;
 	fdc.len--;
 
@@ -1569,7 +1571,7 @@ void FASTCALL FDC::Write(DWORD data)
 //	実行フェーズ(Compare)
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDC::Compare(DWORD data)
+void FASTCALL FDC::Compare(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1580,17 +1582,17 @@ void FASTCALL FDC::Compare(DWORD data)
 			// 比較が必要
 			switch (fdc.cmd) {
 				case scan_eq:
-					if (fdc.buffer[fdc.offset] != (BYTE)data) {
+					if (fdc.buffer[fdc.offset] != (uint8_t)data) {
 						fdc.err |= FDD_SCANNOT;
 					}
 					break;
 				case scan_lo_eq:
-					if (fdc.buffer[fdc.offset] > (BYTE)data) {
+					if (fdc.buffer[fdc.offset] > (uint8_t)data) {
 						fdc.err |= FDD_SCANNOT;
 					}
 					break;
 				case scan_hi_eq:
-					if (fdc.buffer[fdc.offset] < (BYTE)data) {
+					if (fdc.buffer[fdc.offset] < (uint8_t)data) {
 						fdc.err |= FDD_SCANNOT;
 					}
 					break;
@@ -1784,7 +1786,7 @@ void FASTCALL FDC::ResultRW()
 //	割り込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDC::Interrupt(BOOL flag)
+void FASTCALL FDC::Interrupt(int flag)
 {
 	ASSERT(this);
 
@@ -1831,10 +1833,10 @@ void FASTCALL FDC::MakeST3()
 //	READ (DELETED) DATAコマンド
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDC::ReadData()
+int FASTCALL FDC::ReadData()
 {
 	int len;
-	DWORD hus;
+	uint32_t hus;
 
 	ASSERT(this);
 	ASSERT((fdc.cmd == read_data) || (fdc.cmd == read_del_data));
@@ -1938,11 +1940,11 @@ BOOL FASTCALL FDC::ReadData()
 //	WRITE (DELETED) DATAコマンド
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDC::WriteData()
+int FASTCALL FDC::WriteData()
 {
 	int len;
-	DWORD hus;
-	BOOL deleted;
+	uint32_t hus;
+	int deleted;
 
 	ASSERT(this);
 	ASSERT((fdc.cmd == write_data) || (fdc.cmd == write_del_data));
@@ -2027,10 +2029,10 @@ BOOL FASTCALL FDC::WriteData()
 //	SCAN系コマンド
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDC::Scan()
+int FASTCALL FDC::Scan()
 {
 	int len;
-	DWORD hus;
+	uint32_t hus;
 
 	ASSERT(this);
 
@@ -2122,9 +2124,9 @@ BOOL FASTCALL FDC::Scan()
 //	READ DIAGNOSTICコマンド
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDC::ReadDiag()
+int FASTCALL FDC::ReadDiag()
 {
-	DWORD hus;
+	uint32_t hus;
 
 	ASSERT(this);
 	ASSERT(fdc.cmd == read_diag);
@@ -2185,9 +2187,9 @@ BOOL FASTCALL FDC::ReadDiag()
 //	WRITE IDコマンド
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDC::WriteID()
+int FASTCALL FDC::WriteID()
 {
-	DWORD hus;
+	uint32_t hus;
 
 	ASSERT(this);
 	ASSERT(fdc.cmd == write_id);
@@ -2252,7 +2254,7 @@ BOOL FASTCALL FDC::WriteID()
 //---------------------------------------------------------------------------
 void FASTCALL FDC::EventRW()
 {
-	DWORD hus;
+	uint32_t hus;
 
 	// SR設定(Non-DMA)
 	if (fdc.ndm) {
@@ -2304,7 +2306,7 @@ void FASTCALL FDC::EventRW()
 //	イベント(エラー)
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDC::EventErr(DWORD hus)
+void FASTCALL FDC::EventErr(uint32_t hus)
 {
 	// SR設定(Non-DMA)
 	if (fdc.ndm) {
@@ -2356,7 +2358,7 @@ void FASTCALL FDC::WriteBack()
 //	次セクタ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDC::NextSector()
+int FASTCALL FDC::NextSector()
 {
 	// TCチェック
 	if (fdc.tc) {

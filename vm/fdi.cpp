@@ -26,7 +26,7 @@
 //	コンストラクタ
 //
 //---------------------------------------------------------------------------
-FDISector::FDISector(BOOL mfm, const DWORD *chrn)
+FDISector::FDISector(int mfm, const uint32_t *chrn)
 {
 	int i;
 
@@ -67,7 +67,7 @@ FDISector::~FDISector()
 //	初期ロード
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDISector::Load(const BYTE *buf, int len, int gap, int err)
+void FASTCALL FDISector::Load(const uint8_t *buf, int len, int gap, int err)
 {
 	ASSERT(this);
 	ASSERT(!sec.buffer);
@@ -81,7 +81,7 @@ void FASTCALL FDISector::Load(const BYTE *buf, int len, int gap, int err)
 
 	// バッファ確保
 	try {
-		sec.buffer = new BYTE[len];
+		sec.buffer = new uint8_t[len];
 	}
 	catch (...) {
 		sec.buffer = NULL;
@@ -105,7 +105,7 @@ void FASTCALL FDISector::Load(const BYTE *buf, int len, int gap, int err)
 //	セクタマッチするか
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDISector::IsMatch(BOOL mfm, const DWORD *chrn) const
+int FASTCALL FDISector::IsMatch(int mfm, const uint32_t *chrn) const
 {
 	int i;
 
@@ -139,7 +139,7 @@ BOOL FASTCALL FDISector::IsMatch(BOOL mfm, const DWORD *chrn) const
 //	CHRNを取得
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDISector::GetCHRN(DWORD *chrn) const
+void FASTCALL FDISector::GetCHRN(uint32_t *chrn) const
 {
 	int i;
 
@@ -156,7 +156,7 @@ void FASTCALL FDISector::GetCHRN(DWORD *chrn) const
 //	リード
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDISector::Read(BYTE *buf) const
+int FASTCALL FDISector::Read(uint8_t *buf) const
 {
 	ASSERT(this);
 	ASSERT(buf);
@@ -176,7 +176,7 @@ int FASTCALL FDISector::Read(BYTE *buf) const
 //	ライト
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDISector::Write(const BYTE *buf, BOOL deleted)
+int FASTCALL FDISector::Write(const uint8_t *buf, int deleted)
 {
 	ASSERT(this);
 	ASSERT(buf);
@@ -211,10 +211,10 @@ int FASTCALL FDISector::Write(const BYTE *buf, BOOL deleted)
 //	フィル
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDISector::Fill(DWORD d)
+int FASTCALL FDISector::Fill(uint32_t d)
 {
 	int i;
-	BOOL changed;
+	int changed;
 
 	ASSERT(this);
 
@@ -226,7 +226,7 @@ int FASTCALL FDISector::Fill(DWORD d)
 	// 比較しながら書き込み
 	changed = FALSE;
 	for (i=0; i<sec.length; i++) {
-		if (sec.buffer[i] != (BYTE)d) {
+		if (sec.buffer[i] != (uint8_t)d) {
 			// 1回でも違ったら、フィルしてbreak
 			memset(sec.buffer, d, sec.length);
 			changed = TRUE;
@@ -255,7 +255,7 @@ int FASTCALL FDISector::Fill(DWORD d)
 //	コンストラクタ
 //
 //---------------------------------------------------------------------------
-FDITrack::FDITrack(FDIDisk *disk, int track, BOOL hd)
+FDITrack::FDITrack(FDIDisk *disk, int track, int hd)
 {
 	ASSERT(disk);
 	ASSERT((track >= 0) && (track <= 163));
@@ -292,11 +292,11 @@ FDITrack::~FDITrack()
 //	※2HD,DIMなどのセクタ連続書き込みタイプ向け
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDITrack::Save(const Filepath& path, DWORD offset)
+int FASTCALL FDITrack::Save(const Filepath& path, uint32_t offset)
 {
 	Fileio fio;
 	FDISector *sector;
-	BOOL changed;
+	int changed;
 
 	ASSERT(this);
 
@@ -366,10 +366,10 @@ BOOL FASTCALL FDITrack::Save(const Filepath& path, DWORD offset)
 //	※2HD,DIMなどのセクタ連続書き込みタイプ向け
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDITrack::Save(Fileio *fio, DWORD offset)
+int FASTCALL FDITrack::Save(Fileio *fio, uint32_t offset)
 {
 	FDISector *sector;
-	BOOL changed;
+	int changed;
 
 	ASSERT(this);
 	ASSERT(fio);
@@ -432,7 +432,7 @@ BOOL FASTCALL FDITrack::Save(Fileio *fio, DWORD offset)
 //	※セーブは別に行うこと
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDITrack::Create(DWORD phyfmt)
+void FASTCALL FDITrack::Create(uint32_t phyfmt)
 {
 	ASSERT(this);
 
@@ -508,8 +508,8 @@ void FASTCALL FDITrack::Create2HD(int lim)
 {
 	int i;
 	FDISector *sector;
-	DWORD chrn[4];
-	BYTE buf[0x400];
+	uint32_t chrn[4];
+	uint8_t buf[0x400];
 
 	ASSERT(this);
 	ASSERT(trk.hd);
@@ -552,8 +552,8 @@ void FASTCALL FDITrack::Create2HS()
 {
 	int i;
 	FDISector *sector;
-	DWORD chrn[4];
-	BYTE buf[0x400];
+	uint32_t chrn[4];
+	uint8_t buf[0x400];
 
 	ASSERT(this);
 	ASSERT(trk.hd);
@@ -601,8 +601,8 @@ void FASTCALL FDITrack::Create2HC()
 {
 	int i;
 	FDISector *sector;
-	DWORD chrn[4];
-	BYTE buf[0x200];
+	uint32_t chrn[4];
+	uint8_t buf[0x200];
 
 	ASSERT(this);
 	ASSERT(trk.hd);
@@ -645,8 +645,8 @@ void FASTCALL FDITrack::Create2HDE()
 {
 	int i;
 	FDISector *sector;
-	DWORD chrn[4];
-	BYTE buf[0x400];
+	uint32_t chrn[4];
+	uint8_t buf[0x400];
 
 	ASSERT(this);
 	ASSERT(trk.hd);
@@ -694,8 +694,8 @@ void FASTCALL FDITrack::Create2HQ()
 {
 	int i;
 	FDISector *sector;
-	DWORD chrn[4];
-	BYTE buf[0x200];
+	uint32_t chrn[4];
+	uint8_t buf[0x200];
 
 	ASSERT(this);
 	ASSERT(trk.hd);
@@ -738,8 +738,8 @@ void FASTCALL FDITrack::CreateN88B()
 {
 	int i;
 	FDISector *sector;
-	DWORD chrn[4];
-	BYTE buf[0x100];
+	uint32_t chrn[4];
+	uint8_t buf[0x100];
 
 	ASSERT(this);
 	ASSERT(trk.hd);
@@ -802,8 +802,8 @@ void FASTCALL FDITrack::CreateOS9()
 {
 	int i;
 	FDISector *sector;
-	DWORD chrn[4];
-	BYTE buf[0x100];
+	uint32_t chrn[4];
+	uint8_t buf[0x100];
 
 	ASSERT(this);
 	ASSERT(trk.hd);
@@ -846,8 +846,8 @@ void FASTCALL FDITrack::Create2DD()
 {
 	int i;
 	FDISector *sector;
-	DWORD chrn[4];
-	BYTE buf[0x200];
+	uint32_t chrn[4];
+	uint8_t buf[0x200];
 
 	ASSERT(this);
 	ASSERT(!trk.hd);
@@ -891,10 +891,10 @@ void FASTCALL FDITrack::Create2DD()
 //						または有効なセクタすべてID CRC
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDITrack::ReadID(DWORD *buf, BOOL mfm)
+int FASTCALL FDITrack::ReadID(uint32_t *buf, int mfm)
 {
 	FDISector *sector;
-	DWORD pos;
+	uint32_t pos;
 	int status;
 	int num;
 	int match;
@@ -1002,11 +1002,11 @@ int FASTCALL FDITrack::ReadID(DWORD *buf, BOOL mfm)
 //		FDD_DDAM		デリーテッドセクタである
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDITrack::ReadSector(BYTE *buf, int *len, BOOL mfm, const DWORD *chrn)
+int FASTCALL FDITrack::ReadSector(uint8_t *buf, int *len, int mfm, const uint32_t *chrn)
 {
 	FDISector *sector;
-	DWORD work[4];
-	DWORD pos;
+	uint32_t work[4];
+	uint32_t pos;
 	int status;
 	int i;
 	int num;
@@ -1118,11 +1118,11 @@ int FASTCALL FDITrack::ReadSector(BYTE *buf, int *len, BOOL mfm, const DWORD *ch
 //		FDD_DDAM		デリーテッドセクタである
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDITrack::WriteSector(const BYTE *buf, int *len, BOOL mfm, const DWORD *chrn, BOOL deleted)
+int FASTCALL FDITrack::WriteSector(const uint8_t *buf, int *len, int mfm, const uint32_t *chrn, int deleted)
 {
 	FDISector *sector;
-	DWORD work[4];
-	DWORD pos;
+	uint32_t work[4];
+	uint32_t pos;
 	int status;
 	int i;
 	int num;
@@ -1233,19 +1233,19 @@ int FASTCALL FDITrack::WriteSector(const BYTE *buf, int *len, BOOL mfm, const DW
 //		FDD_DDAM		デリーテッドセクタである
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDITrack::ReadDiag(BYTE *buf, int *len, BOOL mfm, const DWORD *chrn)
+int FASTCALL FDITrack::ReadDiag(uint8_t *buf, int *len, int mfm, const uint32_t *chrn)
 {
 	FDISector *sector;
-	DWORD work[4];
+	uint32_t work[4];
 	int num;
 	int total;
 	int start;
 	int length;
 	int status;
 	int error;
-	BYTE *ptr;
-	DWORD pos;
-	BOOL found;
+	uint8_t *ptr;
+	uint32_t pos;
+	int found;
 
 	ASSERT(this);
 	ASSERT(len);
@@ -1275,7 +1275,7 @@ int FASTCALL FDITrack::ReadDiag(BYTE *buf, int *len, BOOL mfm, const DWORD *chrn
 
 	// ワーク確保
 	try {
-		ptr = new BYTE[0x4000];
+		ptr = new uint8_t[0x4000];
 	}
 	catch (...) {
 		return FDD_NODATA | FDD_MAM;
@@ -1402,13 +1402,13 @@ int FASTCALL FDITrack::ReadDiag(BYTE *buf, int *len, BOOL mfm, const DWORD *chrn
 //		FDD_NOTWRITE	書き込み禁止
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDITrack::WriteID(const BYTE *buf, DWORD d, int sc, BOOL mfm, int /*gpl*/)
+int FASTCALL FDITrack::WriteID(const uint8_t *buf, uint32_t d, int sc, int mfm, int /*gpl*/)
 {
 	FDISector *sector;
-	DWORD chrn[4];
+	uint32_t chrn[4];
 	int num;
 	int i;
-	DWORD pos;
+	uint32_t pos;
 
 	ASSERT(this);
 	ASSERT(sc > 0);
@@ -1451,10 +1451,10 @@ int FASTCALL FDITrack::WriteID(const BYTE *buf, DWORD d, int sc, BOOL mfm, int /
 	while (sector) {
 		// bufの中から調べる
 		for (i=0; i<sc; i++) {
-			chrn[0] = (DWORD)buf[i * 4 + 0];
-			chrn[1] = (DWORD)buf[i * 4 + 1];
-			chrn[2] = (DWORD)buf[i * 4 + 2];
-			chrn[3] = (DWORD)buf[i * 4 + 3];
+			chrn[0] = (uint32_t)buf[i * 4 + 0];
+			chrn[1] = (uint32_t)buf[i * 4 + 1];
+			chrn[2] = (uint32_t)buf[i * 4 + 2];
+			chrn[3] = (uint32_t)buf[i * 4 + 3];
 			if (sector->IsMatch(mfm, chrn)) {
 				break;
 			}
@@ -1485,9 +1485,9 @@ int FASTCALL FDITrack::WriteID(const BYTE *buf, DWORD d, int sc, BOOL mfm, int /
 //	変更チェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDITrack::IsChanged() const
+int FASTCALL FDITrack::IsChanged() const
 {
-	BOOL changed;
+	int changed;
 	FDISector *sector;
 
 	ASSERT(this);
@@ -1512,9 +1512,9 @@ BOOL FASTCALL FDITrack::IsChanged() const
 //	セクタレングス累計算出
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL FDITrack::GetTotalLength() const
+uint32_t FASTCALL FDITrack::GetTotalLength() const
 {
-	DWORD total;
+	uint32_t total;
 	FDISector *sector;
 
 	ASSERT(this);
@@ -1624,7 +1624,7 @@ void FASTCALL FDITrack::ClrSector()
 //	セクタ検索
 //
 //---------------------------------------------------------------------------
-FDISector* FASTCALL FDITrack::Search(BOOL mfm, const DWORD *chrn)
+FDISector* FASTCALL FDITrack::Search(int mfm, const uint32_t *chrn)
 {
 	FDISector *sector;
 
@@ -1704,9 +1704,9 @@ int FASTCALL FDITrack::GetTotal() const
 void FASTCALL FDITrack::CalcPos()
 {
 	FDISector *sector;
-	DWORD total;
-	DWORD prev;
-	DWORD hus;
+	uint32_t total;
+	uint32_t prev;
+	uint32_t hus;
 	FDISector *p;
 
 	ASSERT(this);
@@ -1769,9 +1769,9 @@ void FASTCALL FDITrack::CalcPos()
 //	セクタのサイズを得る
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL FDITrack::GetSize(FDISector *sector) const
+uint32_t FASTCALL FDITrack::GetSize(FDISector *sector) const
 {
-	DWORD len;
+	uint32_t len;
 
 	ASSERT(this);
 	ASSERT(sector);
@@ -1812,8 +1812,8 @@ DWORD FASTCALL FDITrack::GetSize(FDISector *sector) const
 //---------------------------------------------------------------------------
 FDISector* FASTCALL FDITrack::GetCurSector() const
 {
-	DWORD cur;
-	DWORD pos;
+	uint32_t cur;
+	uint32_t pos;
 	FDISector *sector;
 
 	ASSERT(this);
@@ -1845,7 +1845,7 @@ FDISector* FASTCALL FDITrack::GetCurSector() const
 //	GAP1作成
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDITrack::MakeGAP1(BYTE *buf, int offset) const
+int FASTCALL FDITrack::MakeGAP1(uint8_t *buf, int offset) const
 {
 	ASSERT(this);
 	ASSERT(buf);
@@ -1880,12 +1880,12 @@ int FASTCALL FDITrack::MakeGAP1(BYTE *buf, int offset) const
 //	セクタデータ作成
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDITrack::MakeSector(BYTE *buf, int offset, FDISector *sector) const
+int FASTCALL FDITrack::MakeSector(uint8_t *buf, int offset, FDISector *sector) const
 {
-	DWORD chrn[4];
+	uint32_t chrn[4];
 	int i;
-	WORD crc;
-	const BYTE *ptr;
+uint16_t crc;
+	const uint8_t *ptr;
 	int len;
 
 	ASSERT(this);
@@ -1905,12 +1905,12 @@ int FASTCALL FDITrack::MakeSector(BYTE *buf, int offset, FDISector *sector) cons
 		offset = MakeData(buf, offset, 0xa1, 3);
 		offset = MakeData(buf, offset, 0xfe, 1);
 		for (i=0; i<4; i++) {
-			buf[offset + i] = (BYTE)chrn[i];
+			buf[offset + i] = (uint8_t)chrn[i];
 		}
 		offset += 4;
 		crc = CalcCRC(&buf[offset - 8], 8);
-		buf[offset + 0] = (BYTE)(crc >> 8);
-		buf[offset + 1] = (BYTE)crc;
+		buf[offset + 0] = (uint8_t)(crc >> 8);
+		buf[offset + 1] = (uint8_t)crc;
 		offset += 2;
 		offset = MakeData(buf, offset, 0x4e, 22);
 
@@ -1926,8 +1926,8 @@ int FASTCALL FDITrack::MakeSector(BYTE *buf, int offset, FDISector *sector) cons
 		memcpy(&buf[offset], ptr, len);
 		crc = CalcCRC(&buf[offset - 4], len + 4);
 		offset += len;
-		buf[offset + 0] = (BYTE)(crc >> 8);
-		buf[offset + 1] = (BYTE)crc;
+		buf[offset + 0] = (uint8_t)(crc >> 8);
+		buf[offset + 1] = (uint8_t)crc;
 		offset += 2;
 		offset = MakeData(buf, offset, 0x4e, sector->GetGAP3());
 		return offset;
@@ -1937,12 +1937,12 @@ int FASTCALL FDITrack::MakeSector(BYTE *buf, int offset, FDISector *sector) cons
 	offset = MakeData(buf, offset, 0x00, 6);
 	offset = MakeData(buf, offset, 0xfe, 1);
 	for (i=0; i<4; i++) {
-		buf[offset + i] = (BYTE)chrn[i];
+		buf[offset + i] = (uint8_t)chrn[i];
 	}
 	offset += 4;
 	crc = CalcCRC(&buf[offset - 5], 5);
-	buf[offset + 0] = (BYTE)(crc >> 8);
-	buf[offset + 1] = (BYTE)crc;
+	buf[offset + 0] = (uint8_t)(crc >> 8);
+	buf[offset + 1] = (uint8_t)crc;
 	offset += 2;
 	offset = MakeData(buf, offset, 0xff, 11);
 
@@ -1957,8 +1957,8 @@ int FASTCALL FDITrack::MakeSector(BYTE *buf, int offset, FDISector *sector) cons
 	memcpy(&buf[offset], ptr, len);
 	crc = CalcCRC(&buf[offset - 1], len + 1);
 	offset += len;
-	buf[offset + 0] = (BYTE)(crc >> 8);
-	buf[offset + 1] = (BYTE)crc;
+	buf[offset + 0] = (uint8_t)(crc >> 8);
+	buf[offset + 1] = (uint8_t)crc;
 	offset += 2;
 	offset = MakeData(buf, offset, 0xff, sector->GetGAP3());
 
@@ -1970,7 +1970,7 @@ int FASTCALL FDITrack::MakeSector(BYTE *buf, int offset, FDISector *sector) cons
 //	GAP4作成
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDITrack::MakeGAP4(BYTE *buf, int offset) const
+int FASTCALL FDITrack::MakeGAP4(uint8_t *buf, int offset) const
 {
 	ASSERT(this);
 	ASSERT(buf);
@@ -1989,9 +1989,9 @@ int FASTCALL FDITrack::MakeGAP4(BYTE *buf, int offset) const
 //	CRC算出
 //
 //---------------------------------------------------------------------------
-WORD FASTCALL FDITrack::CalcCRC(BYTE *ptr, int len) const
+uint16_t FASTCALL FDITrack::CalcCRC(uint8_t *ptr, int len) const
 {
-	WORD crc;
+uint16_t crc;
 	int i;
 
 	ASSERT(this);
@@ -2003,7 +2003,7 @@ WORD FASTCALL FDITrack::CalcCRC(BYTE *ptr, int len) const
 
 	// ループ
 	for (i=0; i<len; i++) {
-		crc = (WORD)((crc << 8) ^ CRCTable[ (BYTE)(crc >> 8) ^ (BYTE)*ptr++ ]);
+		crc = (uint16_t)((crc << 8) ^ CRCTable[ (uint8_t)(crc >> 8) ^ (uint8_t)*ptr++ ]);
 	}
 
 	return crc;
@@ -2014,7 +2014,7 @@ WORD FASTCALL FDITrack::CalcCRC(BYTE *ptr, int len) const
 //	CRC算出テーブル
 //
 //---------------------------------------------------------------------------
-const WORD FDITrack::CRCTable[0x100] = {
+const uint16_t FDITrack::CRCTable[0x100] = {
 	0x0000,  0x1021,  0x2042,  0x3063,  0x4084,  0x50a5,  0x60c6,  0x70e7,
 	0x8108,  0x9129,  0xa14a,  0xb16b,  0xc18c,  0xd1ad,  0xe1ce,  0xf1ef,
 	0x1231,  0x0210,  0x3273,  0x2252,  0x52b5,  0x4294,  0x72f7,  0x62d6,
@@ -2054,7 +2054,7 @@ const WORD FDITrack::CRCTable[0x100] = {
 //	Diagデータ作成
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDITrack::MakeData(BYTE *buf, int offset, BYTE data, int length) const
+int FASTCALL FDITrack::MakeData(uint8_t *buf, int offset, uint8_t data, int length) const
 {
 	int i;
 
@@ -2130,7 +2130,7 @@ FDIDisk::~FDIDisk()
 //		物理フォーマットを行う(仮想関数の最後で、ここを呼ぶこと)
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDIDisk::Create(const Filepath& /*path*/, const option_t *opt)
+int FASTCALL FDIDisk::Create(const Filepath& /*path*/, const option_t *opt)
 {
 	ASSERT(this);
 	ASSERT(opt);
@@ -2190,12 +2190,12 @@ BOOL FASTCALL FDIDisk::Create(const Filepath& /*path*/, const option_t *opt)
 //	論理フォーマット(2HD,2HDA)
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDIDisk::Create2HD(BOOL flag2hd)
+void FASTCALL FDIDisk::Create2HD(int flag2hd)
 {
 	FDITrack *track;
 	FDISector *sector;
-	BYTE buf[0x400];
-	DWORD chrn[4];
+	uint8_t buf[0x400];
+	uint32_t chrn[4];
 	int i;
 
 	ASSERT(this);
@@ -2279,7 +2279,7 @@ void FASTCALL FDIDisk::Create2HD(BOOL flag2hd)
 //	※FORMAT.x v2.31より取得したもの
 //
 //---------------------------------------------------------------------------
-const BYTE FDIDisk::IPL2HD[0x200] = {
+const uint8_t FDIDisk::IPL2HD[0x200] = {
 	0x60,0x3c,0x90,0x58,0x36,0x38,0x49,0x50,
 	0x4c,0x33,0x30,0x00,0x04,0x01,0x01,0x00,
 	0x02,0xc0,0x00,0xd0,0x04,0xfe,0x02,0x00,
@@ -2355,8 +2355,8 @@ void FASTCALL FDIDisk::Create2HS()
 {
 	FDITrack *track;
 	FDISector *sector;
-	BYTE buf[0x400];
-	DWORD chrn[4];
+	uint8_t buf[0x400];
+	uint32_t chrn[4];
 	int i;
 
 	ASSERT(this);
@@ -2429,7 +2429,7 @@ void FASTCALL FDIDisk::Create2HS()
 //	※9scdrv.x v3.00より取得したもの
 //
 //---------------------------------------------------------------------------
-const BYTE FDIDisk::IPL2HS[0x800] = {
+const uint8_t FDIDisk::IPL2HS[0x800] = {
 	0x60,0x1e,0x39,0x53,0x43,0x46,0x4d,0x54,
 	0x20,0x49,0x50,0x4c,0x20,0x76,0x31,0x2e,
 	0x30,0x32,0x04,0x00,0x01,0x03,0x00,0x01,
@@ -2697,8 +2697,8 @@ void FASTCALL FDIDisk::Create2HC()
 {
 	FDITrack *track;
 	FDISector *sector;
-	BYTE buf[0x200];
-	DWORD chrn[4];
+	uint8_t buf[0x200];
+	uint32_t chrn[4];
 	int i;
 
 	ASSERT(this);
@@ -2713,7 +2713,7 @@ void FASTCALL FDIDisk::Create2HC()
 	chrn[1] = 0;
 	chrn[3] = 2;
 	for (i=1; i<=15; i++) {
-		chrn[2] = (BYTE)i;
+		chrn[2] = (uint8_t)i;
 		sector = track->Search(TRUE, chrn);
 		ASSERT(sector);
 		sector->Write(buf, FALSE);
@@ -2724,7 +2724,7 @@ void FASTCALL FDIDisk::Create2HC()
 	chrn[1] = 1;
 	chrn[3] = 2;
 	for (i=1; i<=14; i++) {
-		chrn[2] = (BYTE)i;
+		chrn[2] = (uint8_t)i;
 		sector = track->Search(TRUE, chrn);
 		ASSERT(sector);
 		sector->Write(buf, FALSE);
@@ -2773,7 +2773,7 @@ void FASTCALL FDIDisk::Create2HC()
 //	※FORMAT.x v2.31より取得したもの
 //
 //---------------------------------------------------------------------------
-const BYTE FDIDisk::IPL2HC[0x200] = {
+const uint8_t FDIDisk::IPL2HC[0x200] = {
 	0x60,0x3c,0x90,0x58,0x36,0x38,0x49,0x50,
 	0x4c,0x33,0x30,0x00,0x02,0x01,0x01,0x00,
 	0x02,0xe0,0x00,0x60,0x09,0xf9,0x07,0x00,
@@ -2849,8 +2849,8 @@ void FASTCALL FDIDisk::Create2HDE()
 {
 	FDITrack *track;
 	FDISector *sector;
-	BYTE buf[0x400];
-	DWORD chrn[4];
+	uint8_t buf[0x400];
+	uint32_t chrn[4];
 	int i;
 
 	ASSERT(this);
@@ -2934,7 +2934,7 @@ void FASTCALL FDIDisk::Create2HDE()
 //	※9scdrv.x v3.00より取得したもの
 //
 //---------------------------------------------------------------------------
-const BYTE FDIDisk::IPL2HDE[0x800] = {
+const uint8_t FDIDisk::IPL2HDE[0x800] = {
 	0x60,0x20,0x32,0x48,0x44,0x45,0x20,0x76,
 	0x31,0x2e,0x31,0x00,0x00,0x04,0x01,0x01,
 	0x00,0x02,0xc0,0x00,0xa0,0x05,0x03,0x03,
@@ -3202,8 +3202,8 @@ void FASTCALL FDIDisk::Create2HQ()
 {
 	FDITrack *track;
 	FDISector *sector;
-	BYTE buf[0x200];
-	DWORD chrn[4];
+	uint8_t buf[0x200];
+	uint32_t chrn[4];
 	int i;
 
 	ASSERT(this);
@@ -3278,7 +3278,7 @@ void FASTCALL FDIDisk::Create2HQ()
 //	※FORMAT.x v2.31より取得したもの
 //
 //---------------------------------------------------------------------------
-const BYTE FDIDisk::IPL2HQ[0x200] = {
+const uint8_t FDIDisk::IPL2HQ[0x200] = {
 	0xeb,0xfe,0x90,0x58,0x36,0x38,0x49,0x50,
 	0x4c,0x33,0x30,0x00,0x02,0x01,0x01,0x00,
 	0x02,0xe0,0x00,0x40,0x0b,0xf0,0x09,0x00,
@@ -3354,8 +3354,8 @@ void FASTCALL FDIDisk::Create2DD()
 {
 	FDITrack *track;
 	FDISector *sector;
-	BYTE buf[0x200];
-	DWORD chrn[4];
+	uint8_t buf[0x200];
+	uint32_t chrn[4];
 	int i;
 
 	ASSERT(this);
@@ -3451,7 +3451,7 @@ void FASTCALL FDIDisk::Create2DD()
 //		呼び出した後で、現在のシリンダへシークする
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDIDisk::Open(const Filepath& /*path*/, DWORD /*offset*/)
+int FASTCALL FDIDisk::Open(const Filepath& /*path*/, uint32_t /*offset*/)
 {
 	// 純粋仮想クラス的
 	ASSERT(FALSE);
@@ -3463,7 +3463,7 @@ BOOL FASTCALL FDIDisk::Open(const Filepath& /*path*/, DWORD /*offset*/)
 //	書き込み禁止設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDIDisk::WriteP(BOOL flag)
+void FASTCALL FDIDisk::WriteP(int flag)
 {
 	ASSERT(this);
 
@@ -3482,7 +3482,7 @@ void FASTCALL FDIDisk::WriteP(BOOL flag)
 //	フラッシュ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDIDisk::Flush()
+int FASTCALL FDIDisk::Flush()
 {
 	ASSERT(this);
 
@@ -3538,10 +3538,10 @@ void FASTCALL FDIDisk::Seek(int /*c*/)
 //						または有効なセクタすべてID CRC
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDIDisk::ReadID(DWORD *buf, BOOL mfm, int hd)
+int FASTCALL FDIDisk::ReadID(uint32_t *buf, int mfm, int hd)
 {
 	FDITrack *track;
-	DWORD pos;
+	uint32_t pos;
 
 	ASSERT(this);
 	ASSERT(buf);
@@ -3583,10 +3583,10 @@ int FASTCALL FDIDisk::ReadID(DWORD *buf, BOOL mfm, int hd)
 //		FDD_DDAM		デリーテッドセクタである
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDIDisk::ReadSector(BYTE *buf, int *len, BOOL mfm, const DWORD *chrn, int hd)
+int FASTCALL FDIDisk::ReadSector(uint8_t *buf, int *len, int mfm, const uint32_t *chrn, int hd)
 {
 	FDITrack *track;
-	DWORD pos;
+	uint32_t pos;
 
 	ASSERT(this);
 	ASSERT(len);
@@ -3629,10 +3629,10 @@ int FASTCALL FDIDisk::ReadSector(BYTE *buf, int *len, BOOL mfm, const DWORD *chr
 //		FDD_DDAM		デリーテッドセクタである
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDIDisk::WriteSector(const BYTE *buf, int *len, BOOL mfm, const DWORD *chrn, int hd, BOOL deleted)
+int FASTCALL FDIDisk::WriteSector(const uint8_t *buf, int *len, int mfm, const uint32_t *chrn, int hd, int deleted)
 {
 	FDITrack *track;
-	DWORD pos;
+	uint32_t pos;
 
 	ASSERT(this);
 	ASSERT(len);
@@ -3678,10 +3678,10 @@ int FASTCALL FDIDisk::WriteSector(const BYTE *buf, int *len, BOOL mfm, const DWO
 //		FDD_DDAM		デリーテッドセクタである
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDIDisk::ReadDiag(BYTE *buf, int *len, BOOL mfm, const DWORD *chrn, int hd)
+int FASTCALL FDIDisk::ReadDiag(uint8_t *buf, int *len, int mfm, const uint32_t *chrn, int hd)
 {
 	FDITrack *track;
-	DWORD pos;
+	uint32_t pos;
 
 	ASSERT(this);
 	ASSERT(len);
@@ -3717,7 +3717,7 @@ int FASTCALL FDIDisk::ReadDiag(BYTE *buf, int *len, BOOL mfm, const DWORD *chrn,
 //		FDD_NOTWRITE	メディアは書き込み禁止
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDIDisk::WriteID(const BYTE *buf, DWORD d, int sc, BOOL mfm, int hd, int gpl)
+int FASTCALL FDIDisk::WriteID(const uint8_t *buf, uint32_t d, int sc, int mfm, int hd, int gpl)
 {
 	FDITrack *track;
 
@@ -3751,7 +3751,7 @@ int FASTCALL FDIDisk::WriteID(const BYTE *buf, DWORD d, int sc, BOOL mfm, int hd
 //	回転位置取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL FDIDisk::GetRotationPos() const
+uint32_t FASTCALL FDIDisk::GetRotationPos() const
 {
 	ASSERT(this);
 	ASSERT(GetFDI());
@@ -3765,7 +3765,7 @@ DWORD FASTCALL FDIDisk::GetRotationPos() const
 //	回転時間取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL FDIDisk::GetRotationTime() const
+uint32_t FASTCALL FDIDisk::GetRotationTime() const
 {
 	ASSERT(this);
 
@@ -3780,10 +3780,10 @@ DWORD FASTCALL FDIDisk::GetRotationTime() const
 //	検索長さ算出
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDIDisk::CalcSearch(DWORD pos)
+void FASTCALL FDIDisk::CalcSearch(uint32_t pos)
 {
-	DWORD cur;
-	DWORD hus;
+	uint32_t cur;
+	uint32_t hus;
 
 	ASSERT(this);
 
@@ -3808,7 +3808,7 @@ void FASTCALL FDIDisk::CalcSearch(DWORD pos)
 //	HDフラグ取得
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDIDisk::IsHD() const
+int FASTCALL FDIDisk::IsHD() const
 {
 	ASSERT(this);
 	ASSERT(GetFDI());
@@ -3932,7 +3932,7 @@ FDI::~FDI()
 //		呼び出した後で、現在のシリンダへシークする
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDI::Open(const Filepath& path, int media = 0)
+int FASTCALL FDI::Open(const Filepath& path, int media = 0)
 {
 	FDIDisk2HD *disk2hd;
 	FDIDiskDIM *diskdim;
@@ -3942,7 +3942,7 @@ BOOL FASTCALL FDI::Open(const Filepath& path, int media = 0)
 	FDIDiskBAD *diskbad;
 	int i;
 	int num;
-	DWORD offset[0x10];
+	uint32_t offset[0x10];
 
 	ASSERT(this);
 	ASSERT((media >= 0) && (media < 0x10));
@@ -4034,7 +4034,7 @@ BOOL FASTCALL FDI::Open(const Filepath& path, int media = 0)
 //	ID取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL FDI::GetID() const
+uint32_t FASTCALL FDI::GetID() const
 {
 	ASSERT(this);
 
@@ -4052,7 +4052,7 @@ DWORD FASTCALL FDI::GetID() const
 //	マルチディスクか
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDI::IsMulti() const
+int FASTCALL FDI::IsMulti() const
 {
 	ASSERT(this);
 
@@ -4141,7 +4141,7 @@ void FASTCALL FDI::GetPath(Filepath& path) const
 //	レディチェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDI::IsReady() const
+int FASTCALL FDI::IsReady() const
 {
 	ASSERT(this);
 
@@ -4157,7 +4157,7 @@ BOOL FASTCALL FDI::IsReady() const
 //	書き込み禁止か
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDI::IsWriteP() const
+int FASTCALL FDI::IsWriteP() const
 {
 	// ノットレディならFALSE
 	if (!IsReady()) {
@@ -4173,7 +4173,7 @@ BOOL FASTCALL FDI::IsWriteP() const
 //	Read Onlyディスクイメージか
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDI::IsReadOnly() const
+int FASTCALL FDI::IsReadOnly() const
 {
 	// ノットレディならFALSE
 	if (!IsReady()) {
@@ -4189,7 +4189,7 @@ BOOL FASTCALL FDI::IsReadOnly() const
 //	書き込み禁止セット
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDI::WriteP(BOOL flag)
+void FASTCALL FDI::WriteP(int flag)
 {
 	ASSERT(this);
 
@@ -4229,7 +4229,7 @@ void FASTCALL FDI::Seek(int c)
 //						または有効なセクタすべてID CRC
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDI::ReadID(DWORD *buf, BOOL mfm, int hd)
+int FASTCALL FDI::ReadID(uint32_t *buf, int mfm, int hd)
 {
 	ASSERT(this);
 	ASSERT(buf);
@@ -4260,7 +4260,7 @@ int FASTCALL FDI::ReadID(DWORD *buf, BOOL mfm, int hd)
 //		FDD_DDAM		デリーテッドセクタである
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDI::ReadSector(BYTE *buf, int *len, BOOL mfm, const DWORD *chrn, int hd)
+int FASTCALL FDI::ReadSector(uint8_t *buf, int *len, int mfm, const uint32_t *chrn, int hd)
 {
 	ASSERT(this);
 	ASSERT(len);
@@ -4292,7 +4292,7 @@ int FASTCALL FDI::ReadSector(BYTE *buf, int *len, BOOL mfm, const DWORD *chrn, i
 //		FDD_DDAM		デリーテッドセクタである
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDI::WriteSector(const BYTE *buf, int *len, BOOL mfm, const DWORD *chrn, int hd, BOOL deleted)
+int FASTCALL FDI::WriteSector(const uint8_t *buf, int *len, int mfm, const uint32_t *chrn, int hd, int deleted)
 {
 	ASSERT(this);
 	ASSERT(len);
@@ -4321,7 +4321,7 @@ int FASTCALL FDI::WriteSector(const BYTE *buf, int *len, BOOL mfm, const DWORD *
 //		FDD_DDAM		デリーテッドセクタである
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDI::ReadDiag(BYTE *buf, int *len, BOOL mfm, const DWORD *chrn, int hd)
+int FASTCALL FDI::ReadDiag(uint8_t *buf, int *len, int mfm, const uint32_t *chrn, int hd)
 {
 	ASSERT(this);
 	ASSERT(len);
@@ -4346,7 +4346,7 @@ int FASTCALL FDI::ReadDiag(BYTE *buf, int *len, BOOL mfm, const DWORD *chrn, int
 //		FDD_NOTWRITE	メディアは書き込み禁止
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDI::WriteID(const BYTE *buf, DWORD d, int sc, BOOL mfm, int hd, int gpl)
+int FASTCALL FDI::WriteID(const uint8_t *buf, uint32_t d, int sc, int mfm, int hd, int gpl)
 {
 	ASSERT(this);
 	ASSERT(sc > 0);
@@ -4366,7 +4366,7 @@ int FASTCALL FDI::WriteID(const BYTE *buf, DWORD d, int sc, BOOL mfm, int hd, in
 //	回転位置取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL FDI::GetRotationPos() const
+uint32_t FASTCALL FDI::GetRotationPos() const
 {
 	ASSERT(this);
 	ASSERT(GetFDD());
@@ -4380,7 +4380,7 @@ DWORD FASTCALL FDI::GetRotationPos() const
 //	回転時間取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL FDI::GetRotationTime() const
+uint32_t FASTCALL FDI::GetRotationTime() const
 {
 	ASSERT(this);
 	ASSERT(GetFDD());
@@ -4394,7 +4394,7 @@ DWORD FASTCALL FDI::GetRotationTime() const
 //	検索時間取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL FDI::GetSearch() const
+uint32_t FASTCALL FDI::GetSearch() const
 {
 	FDIDisk *disk;
 
@@ -4415,7 +4415,7 @@ DWORD FASTCALL FDI::GetSearch() const
 //	HDフラグ取得
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDI::IsHD() const
+int FASTCALL FDI::IsHD() const
 {
 	ASSERT(this);
 	ASSERT(GetFDD());
@@ -4517,9 +4517,9 @@ FDIDisk* FASTCALL FDI::Search(int index) const
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDI::Save(Fileio *fio, int ver)
+int FASTCALL FDI::Save(Fileio *fio, int ver)
 {
-	BOOL ready;
+	int ready;
 	FDIDisk *disk;
 	Filepath path;
 	int i;
@@ -4570,7 +4570,7 @@ BOOL FASTCALL FDI::Save(Fileio *fio, int ver)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDI::Load(Fileio *fio, int ver, BOOL *ready, int *media, Filepath& path)
+int FASTCALL FDI::Load(Fileio *fio, int ver, int *ready, int *media, Filepath& path)
 {
 	ASSERT(this);
 	ASSERT(fio);
@@ -4580,7 +4580,7 @@ BOOL FASTCALL FDI::Load(Fileio *fio, int ver, BOOL *ready, int *media, Filepath&
 	ASSERT(GetDisks() == 0);
 
 	// レディフラグを読み込む
-	if (!fio->Read(ready, sizeof(BOOL))) {
+	if (!fio->Read(ready, sizeof(int))) {
 		return FALSE;
 	}
 
@@ -4652,11 +4652,11 @@ FDITrack2HD::FDITrack2HD(FDIDisk *disk, int track) : FDITrack(disk, track)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDITrack2HD::Load(const Filepath& path, DWORD offset)
+int FASTCALL FDITrack2HD::Load(const Filepath& path, uint32_t offset)
 {
 	Fileio fio;
-	BYTE buf[0x400];
-	DWORD chrn[4];
+	uint8_t buf[0x400];
+	uint32_t chrn[4];
 	int i;
 	FDISector *sector;
 
@@ -4746,7 +4746,7 @@ FDIDisk2HD::FDIDisk2HD(int index, FDI *fdi) : FDIDisk(index, fdi)
 FDIDisk2HD::~FDIDisk2HD()
 {
 	int i;
-	DWORD offset;
+	uint32_t offset;
 	FDITrack *track;
 
 	// 最後のトラックデータを書き込む
@@ -4772,10 +4772,10 @@ FDIDisk2HD::~FDIDisk2HD()
 //	オープン
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDIDisk2HD::Open(const Filepath& path, DWORD offset)
+int FASTCALL FDIDisk2HD::Open(const Filepath& path, uint32_t offset)
 {
 	Fileio fio;
-	DWORD size;
+	uint32_t size;
 	FDITrack2HD *track;
 	int i;
 
@@ -4835,7 +4835,7 @@ void FASTCALL FDIDisk2HD::Seek(int c)
 {
 	int i;
 	FDITrack2HD *track;
-	DWORD offset;
+	uint32_t offset;
 
 	ASSERT(this);
 	ASSERT((c >= 0) && (c < 82));
@@ -4884,11 +4884,11 @@ void FASTCALL FDIDisk2HD::Seek(int c)
 //	新規ディスク作成
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDIDisk2HD::Create(const Filepath& path, const option_t *opt)
+int FASTCALL FDIDisk2HD::Create(const Filepath& path, const option_t *opt)
 {
 	int i;
 	FDITrack2HD *track;
-	DWORD offset;
+	uint32_t offset;
 	Fileio fio;
 
 	ASSERT(this);
@@ -4953,10 +4953,10 @@ BOOL FASTCALL FDIDisk2HD::Create(const Filepath& path, const option_t *opt)
 //	フラッシュ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDIDisk2HD::Flush()
+int FASTCALL FDIDisk2HD::Flush()
 {
 	int i;
-	DWORD offset;
+	uint32_t offset;
 	FDITrack *track;
 
 	ASSERT(this);
@@ -5059,11 +5059,11 @@ FDITrackDIM::FDITrackDIM(FDIDisk *disk, int track, int type) : FDITrack(disk, tr
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDITrackDIM::Load(const Filepath& path, DWORD offset, BOOL load)
+int FASTCALL FDITrackDIM::Load(const Filepath& path, uint32_t offset, int load)
 {
 	Fileio fio;
-	BYTE buf[0x400];
-	DWORD chrn[4];
+	uint8_t buf[0x400];
+	uint32_t chrn[4];
 	int i;
 	int num;
 	int len;
@@ -5221,10 +5221,10 @@ FDIDiskDIM::~FDIDiskDIM()
 //	オープン
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDIDiskDIM::Open(const Filepath& path, DWORD offset)
+int FASTCALL FDIDiskDIM::Open(const Filepath& path, uint32_t offset)
 {
 	Fileio fio;
-	DWORD size;
+	uint32_t size;
 	FDITrackDIM *track;
 	int i;
 
@@ -5299,8 +5299,8 @@ void FASTCALL FDIDiskDIM::Seek(int c)
 {
 	int i;
 	FDITrackDIM *track;
-	DWORD offset;
-	BOOL flag;
+	uint32_t offset;
+	int flag;
 
 	ASSERT(this);
 	ASSERT((c >= 0) && (c < 82));
@@ -5332,7 +5332,7 @@ void FASTCALL FDIDiskDIM::Seek(int c)
 //	DIMトラックマップを取得
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDIDiskDIM::GetDIMMap(int track) const
+int FASTCALL FDIDiskDIM::GetDIMMap(int track) const
 {
 	ASSERT(this);
 	ASSERT((track >= 0) && (track <= 163));
@@ -5349,10 +5349,10 @@ BOOL FASTCALL FDIDiskDIM::GetDIMMap(int track) const
 //	DIMトラックオフセットを取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL FDIDiskDIM::GetDIMOffset(int track) const
+uint32_t FASTCALL FDIDiskDIM::GetDIMOffset(int track) const
 {
 	int i;
-	DWORD offset;
+	uint32_t offset;
 	int length;
 	FDITrackDIM *dim;
 
@@ -5383,15 +5383,15 @@ DWORD FASTCALL FDIDiskDIM::GetDIMOffset(int track) const
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDIDiskDIM::Save()
+int FASTCALL FDIDiskDIM::Save()
 {
-	BOOL changed;
+	int changed;
 	int i;
 	FDITrackDIM *track;
-	DWORD offset;
+	uint32_t offset;
 	Fileio fio;
-	DWORD total;
-	BYTE *ptr;
+	uint32_t total;
+	uint8_t *ptr;
 
 	ASSERT(this);
 	ASSERT(dim_load);
@@ -5478,7 +5478,7 @@ BOOL FASTCALL FDIDiskDIM::Save()
 
 	// 256バイトのヘッダ以降は、E5データを最初にセーブ
 	try {
-		ptr = new BYTE[total];
+		ptr = new uint8_t[total];
 	}
 	catch (...) {
 		fio.Close();
@@ -5518,12 +5518,12 @@ BOOL FASTCALL FDIDiskDIM::Save()
 //	新規ディスク作成
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDIDiskDIM::Create(const Filepath& path, const option_t *opt)
+int FASTCALL FDIDiskDIM::Create(const Filepath& path, const option_t *opt)
 {
 	int i;
 	FDITrackDIM *track;
 	Fileio fio;
-	static BYTE iocsdata[] = {
+	static uint8_t iocsdata[] = {
 		0x04, 0x21, 0x03, 0x22, 0x01, 0x00, 0x00, 0x00
 	};
 
@@ -5626,7 +5626,7 @@ BOOL FASTCALL FDIDiskDIM::Create(const Filepath& path, const option_t *opt)
 //	フラッシュ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDIDiskDIM::Flush()
+int FASTCALL FDIDiskDIM::Flush()
 {
 	ASSERT(this);
 
@@ -5650,7 +5650,7 @@ BOOL FASTCALL FDIDiskDIM::Flush()
 //	コンストラクタ
 //
 //---------------------------------------------------------------------------
-FDITrackD68::FDITrackD68(FDIDisk *disk, int track, BOOL hd) : FDITrack(disk, track, hd)
+FDITrackD68::FDITrackD68(FDIDisk *disk, int track, int hd) : FDITrack(disk, track, hd)
 {
 	// フォーマット変更なし
 	d68_format = FALSE;
@@ -5661,20 +5661,20 @@ FDITrackD68::FDITrackD68(FDIDisk *disk, int track, BOOL hd) : FDITrack(disk, tra
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDITrackD68::Load(const Filepath& path, DWORD offset)
+int FASTCALL FDITrackD68::Load(const Filepath& path, uint32_t offset)
 {
 	Fileio fio;
-	BYTE header[0x10];
-	DWORD chrn[4];
-	BYTE buf[0x2000];
-	BOOL mfm;
+	uint8_t header[0x10];
+	uint32_t chrn[4];
+	uint8_t buf[0x2000];
+	int mfm;
 	int len;
 	int i;
 	int num;
 	int gap;
 	int stat;
 	FDISector *sector;
-	BYTE *ptr;
+	uint8_t *ptr;
 	const int *table;
 
 	ASSERT(this);
@@ -5758,10 +5758,10 @@ BOOL FASTCALL FDITrackD68::Load(const Filepath& path, DWORD offset)
 		}
 
 		// セクタ作成
-		chrn[0] = (DWORD)header[0];
-		chrn[1] = (DWORD)header[1];
-		chrn[2] = (DWORD)header[2];
-		chrn[3] = (DWORD)header[3];
+		chrn[0] = (uint32_t)header[0];
+		chrn[1] = (uint32_t)header[1];
+		chrn[2] = (uint32_t)header[2];
+		chrn[3] = (uint32_t)header[3];
 		sector = new FDISector(mfm, chrn);
 		sector->Load(buf, len, gap, stat);
 
@@ -5785,15 +5785,15 @@ BOOL FASTCALL FDITrackD68::Load(const Filepath& path, DWORD offset)
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDITrackD68::Save(const Filepath& path, DWORD offset)
+int FASTCALL FDITrackD68::Save(const Filepath& path, uint32_t offset)
 {
 	FDISector *sector;
-	BYTE header[0x10];
-	DWORD chrn[4];
+	uint8_t header[0x10];
+	uint32_t chrn[4];
 	Fileio fio;
 	int secs;
 	int len;
-	BYTE *ptr;
+	uint8_t *ptr;
 
 	ASSERT(this);
 	ASSERT(offset > 0);
@@ -5813,14 +5813,14 @@ BOOL FASTCALL FDITrackD68::Save(const Filepath& path, DWORD offset)
 		// 変更されている。ヘッダを作る
 		memset(header, 0, sizeof(header));
 		sector->GetCHRN(chrn);
-		header[0] = (BYTE)chrn[0];
-		header[1] = (BYTE)chrn[1];
-		header[2] = (BYTE)chrn[2];
-		header[3] = (BYTE)chrn[3];
+		header[0] = (uint8_t)chrn[0];
+		header[1] = (uint8_t)chrn[1];
+		header[2] = (uint8_t)chrn[2];
+		header[3] = (uint8_t)chrn[3];
 		secs = GetAllSectors();
 		ptr = &header[0x04];
-		ptr[1] = (BYTE)(secs >> 8);
-		ptr[0] = (BYTE)secs;
+		ptr[1] = (uint8_t)(secs >> 8);
+		ptr[0] = (uint8_t)secs;
 		if (!sector->IsMFM()) {
 			header[0x06] = 0x40;
 		}
@@ -5835,8 +5835,8 @@ BOOL FASTCALL FDITrackD68::Save(const Filepath& path, DWORD offset)
 		}
 		ptr = &header[0x0e];
 		len = sector->GetLength();
-		ptr[1] = (BYTE)(len >> 8);
-		ptr[0] = (BYTE)len;
+		ptr[1] = (uint8_t)(len >> 8);
+		ptr[0] = (uint8_t)len;
 
 		// 書き込み
 		if (!fio.IsValid()) {
@@ -5882,14 +5882,14 @@ BOOL FASTCALL FDITrackD68::Save(const Filepath& path, DWORD offset)
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDITrackD68::Save(Fileio *fio, DWORD offset)
+int FASTCALL FDITrackD68::Save(Fileio *fio, uint32_t offset)
 {
 	FDISector *sector;
-	BYTE header[0x10];
-	DWORD chrn[4];
+	uint8_t header[0x10];
+	uint32_t chrn[4];
 	int secs;
 	int len;
-	BYTE *ptr;
+	uint8_t *ptr;
 
 	ASSERT(this);
 	ASSERT(fio);
@@ -5910,14 +5910,14 @@ BOOL FASTCALL FDITrackD68::Save(Fileio *fio, DWORD offset)
 		// 変更されている。ヘッダを作る
 		memset(header, 0, sizeof(header));
 		sector->GetCHRN(chrn);
-		header[0] = (BYTE)chrn[0];
-		header[1] = (BYTE)chrn[1];
-		header[2] = (BYTE)chrn[2];
-		header[3] = (BYTE)chrn[3];
+		header[0] = (uint8_t)chrn[0];
+		header[1] = (uint8_t)chrn[1];
+		header[2] = (uint8_t)chrn[2];
+		header[3] = (uint8_t)chrn[3];
 		secs = GetAllSectors();
 		ptr = &header[0x04];
-		ptr[1] = (BYTE)(secs >> 8);
-		ptr[0] = (BYTE)secs;
+		ptr[1] = (uint8_t)(secs >> 8);
+		ptr[0] = (uint8_t)secs;
 		if (!sector->IsMFM()) {
 			header[0x06] = 0x40;
 		}
@@ -5932,8 +5932,8 @@ BOOL FASTCALL FDITrackD68::Save(Fileio *fio, DWORD offset)
 		}
 		ptr = &header[0x0e];
 		len = sector->GetLength();
-		ptr[1] = (BYTE)(len >> 8);
-		ptr[0] = (BYTE)len;
+		ptr[1] = (uint8_t)(len >> 8);
+		ptr[0] = (uint8_t)len;
 
 		// 書き込み
 		fio->Seek(offset);
@@ -5966,14 +5966,14 @@ BOOL FASTCALL FDITrackD68::Save(Fileio *fio, DWORD offset)
 //		FDD_NOTWRITE	書き込み禁止
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDITrackD68::WriteID(const BYTE *buf, DWORD d, int sc, BOOL mfm, int gpl)
+int FASTCALL FDITrackD68::WriteID(const uint8_t *buf, uint32_t d, int sc, int mfm, int gpl)
 {
 	int stat;
 	FDISector *sector;
-	DWORD pos;
+	uint32_t pos;
 	int i;
-	BYTE fillbuf[0x2000];
-	DWORD chrn[4];
+	uint8_t fillbuf[0x2000];
+	uint32_t chrn[4];
 
 	ASSERT(this);
 	ASSERT(sc > 0);
@@ -6011,10 +6011,10 @@ int FASTCALL FDITrackD68::WriteID(const BYTE *buf, DWORD d, int sc, BOOL mfm, in
 		}
 
 		// セクタを作成
-		chrn[0] = (DWORD)buf[i * 4 + 0];
-		chrn[1] = (DWORD)buf[i * 4 + 1];
-		chrn[2] = (DWORD)buf[i * 4 + 2];
-		chrn[3] = (DWORD)buf[i * 4 + 3];
+		chrn[0] = (uint32_t)buf[i * 4 + 0];
+		chrn[1] = (uint32_t)buf[i * 4 + 1];
+		chrn[2] = (uint32_t)buf[i * 4 + 2];
+		chrn[3] = (uint32_t)buf[i * 4 + 3];
 		sector = new FDISector(mfm, chrn);
 		sector->Load(fillbuf, 1 << (buf[i * 4 + 3] + 7), gpl, FDD_NOERROR);
 
@@ -6033,9 +6033,9 @@ int FASTCALL FDITrackD68::WriteID(const BYTE *buf, DWORD d, int sc, BOOL mfm, in
 //	D68での長さ取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL FDITrackD68::GetD68Length() const
+uint32_t FASTCALL FDITrackD68::GetD68Length() const
 {
-	DWORD length;
+	uint32_t length;
 	FDISector *sector;
 
 	ASSERT(this);
@@ -6115,12 +6115,12 @@ FDIDiskD68::~FDIDiskD68()
 //	オープン
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDIDiskD68::Open(const Filepath& path, DWORD offset)
+int FASTCALL FDIDiskD68::Open(const Filepath& path, uint32_t offset)
 {
 	Fileio fio;
 	int i;
 	FDITrackD68 *track;
-	BOOL hd;
+	int hd;
 
 	ASSERT(this);
 	ASSERT(!GetFirst());
@@ -6211,7 +6211,7 @@ void FASTCALL FDIDiskD68::Seek(int c)
 {
 	int i;
 	FDITrackD68 *track;
-	DWORD offset;
+	uint32_t offset;
 
 	ASSERT(this);
 	ASSERT((c >= 0) && (c < 82));
@@ -6257,10 +6257,10 @@ void FASTCALL FDIDiskD68::Seek(int c)
 //	※無効トラックは0
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL FDIDiskD68::GetD68Offset(int track) const
+uint32_t FASTCALL FDIDiskD68::GetD68Offset(int track) const
 {
-	DWORD offset;
-	const BYTE *ptr;
+	uint32_t offset;
+	const uint8_t *ptr;
 
 	ASSERT(this);
 	ASSERT((track >= 0) && (track <= 163));
@@ -6270,11 +6270,11 @@ DWORD FASTCALL FDIDiskD68::GetD68Offset(int track) const
 	ptr = &d68_hdr[0x20 + (track << 2)];
 
 	// オフセット取得(リトルエンディアン)
-	offset = (DWORD)ptr[2];
+	offset = (uint32_t)ptr[2];
 	offset <<= 8;
-	offset |= (DWORD)ptr[1];
+	offset |= (uint32_t)ptr[1];
 	offset <<= 8;
-	offset |= (DWORD)ptr[0];
+	offset |= (uint32_t)ptr[0];
 
 	return offset;
 }
@@ -6284,18 +6284,18 @@ DWORD FASTCALL FDIDiskD68::GetD68Offset(int track) const
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDIDiskD68::Save()
+int FASTCALL FDIDiskD68::Save()
 {
-	DWORD diskoff[16 + 1];
-	BOOL format;
+	uint32_t diskoff[16 + 1];
+	int format;
 	int i;
 	FDITrackD68 *track;
-	DWORD offset;
-	DWORD length;
-	BYTE *fileptr;
-	DWORD filelen;
+	uint32_t offset;
+	uint32_t length;
+	uint8_t *fileptr;
+	uint32_t filelen;
 	Fileio fio;
-	BYTE *ptr;
+	uint8_t *ptr;
 
 	ASSERT(this);
 
@@ -6337,8 +6337,8 @@ BOOL FASTCALL FDIDiskD68::Save()
 		if (IsWriteP()) {
 			i = 0x10;
 		}
-		if (d68_hdr[0x1a] != (BYTE)i) {
-			d68_hdr[0x1a] = (BYTE)i;
+		if (d68_hdr[0x1a] != (uint8_t)i) {
+			d68_hdr[0x1a] = (uint8_t)i;
 			if (!fio.Open(disk.path, Fileio::ReadWrite)) {
 				return FALSE;
 			}
@@ -6361,7 +6361,7 @@ BOOL FASTCALL FDIDiskD68::Save()
 	}
 	filelen = fio.GetFileSize();
 	try {
-		fileptr = new BYTE[filelen];
+		fileptr = new uint8_t[filelen];
 	}
 	catch (...) {
 		fio.Close();
@@ -6389,10 +6389,10 @@ BOOL FASTCALL FDIDiskD68::Save()
 			memset(ptr, 0, 4);
 		}
 		else {
-			ptr[3] = (BYTE)(offset >> 24);
-			ptr[2] = (BYTE)(offset >> 16);
-			ptr[1] = (BYTE)(offset >> 8);
-			ptr[0] = (BYTE)offset;
+			ptr[3] = (uint8_t)(offset >> 24);
+			ptr[2] = (uint8_t)(offset >> 16);
+			ptr[1] = (uint8_t)(offset >> 8);
+			ptr[0] = (uint8_t)offset;
 			offset += length;
 		}
 	}
@@ -6401,10 +6401,10 @@ BOOL FASTCALL FDIDiskD68::Save()
 		d68_hdr[0x1a] = 0x10;
 	}
 	ptr = &d68_hdr[0x1c];
-	ptr[3] = (BYTE)(offset >> 24);
-	ptr[2] = (BYTE)(offset >> 16);
-	ptr[1] = (BYTE)(offset >> 8);
-	ptr[0] = (BYTE)offset;
+	ptr[3] = (uint8_t)(offset >> 24);
+	ptr[2] = (uint8_t)(offset >> 16);
+	ptr[1] = (uint8_t)(offset >> 8);
+	ptr[0] = (uint8_t)offset;
 
 	// ファイルの前を保存
 	if (!fio.Open(disk.path, Fileio::WriteOnly)) {
@@ -6484,12 +6484,12 @@ BOOL FASTCALL FDIDiskD68::Save()
 //	新規ディスク作成
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDIDiskD68::Create(const Filepath& path, const option_t *opt)
+int FASTCALL FDIDiskD68::Create(const Filepath& path, const option_t *opt)
 {
 	Fileio fio;
 	int i;
 	FDITrackD68 *track;
-	BOOL hd;
+	int hd;
 
 	ASSERT(this);
 	ASSERT(opt);
@@ -6554,17 +6554,17 @@ BOOL FASTCALL FDIDiskD68::Create(const Filepath& path, const option_t *opt)
 //	D68ファイルの検査
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDIDiskD68::CheckDisks(const Filepath& path, DWORD *offbuf)
+int FASTCALL FDIDiskD68::CheckDisks(const Filepath& path, uint32_t *offbuf)
 {
 	Fileio fio;
-	DWORD fsize;
-	DWORD dsize;
-	DWORD base;
-	DWORD prev;
-	DWORD offset;
+	uint32_t fsize;
+	uint32_t dsize;
+	uint32_t base;
+	uint32_t prev;
+	uint32_t offset;
 	int disks;
-	BYTE header[0x2b0];
-	BYTE *ptr;
+	uint8_t header[0x2b0];
+	uint8_t *ptr;
 	int i;
 
 	ASSERT(offbuf);
@@ -6616,13 +6616,13 @@ int FASTCALL FDIDiskD68::CheckDisks(const Filepath& path, DWORD *offbuf)
 
 		// このディスクサイズを取得(0x200以上、1.92MB以下と限定)
 		ptr = &header[0x1c];
-		dsize = (DWORD)ptr[3];
+		dsize = (uint32_t)ptr[3];
 		dsize <<= 8;
-		dsize |= (DWORD)ptr[2];
+		dsize |= (uint32_t)ptr[2];
 		dsize <<= 8;
-		dsize |= (DWORD)ptr[1];
+		dsize |= (uint32_t)ptr[1];
 		dsize <<= 8;
-		dsize |= (DWORD)ptr[0];
+		dsize |= (uint32_t)ptr[0];
 
 		if ((dsize + base) > fsize) {
 			return 0;
@@ -6646,13 +6646,13 @@ int FASTCALL FDIDiskD68::CheckDisks(const Filepath& path, DWORD *offbuf)
 
 			// このトラックのオフセットを得る
 			ptr = &header[0x20 + (i << 2)];
-			offset = (DWORD)ptr[3];
+			offset = (uint32_t)ptr[3];
 			offset <<= 8;
-			offset |= (DWORD)ptr[2];
+			offset |= (uint32_t)ptr[2];
 			offset <<= 8;
-			offset |= (DWORD)ptr[1];
+			offset |= (uint32_t)ptr[1];
 			offset <<= 8;
-			offset |= (DWORD)ptr[0];
+			offset |= (uint32_t)ptr[0];
 
 			// オフセットが0x10で割り切れなければエラー
 			if (offset & 0x0f) {
@@ -6698,7 +6698,7 @@ int FASTCALL FDIDiskD68::CheckDisks(const Filepath& path, DWORD *offbuf)
 //---------------------------------------------------------------------------
 void FASTCALL FDIDiskD68::AdjustOffset()
 {
-	DWORD offset[0x10];
+	uint32_t offset[0x10];
 
 	ASSERT(this);
 
@@ -6712,7 +6712,7 @@ void FASTCALL FDIDiskD68::AdjustOffset()
 //	フラッシュ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDIDiskD68::Flush()
+int FASTCALL FDIDiskD68::Flush()
 {
 	ASSERT(this);
 
@@ -6749,11 +6749,11 @@ FDITrackBAD::FDITrackBAD(FDIDisk *disk, int track) : FDITrack(disk, track)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDITrackBAD::Load(const Filepath& path, DWORD offset)
+int FASTCALL FDITrackBAD::Load(const Filepath& path, uint32_t offset)
 {
 	Fileio fio;
-	BYTE buf[0x400];
-	DWORD chrn[4];
+	uint8_t buf[0x400];
+	uint32_t chrn[4];
 	int i;
 	FDISector *sector;
 
@@ -6838,11 +6838,11 @@ BOOL FASTCALL FDITrackBAD::Load(const Filepath& path, DWORD offset)
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDITrackBAD::Save(const Filepath& path, DWORD offset)
+int FASTCALL FDITrackBAD::Save(const Filepath& path, uint32_t offset)
 {
 	Fileio fio;
 	FDISector *sector;
-	BOOL changed;
+	int changed;
 	int index;
 
 	ASSERT(this);
@@ -6945,7 +6945,7 @@ FDIDiskBAD::FDIDiskBAD(int index, FDI *fdi) : FDIDisk(index, fdi)
 FDIDiskBAD::~FDIDiskBAD()
 {
 	int i;
-	DWORD offset;
+	uint32_t offset;
 	FDITrack *track;
 
 	// 最後のトラックデータを書き込む
@@ -6971,10 +6971,10 @@ FDIDiskBAD::~FDIDiskBAD()
 //	オープン
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDIDiskBAD::Open(const Filepath& path, DWORD offset)
+int FASTCALL FDIDiskBAD::Open(const Filepath& path, uint32_t offset)
 {
 	Fileio fio;
-	DWORD size;
+	uint32_t size;
 	FDITrackBAD *track;
 	int i;
 
@@ -7038,7 +7038,7 @@ void FASTCALL FDIDiskBAD::Seek(int c)
 {
 	int i;
 	FDITrackBAD *track;
-	DWORD offset;
+	uint32_t offset;
 
 	ASSERT(this);
 	ASSERT((c >= 0) && (c < 82));
@@ -7087,12 +7087,12 @@ void FASTCALL FDIDiskBAD::Seek(int c)
 //	フラッシュ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDIDiskBAD::Flush()
+int FASTCALL FDIDiskBAD::Flush()
 {
 	ASSERT(this);
 
 	int i;
-	DWORD offset;
+	uint32_t offset;
 	FDITrack *track;
 
 	// 最後のトラックデータを書き込む
@@ -7137,11 +7137,11 @@ FDITrack2DD::FDITrack2DD(FDIDisk *disk, int track) : FDITrack(disk, track, FALSE
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDITrack2DD::Load(const Filepath& path, DWORD offset)
+int FASTCALL FDITrack2DD::Load(const Filepath& path, uint32_t offset)
 {
 	Fileio fio;
-	BYTE buf[0x200];
-	DWORD chrn[4];
+	uint8_t buf[0x200];
+	uint32_t chrn[4];
 	int i;
 	FDISector *sector;
 
@@ -7231,7 +7231,7 @@ FDIDisk2DD::FDIDisk2DD(int index, FDI *fdi) : FDIDisk(index, fdi)
 FDIDisk2DD::~FDIDisk2DD()
 {
 	int i;
-	DWORD offset;
+	uint32_t offset;
 	FDITrack *track;
 
 	// 最後のトラックデータを書き込む
@@ -7257,10 +7257,10 @@ FDIDisk2DD::~FDIDisk2DD()
 //	オープン
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDIDisk2DD::Open(const Filepath& path, DWORD offset)
+int FASTCALL FDIDisk2DD::Open(const Filepath& path, uint32_t offset)
 {
 	Fileio fio;
-	DWORD size;
+	uint32_t size;
 	FDITrack2DD *track;
 	int i;
 
@@ -7320,7 +7320,7 @@ void FASTCALL FDIDisk2DD::Seek(int c)
 {
 	int i;
 	FDITrack2DD *track;
-	DWORD offset;
+	uint32_t offset;
 
 	ASSERT(this);
 	ASSERT((c >= 0) && (c < 82));
@@ -7369,11 +7369,11 @@ void FASTCALL FDIDisk2DD::Seek(int c)
 //	新規ディスク作成
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDIDisk2DD::Create(const Filepath& path, const option_t *opt)
+int FASTCALL FDIDisk2DD::Create(const Filepath& path, const option_t *opt)
 {
 	int i;
 	FDITrack2DD *track;
-	DWORD offset;
+	uint32_t offset;
 	Fileio fio;
 
 	ASSERT(this);
@@ -7438,10 +7438,10 @@ BOOL FASTCALL FDIDisk2DD::Create(const Filepath& path, const option_t *opt)
 //	フラッシュ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDIDisk2DD::Flush()
+int FASTCALL FDIDisk2DD::Flush()
 {
 	int i;
-	DWORD offset;
+	uint32_t offset;
 	FDITrack *track;
 
 	ASSERT(this);
@@ -7488,11 +7488,11 @@ FDITrack2HQ::FDITrack2HQ(FDIDisk *disk, int track) : FDITrack(disk, track)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDITrack2HQ::Load(const Filepath& path, DWORD offset)
+int FASTCALL FDITrack2HQ::Load(const Filepath& path, uint32_t offset)
 {
 	Fileio fio;
-	BYTE buf[0x200];
-	DWORD chrn[4];
+	uint8_t buf[0x200];
+	uint32_t chrn[4];
 	int i;
 	FDISector *sector;
 
@@ -7582,7 +7582,7 @@ FDIDisk2HQ::FDIDisk2HQ(int index, FDI *fdi) : FDIDisk(index, fdi)
 FDIDisk2HQ::~FDIDisk2HQ()
 {
 	int i;
-	DWORD offset;
+	uint32_t offset;
 	FDITrack *track;
 
 	// 最後のトラックデータを書き込む
@@ -7608,10 +7608,10 @@ FDIDisk2HQ::~FDIDisk2HQ()
 //	オープン
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDIDisk2HQ::Open(const Filepath& path, DWORD offset)
+int FASTCALL FDIDisk2HQ::Open(const Filepath& path, uint32_t offset)
 {
 	Fileio fio;
-	DWORD size;
+	uint32_t size;
 	FDITrack2HQ *track;
 	int i;
 
@@ -7671,7 +7671,7 @@ void FASTCALL FDIDisk2HQ::Seek(int c)
 {
 	int i;
 	FDITrack2HQ *track;
-	DWORD offset;
+	uint32_t offset;
 
 	ASSERT(this);
 	ASSERT((c >= 0) && (c < 82));
@@ -7720,11 +7720,11 @@ void FASTCALL FDIDisk2HQ::Seek(int c)
 //	新規ディスク作成
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDIDisk2HQ::Create(const Filepath& path, const option_t *opt)
+int FASTCALL FDIDisk2HQ::Create(const Filepath& path, const option_t *opt)
 {
 	int i;
 	FDITrack2HQ *track;
-	DWORD offset;
+	uint32_t offset;
 	Fileio fio;
 
 	ASSERT(this);
@@ -7789,12 +7789,12 @@ BOOL FASTCALL FDIDisk2HQ::Create(const Filepath& path, const option_t *opt)
 //	フラッシュ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDIDisk2HQ::Flush()
+int FASTCALL FDIDisk2HQ::Flush()
 {
 	ASSERT(this);
 
 	int i;
-	DWORD offset;
+	uint32_t offset;
 	FDITrack *track;
 
 	// 最後のトラックデータを書き込む

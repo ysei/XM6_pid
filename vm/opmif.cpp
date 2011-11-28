@@ -56,7 +56,7 @@ OPMIF::OPMIF(VM *p) : MemDevice(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL OPMIF::Init()
+int FASTCALL OPMIF::Init()
 {
 	int i;
 
@@ -84,9 +84,13 @@ BOOL FASTCALL OPMIF::Init()
 
 	// イベント作成
 	event[0].SetDevice(this);
+#if defined(XM6_USE_EVENT_DESC)
 	event[0].SetDesc("Timer-A");
+#endif
 	event[1].SetDevice(this);
+#if defined(XM6_USE_EVENT_DESC)
 	event[1].SetDesc("Timer-B");
+#endif
 	for (i=0; i<2; i++) {
 		event[i].SetUser(i);
 		event[i].SetTime(0);
@@ -95,7 +99,7 @@ BOOL FASTCALL OPMIF::Init()
 
 	// バッファ確保
 	try {
-		opmbuf = new DWORD [BufMax * 2];
+		opmbuf = new uint32_t [BufMax * 2];
 	}
 	catch (...) {
 		return FALSE;
@@ -153,7 +157,7 @@ void FASTCALL OPMIF::Reset()
 	event[1].SetTime(0);
 
 	// バッファクリア
-	memset(opmbuf, 0, sizeof(DWORD) * (BufMax * 2));
+	memset(opmbuf, 0, sizeof(uint32_t) * (BufMax * 2));
 
 	// エンジンが指定されていればリセット
 	if (engine) {
@@ -201,7 +205,7 @@ void FASTCALL OPMIF::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL OPMIF::Save(Fileio *fio, int ver)
+int FASTCALL OPMIF::Save(Fileio *fio, int ver)
 {
 	size_t sz;
 
@@ -249,7 +253,7 @@ BOOL FASTCALL OPMIF::Save(Fileio *fio, int ver)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL OPMIF::Load(Fileio *fio, int ver)
+int FASTCALL OPMIF::Load(Fileio *fio, int ver)
 {
 	size_t sz;
 	int i;
@@ -379,9 +383,9 @@ void FASTCALL OPMIF::AssertDiag() const
 //	バイト読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL OPMIF::ReadByte(DWORD addr)
+uint32_t FASTCALL OPMIF::ReadByte(uint32_t addr)
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -428,14 +432,14 @@ DWORD FASTCALL OPMIF::ReadByte(DWORD addr)
 //	ワード書き込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL OPMIF::ReadWord(DWORD addr)
+uint32_t FASTCALL OPMIF::ReadWord(uint32_t addr)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
 	ASSERT((addr & 1) == 0);
 	ASSERT_DIAG();
 
-	return (WORD)(0xff00 | ReadByte(addr + 1));
+	return (uint16_t)(0xff00 | ReadByte(addr + 1));
 }
 
 //---------------------------------------------------------------------------
@@ -443,7 +447,7 @@ DWORD FASTCALL OPMIF::ReadWord(DWORD addr)
 //	バイト書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL OPMIF::WriteByte(DWORD addr, DWORD data)
+void FASTCALL OPMIF::WriteByte(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -483,7 +487,7 @@ void FASTCALL OPMIF::WriteByte(DWORD addr, DWORD data)
 //	ワード書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL OPMIF::WriteWord(DWORD addr, DWORD data)
+void FASTCALL OPMIF::WriteWord(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -491,7 +495,7 @@ void FASTCALL OPMIF::WriteWord(DWORD addr, DWORD data)
 	ASSERT(data < 0x10000);
 	ASSERT_DIAG();
 
-	WriteByte(addr + 1, (BYTE)data);
+	WriteByte(addr + 1, (uint8_t)data);
 }
 
 //---------------------------------------------------------------------------
@@ -499,9 +503,9 @@ void FASTCALL OPMIF::WriteWord(DWORD addr, DWORD data)
 //	読み込みのみ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL OPMIF::ReadOnly(DWORD addr) const
+uint32_t FASTCALL OPMIF::ReadOnly(uint32_t addr) const
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -559,7 +563,7 @@ void FASTCALL OPMIF::GetOPM(opm_t *buffer)
 //	イベントコールバック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL OPMIF::Callback(Event *ev)
+int FASTCALL OPMIF::Callback(Event *ev)
 {
 	int index;
 
@@ -660,7 +664,7 @@ void FASTCALL OPMIF::SetEngine(FM::OPM *p)
 //	レジスタ出力
 //
 //---------------------------------------------------------------------------
-void FASTCALL OPMIF::Output(DWORD addr, DWORD data)
+void FASTCALL OPMIF::Output(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(addr < 0x100);
@@ -729,8 +733,8 @@ void FASTCALL OPMIF::Output(DWORD addr, DWORD data)
 //---------------------------------------------------------------------------
 void FASTCALL OPMIF::CalcTimerA()
 {
-	DWORD hus;
-	DWORD low;
+	uint32_t hus;
+	uint32_t low;
 
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -763,7 +767,7 @@ void FASTCALL OPMIF::CalcTimerA()
 //---------------------------------------------------------------------------
 void FASTCALL OPMIF::CalcTimerB()
 {
-	DWORD hus;
+	uint32_t hus;
 
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -791,7 +795,7 @@ void FASTCALL OPMIF::CalcTimerB()
 //	タイマ制御
 //
 //---------------------------------------------------------------------------
-void FASTCALL OPMIF::CtrlTimer(DWORD data)
+void FASTCALL OPMIF::CtrlTimer(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -867,9 +871,9 @@ void FASTCALL OPMIF::CtrlTimer(DWORD data)
 //	CT制御
 //
 //---------------------------------------------------------------------------
-void FASTCALL OPMIF::CtrlCT(DWORD data)
+void FASTCALL OPMIF::CtrlCT(uint32_t data)
 {
-	DWORD ct;
+	uint32_t ct;
 
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -926,7 +930,7 @@ void FASTCALL OPMIF::GetBufInfo(opmbuf_t *buf)
 //	バッファ初期化
 //
 //---------------------------------------------------------------------------
-void FASTCALL OPMIF::InitBuf(DWORD rate)
+void FASTCALL OPMIF::InitBuf(uint32_t rate)
 {
 	ASSERT(this);
 	ASSERT(rate > 0);
@@ -956,12 +960,12 @@ void FASTCALL OPMIF::InitBuf(DWORD rate)
 //	バッファリング
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL OPMIF::ProcessBuf()
+uint32_t FASTCALL OPMIF::ProcessBuf()
 {
-	DWORD stime;
-	DWORD sample;
-	DWORD first;
-	DWORD second;
+	uint32_t stime;
+	uint32_t sample;
+	uint32_t first;
+	uint32_t second;
 
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -1051,12 +1055,12 @@ DWORD FASTCALL OPMIF::ProcessBuf()
 //	バッファから取得
 //
 //---------------------------------------------------------------------------
-void FASTCALL OPMIF::GetBuf(DWORD *buf, int samples)
+void FASTCALL OPMIF::GetBuf(uint32_t *buf, int samples)
 {
-	DWORD first;
-	DWORD second;
-	DWORD under;
-	DWORD over;
+	uint32_t first;
+	uint32_t second;
+	uint32_t under;
+	uint32_t over;
 
 	ASSERT(this);
 	ASSERT(buf);
@@ -1066,7 +1070,7 @@ void FASTCALL OPMIF::GetBuf(DWORD *buf, int samples)
 
 	// オーバーランチェックを先に
 	over = 0;
-	if (bufinfo.num > (DWORD)samples) {
+	if (bufinfo.num > (uint32_t)samples) {
 		over = bufinfo.num - samples;
 	}
 

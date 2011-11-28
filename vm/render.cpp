@@ -108,7 +108,7 @@ Render::Render(VM *p) : Device(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Render::Init()
+int FASTCALL Render::Init()
 {
 	int i;
 
@@ -129,7 +129,7 @@ BOOL FASTCALL Render::Init()
 
 	// パレットバッファ確保(4MB)
 	try {
-		render.palbuf = new DWORD[0x10000 * 16];
+		render.palbuf = new uint32_t[0x10000 * 16];
 	}
 	catch (...) {
 		return FALSE;
@@ -140,9 +140,9 @@ BOOL FASTCALL Render::Init()
 
 	// テキストVRAMバッファ確保(4.7MB)
 	try {
-		render.textflag = new BOOL[1024 * 32];
-		render.textbuf = new BYTE[1024 * 512];
-		render.textout = new DWORD[1024 * (1024 + 1)];
+		render.textflag = new int[1024 * 32];
+		render.textbuf = new uint8_t[1024 * 512];
+		render.textout = new uint32_t[1024 * (1024 + 1)];
 	}
 	catch (...) {
 		return FALSE;
@@ -165,8 +165,8 @@ BOOL FASTCALL Render::Init()
 
 	// グラフィックVRAMバッファ確保(8.2MB)
 	try {
-		render.grpflag = new BOOL[512 * 32 * 4];
-		render.grpbuf[0] = new DWORD[512 * 1024 * 4];
+		render.grpflag = new int[512 * 32 * 4];
+		render.grpbuf[0] = new uint32_t[512 * 1024 * 4];
 	}
 	catch (...) {
 		return FALSE;
@@ -180,7 +180,7 @@ BOOL FASTCALL Render::Init()
 	render.grpbuf[1] = render.grpbuf[0] + 512 * 1024;
 	render.grpbuf[2] = render.grpbuf[1] + 512 * 1024;
 	render.grpbuf[3] = render.grpbuf[2] + 512 * 1024;
-	memset(render.grpflag, 0, sizeof(BOOL) * 32 * 512 * 4);
+	memset(render.grpflag, 0, sizeof(int) * 32 * 512 * 4);
 	for (i=0; i<512*4; i++) {
 		render.grpmod[i] = FALSE;
 		render.grppal[i] = TRUE;
@@ -188,7 +188,7 @@ BOOL FASTCALL Render::Init()
 
 	// PCGバッファ確保(4MB)
 	try {
-		render.pcgbuf = new DWORD[ 16 * 256 * 16 * 16 ];
+		render.pcgbuf = new uint32_t[ 16 * 256 * 16 * 16 ];
 	}
 	catch (...) {
 		return FALSE;
@@ -199,7 +199,7 @@ BOOL FASTCALL Render::Init()
 
 	// スプライトポインタ確保(256KB)
 	try {
-		render.spptr = new DWORD*[ 128 * 512 ];
+		render.spptr = new uint32_t*[ 128 * 512 ];
 	}
 	catch (...) {
 		return FALSE;
@@ -210,10 +210,10 @@ BOOL FASTCALL Render::Init()
 
 	// BGポインタ確保(768KB)
 	try {
-		render.bgptr[0] = new DWORD*[ (64 * 2) * 1024 ];
-		memset(render.bgptr[0], 0, sizeof(DWORD*) * (64 * 2 * 1024));
-		render.bgptr[1] = new DWORD*[ (64 * 2) * 1024 ];	// from 512 to 1024 since version2.04
-		memset(render.bgptr[1], 0, sizeof(DWORD*) * (64 * 2 * 1024));
+		render.bgptr[0] = new uint32_t*[ (64 * 2) * 1024 ];
+		memset(render.bgptr[0], 0, sizeof(uint32_t*) * (64 * 2 * 1024));
+		render.bgptr[1] = new uint32_t*[ (64 * 2) * 1024 ];	// from 512 to 1024 since version2.04
+		memset(render.bgptr[1], 0, sizeof(uint32_t*) * (64 * 2 * 1024));
 	}
 	catch (...) {
 		return FALSE;
@@ -229,7 +229,7 @@ BOOL FASTCALL Render::Init()
 
 	// BG/スプライトバッファ確保(1MB)
 	try {
-		render.bgspbuf = new DWORD[ 512 * 512 + 16];	// +16は暫定措置
+		render.bgspbuf = new uint32_t[ 512 * 512 + 16];	// +16は暫定措置
 	}
 	catch (...) {
 		return FALSE;
@@ -240,7 +240,7 @@ BOOL FASTCALL Render::Init()
 
 	// 描画フラグバッファ確保(256KB)
 	try {
-		render.drawflag = new BOOL[64 * 1024];
+		render.drawflag = new int[64 * 1024];
 	}
 	catch (...) {
 		return FALSE;
@@ -248,7 +248,7 @@ BOOL FASTCALL Render::Init()
 	if (!render.drawflag) {
 		return FALSE;
 	}
-	memset(render.drawflag, 0, sizeof(BOOL) * 64 * 1024);
+	memset(render.drawflag, 0, sizeof(int) * 64 * 1024);
 
 	// パレット作成
 	MakePalette();
@@ -353,14 +353,14 @@ void FASTCALL Render::Reset()
 	int i;
 	int j;
 	int k;
-	DWORD **ptr;
+	uint32_t **ptr;
 
 	ASSERT(this);
 	LOG0(Log::Normal, "リセット");
 
 	// ビデオコントローラよりポインタ取得
 	ASSERT(vc);
-	render.palvc = (const WORD*)vc->GetPalette();
+	render.palvc = (const uint16_t*)vc->GetPalette();
 
 	// テキストVRAMよりポインタ取得
 	tvram = (TVRAM*)vm->SearchDevice(MAKEID('T', 'V', 'R', 'M'));
@@ -415,7 +415,7 @@ void FASTCALL Render::Reset()
 	memset(render.pcgpal, 0, sizeof(render.pcgpal));
 
 	// ワークエリア初期化(スプライト)
-	memset(render.spptr, 0, sizeof(DWORD*) * 128 * 512);
+	memset(render.spptr, 0, sizeof(uint32_t*) * 128 * 512);
 	memset(render.spreg, 0, sizeof(render.spreg));
 	memset(render.spuse, 0, sizeof(render.spuse));
 
@@ -444,13 +444,13 @@ void FASTCALL Render::Reset()
 	render.pcgready[0] = TRUE;
 	render.pcguse[0] = (64 * 64) * 2;
 	render.pcgpal[0] = (64 * 64) * 2;
-	memset(render.pcgbuf, 0, (16 * 16) * sizeof(DWORD));
+	memset(render.pcgbuf, 0, (16 * 16) * sizeof(uint32_t));
 	for (i=0; i<64; i++) {
 		ptr = &render.bgptr[0][i << 3];
 		for (j=0; j<64; j++) {
 			for (k=0; k<8; k++) {
 				ptr[(k << 7) + 0] = &render.pcgbuf[k << 4];
-				ptr[(k << 7) + 1] = (DWORD*)0x10000;
+				ptr[(k << 7) + 1] = (uint32_t*)0x10000;
 			}
 			ptr += 2;
 		}
@@ -458,7 +458,7 @@ void FASTCALL Render::Reset()
 		for (j=0; j<64; j++) {
 			for (k=0; k<8; k++) {
 				ptr[(k << 7) + 0] = &render.pcgbuf[k << 4];
-				ptr[(k << 7) + 1] = (DWORD*)0x10000;
+				ptr[(k << 7) + 1] = (uint32_t*)0x10000;
 			}
 			ptr += 2;
 		}
@@ -466,7 +466,7 @@ void FASTCALL Render::Reset()
 		for (j=0; j<64; j++) {
 			for (k=0; k<8; k++) {
 				ptr[(k << 7) + 0] = &render.pcgbuf[k << 4];
-				ptr[(k << 7) + 1] = (DWORD*)0x10000;
+				ptr[(k << 7) + 1] = (uint32_t*)0x10000;
 			}
 			ptr += 2;
 		}
@@ -481,7 +481,7 @@ void FASTCALL Render::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Render::Save(Fileio *fio, int ver)
+int FASTCALL Render::Save(Fileio *fio, int ver)
 {
 	ASSERT(this);
 	LOG0(Log::Normal, "セーブ");
@@ -494,7 +494,7 @@ BOOL FASTCALL Render::Save(Fileio *fio, int ver)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Render::Load(Fileio *fio, int ver)
+int FASTCALL Render::Load(Fileio *fio, int ver)
 {
 	ASSERT(this);
 	LOG0(Log::Normal, "ロード");
@@ -613,7 +613,7 @@ void FASTCALL Render::EndFrame()
 //	合成バッファセット
 //
 //---------------------------------------------------------------------------
-void FASTCALL Render::SetMixBuf(DWORD *buf, int width, int height)
+void FASTCALL Render::SetMixBuf(uint32_t *buf, int width, int height)
 {
 	int i;
 
@@ -681,9 +681,9 @@ void FASTCALL Render::Video()
 	int gr;
 	int tx;
 	int map[4];
-	DWORD *ptr[4];
-	DWORD shift[4];
-	DWORD an[4];
+	uint32_t *ptr[4];
+	uint32_t shift[4];
+	uint32_t an[4];
 
 	// VCフラグを降ろす
 	render.vc = FALSE;
@@ -1196,7 +1196,7 @@ void FASTCALL Render::Contrast()
 //---------------------------------------------------------------------------
 void FASTCALL Render::MakePalette()
 {
-	DWORD *p;
+	uint32_t *p;
 	int ratio;
 	int i;
 	int j;
@@ -1223,23 +1223,23 @@ void FASTCALL Render::MakePalette()
 //	パレット変換
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL Render::ConvPalette(int color, int ratio)
+uint32_t FASTCALL Render::ConvPalette(int color, int ratio)
 {
-	DWORD r;
-	DWORD g;
-	DWORD b;
+	uint32_t r;
+	uint32_t g;
+	uint32_t b;
 
 	// assert
 	ASSERT((color >= 0) && (color < 0x10000));
 	ASSERT((ratio >= 0) && (ratio <= 0x100));
 
 	// 全てコピー
-	r = (DWORD)color;
-	g = (DWORD)color;
-	b = (DWORD)color;
+	r = (uint32_t)color;
+	g = (uint32_t)color;
+	b = (uint32_t)color;
 
 	// MSBからG:5、R:5、B:5、I:1の順になっている
-	// これを R:8 G:8 B:8のDWORDに変換。b31-b24は使わない
+	// これを R:8 G:8 B:8のuint32_tに変換。b31-b24は使わない
 	r <<= 13;
 	r &= 0xf80000;
 	g &= 0x00f800;
@@ -1263,7 +1263,7 @@ DWORD FASTCALL Render::ConvPalette(int color, int ratio)
 	r >>= 8;
 	r &= 0xff0000;
 
-	return (DWORD)(r | g | b);
+	return (uint32_t)(r | g | b);
 }
 
 //---------------------------------------------------------------------------
@@ -1271,7 +1271,7 @@ DWORD FASTCALL Render::ConvPalette(int color, int ratio)
 //	パレット取得
 //
 //---------------------------------------------------------------------------
-const DWORD* FASTCALL Render::GetPalette() const
+const uint32_t* FASTCALL Render::GetPalette() const
 {
 	ASSERT(this);
 	ASSERT(render.paldata);
@@ -1286,10 +1286,10 @@ const DWORD* FASTCALL Render::GetPalette() const
 //---------------------------------------------------------------------------
 void FASTCALL Render::Palette()
 {
-	DWORD data;
-	BOOL tx;
-	BOOL gr;
-	BOOL sp;
+	uint32_t data;
+	int tx;
+	int gr;
+	int sp;
 	int i;
 	int j;
 
@@ -1301,7 +1301,7 @@ void FASTCALL Render::Palette()
 	// グラフィック
 	for (i=0; i<0x100; i++) {
 		if (render.palmod[i]) {
-			data = (DWORD)render.palvc[i];
+			data = (uint32_t)render.palvc[i];
 			render.paldata[i] = render.palptr[data];
 
 			// グラフィックに影響、フラグOFF
@@ -1318,15 +1318,15 @@ void FASTCALL Render::Palette()
 			if (i & 1) {
 				j += 128;
 			}
-			render.pal64k[j * 2 + 0] = (BYTE)(data >> 8);
-			render.pal64k[j * 2 + 1] = (BYTE)data;
+			render.pal64k[j * 2 + 0] = (uint8_t)(data >> 8);
+			render.pal64k[j * 2 + 1] = (uint8_t)data;
 		}
 	}
 
 	// テキスト兼スプライト
 	for (i=0x100; i<0x110; i++) {
 		if (render.palmod[i]) {
-			data = (DWORD)render.palvc[i];
+			data = (uint32_t)render.palvc[i];
 			render.paldata[i] = render.palptr[data];
 
 			// テキストに影響、フラグOFF
@@ -1341,7 +1341,7 @@ void FASTCALL Render::Palette()
 			}
 
 			// PCG検査
-			memset(&render.pcgready[0], 0, sizeof(BOOL) * 256);
+			memset(&render.pcgready[0], 0, sizeof(int) * 256);
 			if (render.pcgpal[0] > 0) {
 				sp = TRUE;
 			}
@@ -1352,7 +1352,7 @@ void FASTCALL Render::Palette()
 	for (i=0x110; i<0x200; i++) {
 		if (render.palmod[i]) {
 			// スプライトに影響、フラグOFF
-			data = (DWORD)render.palvc[i];
+			data = (uint32_t)render.palvc[i];
 			render.paldata[i] = render.palptr[data];
 			render.palmod[i] = FALSE;
 
@@ -1362,7 +1362,7 @@ void FASTCALL Render::Palette()
 			}
 
 			// PCG検査
-			memset(&render.pcgready[(i & 0xf0) << 4], 0, sizeof(BOOL) * 256);
+			memset(&render.pcgready[(i & 0xf0) << 4], 0, sizeof(int) * 256);
 			if (render.pcgpal[(i & 0xf0) >> 4] > 0) {
 				sp = TRUE;
 			}
@@ -1400,7 +1400,7 @@ void FASTCALL Render::Palette()
 //	テキストスクロール
 //
 //---------------------------------------------------------------------------
-void FASTCALL Render::TextScrl(DWORD x, DWORD y)
+void FASTCALL Render::TextScrl(uint32_t x, uint32_t y)
 {
 	int i;
 
@@ -1434,7 +1434,7 @@ void FASTCALL Render::TextScrl(DWORD x, DWORD y)
 //	テキストコピー
 //
 //---------------------------------------------------------------------------
-void FASTCALL Render::TextCopy(DWORD src, DWORD dst, DWORD plane)
+void FASTCALL Render::TextCopy(uint32_t src, uint32_t dst, uint32_t plane)
 {
 	ASSERT(this);
 	ASSERT((src >= 0) && (src < 256));
@@ -1454,7 +1454,7 @@ void FASTCALL Render::TextCopy(DWORD src, DWORD dst, DWORD plane)
 //	テキストバッファ取得
 //
 //---------------------------------------------------------------------------
-const DWORD* FASTCALL Render::GetTextBuf() const
+const uint32_t* FASTCALL Render::GetTextBuf() const
 {
 	ASSERT(this);
 	ASSERT(render.textout);
@@ -1517,7 +1517,7 @@ void FASTCALL Render::Text(int raster)
 
 		// y == 1023ならコピーする
 		if (y == 1023) {
-			memcpy(render.textout + (1024 << 10), render.textout + (1023 << 10), sizeof(DWORD) * 1024);
+			memcpy(render.textout + (1024 << 10), render.textout + (1023 << 10), sizeof(uint32_t) * 1024);
 		}
 	}
 }
@@ -1527,7 +1527,7 @@ void FASTCALL Render::Text(int raster)
 //	グラフィックバッファ取得
 //
 //---------------------------------------------------------------------------
-const DWORD* FASTCALL Render::GetGrpBuf(int index) const
+const uint32_t* FASTCALL Render::GetGrpBuf(int index) const
 {
 	ASSERT(this);
 	ASSERT((index >= 0) && (index <= 3));
@@ -1541,9 +1541,9 @@ const DWORD* FASTCALL Render::GetGrpBuf(int index) const
 //	グラフィックスクロール
 //
 //---------------------------------------------------------------------------
-void FASTCALL Render::GrpScrl(int block, DWORD x, DWORD y)
+void FASTCALL Render::GrpScrl(int block, uint32_t x, uint32_t y)
 {
-	BOOL flag;
+	int flag;
 	int i;
 
 	ASSERT(this);
@@ -1921,12 +1921,12 @@ void FASTCALL Render::Grp(int block, int raster)
 //---------------------------------------------------------------------------
 void FASTCALL Render::SpriteReset()
 {
-	DWORD addr;
-	WORD data;
+	uint32_t addr;
+uint16_t data;
 
 	// スプライトレジスタ設定
 	for (addr=0; addr<0x400; addr+=2) {
-		data = *(WORD*)(&render.sprmem[addr]);
+		data = *(uint16_t*)(&render.sprmem[addr]);
 		SpriteReg(addr, data);
 	}
 }
@@ -1936,17 +1936,17 @@ void FASTCALL Render::SpriteReset()
 //	スプライトレジスタ変更
 //
 //---------------------------------------------------------------------------
-void FASTCALL Render::SpriteReg(DWORD addr, DWORD data)
+void FASTCALL Render::SpriteReg(uint32_t addr, uint32_t data)
 {
-	BOOL use;
-	DWORD reg[4];
-	DWORD *next;
-	DWORD **ptr;
+	int use;
+	uint32_t reg[4];
+	uint32_t *next;
+	uint32_t **ptr;
 	int index;
 	int i;
 	int j;
 	int offset;
-	DWORD pcgno;
+	uint32_t pcgno;
 
 	ASSERT(this);
 	ASSERT(addr < 0x400);
@@ -1988,7 +1988,7 @@ void FASTCALL Render::SpriteReg(DWORD addr, DWORD data)
 	if (next[0] == 0) {
 		use = FALSE;
 	}
-	if (next[0] >= (DWORD)(render.mixlen + 16)) {
+	if (next[0] >= (uint32_t)(render.mixlen + 16)) {
 		use = FALSE;
 	}
 	if (next[1] == 0) {
@@ -2075,9 +2075,9 @@ void FASTCALL Render::SpriteReg(DWORD addr, DWORD data)
 //	BGスクロール変更
 //
 //---------------------------------------------------------------------------
-void FASTCALL Render::BGScrl(int page, DWORD x, DWORD y)
+void FASTCALL Render::BGScrl(int page, uint32_t x, uint32_t y)
 {
-	BOOL flag;
+	int flag;
 	int i;
 
 	ASSERT((page == 0) || (page == 1));
@@ -2118,17 +2118,17 @@ void FASTCALL Render::BGScrl(int page, DWORD x, DWORD y)
 //	BGコントロール変更
 //
 //---------------------------------------------------------------------------
-void FASTCALL Render::BGCtrl(int index, BOOL flag)
+void FASTCALL Render::BGCtrl(int index, int flag)
 {
 	int i;
 	int j;
-	BOOL areaflag[2];
-	DWORD *reg;
-	WORD *area;
-	DWORD pcgno;
-	DWORD low;
-	DWORD mid;
-	DWORD high;
+	int areaflag[2];
+	uint32_t *reg;
+uint16_t *area;
+	uint32_t pcgno;
+	uint32_t low;
+	uint32_t mid;
+	uint32_t high;
 
 	// フラグOFF
 	areaflag[0] = FALSE;
@@ -2204,7 +2204,7 @@ void FASTCALL Render::BGCtrl(int index, BOOL flag)
 			}
 
 			// データアドレスを算出($EBE000,$EBC000)
-			area = (WORD*)render.sprmem;
+			area = (uint16_t*)render.sprmem;
 			area += 0x6000;
 			if (render.bgarea[i]) {
 				area += 0x1000;
@@ -2214,13 +2214,13 @@ void FASTCALL Render::BGCtrl(int index, BOOL flag)
 			if (render.bgsize) {
 				// 16x16はそのまま
 				for (j=0; j<(64*64); j++) {
-					render.bgreg[i][j] = (DWORD)area[j];
+					render.bgreg[i][j] = (uint32_t)area[j];
 				}
 			}
 			else {
 				// 8x8は工夫が必要。PCG(0-255)を>>2し、消えたbit0,1をbit17,18へ
 				for (j=0; j<(64*64); j++) {
-					low = (DWORD)area[j];
+					low = (uint32_t)area[j];
 					mid = low;
 					high = low;
 					low >>= 2;
@@ -2228,7 +2228,7 @@ void FASTCALL Render::BGCtrl(int index, BOOL flag)
 					mid &= 0xff00;
 					high <<= 17;
 					high &= 0x60000;
-					render.bgreg[i][j] = (DWORD)(low | mid | high);
+					render.bgreg[i][j] = (uint32_t)(low | mid | high);
 				}
 			}
 
@@ -2252,17 +2252,17 @@ void FASTCALL Render::BGCtrl(int index, BOOL flag)
 //	BGメモリ変更
 //
 //---------------------------------------------------------------------------
-void FASTCALL Render::BGMem(DWORD addr, WORD data)
+void FASTCALL Render::BGMem(uint32_t addr,uint16_t data)
 {
-	BOOL flag;
+	int flag;
 	int i;
 	int j;
 	int index;
 	int raster;
-	DWORD pcgno;
-	DWORD low;
-	DWORD mid;
-	DWORD high;
+	uint32_t pcgno;
+	uint32_t low;
+	uint32_t mid;
+	uint32_t high;
 
 	ASSERT((addr >= 0xc000) && (addr < 0x10000));
 
@@ -2299,11 +2299,11 @@ void FASTCALL Render::BGMem(DWORD addr, WORD data)
 		// コピー
 		if (render.bgsize) {
 			// 16x16はそのまま
-			render.bgreg[i][index] = (DWORD)data;
+			render.bgreg[i][index] = (uint32_t)data;
 		}
 		else {
 			// 8x8は工夫が必要。PCG(0-255)を>>2し、消えたbit0,1をbit17,18へ
-			low = (DWORD)data;
+			low = (uint32_t)data;
 			mid = low;
 			high = low;
 			low >>= 2;
@@ -2311,7 +2311,7 @@ void FASTCALL Render::BGMem(DWORD addr, WORD data)
 			mid &= 0xff00;
 			high <<= 17;
 			high &= 0x60000;
-			render.bgreg[i][index] = (DWORD)(low | mid | high);
+			render.bgreg[i][index] = (uint32_t)(low | mid | high);
 		}
 
 		// bgallを上げる
@@ -2355,10 +2355,10 @@ void FASTCALL Render::BGMem(DWORD addr, WORD data)
 //	PCGメモリ変更
 //
 //---------------------------------------------------------------------------
-void FASTCALL Render::PCGMem(DWORD addr)
+void FASTCALL Render::PCGMem(uint32_t addr)
 {
 	int index;
-	DWORD count;
+	uint32_t count;
 	int i;
 
 	ASSERT(this);
@@ -2394,7 +2394,7 @@ void FASTCALL Render::PCGMem(DWORD addr)
 //	PCGバッファ取得
 //
 //---------------------------------------------------------------------------
-const DWORD* FASTCALL Render::GetPCGBuf() const
+const uint32_t* FASTCALL Render::GetPCGBuf() const
 {
 	ASSERT(this);
 	ASSERT(render.pcgbuf);
@@ -2407,7 +2407,7 @@ const DWORD* FASTCALL Render::GetPCGBuf() const
 //	BG/スプライトバッファ取得
 //
 //---------------------------------------------------------------------------
-const DWORD* FASTCALL Render::GetBGSpBuf() const
+const uint32_t* FASTCALL Render::GetBGSpBuf() const
 {
 	ASSERT(this);
 	ASSERT(render.bgspbuf);
@@ -2423,10 +2423,10 @@ const DWORD* FASTCALL Render::GetBGSpBuf() const
 void FASTCALL Render::BGSprite(int raster)
 {
 	int i;
-	DWORD *reg;
-	DWORD **ptr;
-	DWORD *buf;
-	DWORD pcgno;
+	uint32_t *reg;
+	uint32_t **ptr;
+	uint32_t *buf;
+	uint32_t pcgno;
 
 	// BGスプライトをMixしないフラグのチェックが必要か。下のASSERT。
 
@@ -2564,11 +2564,11 @@ void FASTCALL Render::BGSprite(int raster)
 //	BG
 //
 //---------------------------------------------------------------------------
-void FASTCALL Render::BG(int page, int raster, DWORD *buf)
+void FASTCALL Render::BG(int page, int raster, uint32_t *buf)
 {
 	int x;
 	int y;
-	DWORD **ptr;
+	uint32_t **ptr;
 	int len;
 	int rest;
 
@@ -2706,11 +2706,11 @@ void FASTCALL Render::BGBlock(int page, int y)
 {
 	int i;
 	int j;
-	DWORD *reg;
-	DWORD **ptr;
-	DWORD *pcgbuf;
-	DWORD bgdata;
-	DWORD pcgno;
+	uint32_t *reg;
+	uint32_t **ptr;
+	uint32_t *pcgbuf;
+	uint32_t bgdata;
+	uint32_t pcgno;
 
 	ASSERT((page == 0) || (page == 1));
 	ASSERT((y >= 0) && (y < 64));
@@ -2753,7 +2753,7 @@ void FASTCALL Render::BGBlock(int page, int y)
 				pcgbuf += 0xf0;
 				for (j=0; j<16; j++) {
 					ptr[0] = pcgbuf;
-					ptr[1] = (DWORD*)bgdata;
+					ptr[1] = (uint32_t*)bgdata;
 					pcgbuf -= 0x10;
 					ptr += 128;
 				}
@@ -2762,7 +2762,7 @@ void FASTCALL Render::BGBlock(int page, int y)
 				// 通常
 				for (j=0; j<16; j++) {
 					ptr[0] = pcgbuf;
-					ptr[1] = (DWORD*)bgdata;
+					ptr[1] = (uint32_t*)bgdata;
 					pcgbuf += 0x10;
 					ptr += 128;
 				}
@@ -2784,7 +2784,7 @@ void FASTCALL Render::BGBlock(int page, int y)
 				pcgbuf += 0x70;
 				for (j=0; j<8; j++) {
 					ptr[0] = pcgbuf;
-					ptr[1] = (DWORD*)bgdata;
+					ptr[1] = (uint32_t*)bgdata;
 					pcgbuf -= 0x10;
 					ptr += 128;
 				}
@@ -2793,7 +2793,7 @@ void FASTCALL Render::BGBlock(int page, int y)
 				// 通常
 				for (j=0; j<8; j++) {
 					ptr[0] = pcgbuf;
-					ptr[1] = (DWORD*)bgdata;
+					ptr[1] = (uint32_t*)bgdata;
 					pcgbuf += 0x10;
 					ptr += 128;
 				}
@@ -2824,12 +2824,12 @@ void FASTCALL Render::BGBlock(int page, int y)
 //---------------------------------------------------------------------------
 void FASTCALL Render::Mix(int y)
 {
-	DWORD *p;
-	DWORD *q;
-	DWORD *r;
-	DWORD *ptr[3];
+	uint32_t *p;
+	uint32_t *q;
+	uint32_t *r;
+	uint32_t *ptr[3];
 	int offset;
-	DWORD buf[1024];
+	uint32_t buf[1024];
 
 	// 合成指示が無い場合、合成バッファが無い場合、yオーバーの場合return
 	if ((!render.mix[y]) || (!render.mixbuf)) {
@@ -2999,12 +2999,12 @@ void FASTCALL Render::Mix(int y)
 //	グラフィック合成
 //
 //---------------------------------------------------------------------------
-void FASTCALL Render::MixGrp(int y, DWORD *buf)
+void FASTCALL Render::MixGrp(int y, uint32_t *buf)
 {
-	DWORD *p;
-	DWORD *q;
-	DWORD *r;
-	DWORD *s;
+	uint32_t *p;
+	uint32_t *q;
+	uint32_t *r;
+	uint32_t *s;
 	int offset;
 
 	ASSERT(buf);
@@ -3111,7 +3111,7 @@ void FASTCALL Render::MixGrp(int y, DWORD *buf)
 //	合成バッファ取得
 //
 //---------------------------------------------------------------------------
-const DWORD* FASTCALL Render::GetMixBuf() const
+const uint32_t* FASTCALL Render::GetMixBuf() const
 {
 	ASSERT(this);
 

@@ -17,7 +17,7 @@
 #include "cpu.h"
 #include "crtc.h"
 #include "render.h"
-#include "memory.h"
+#include "memory_xm6.h"
 #include "schedule.h"
 #include "fileio.h"
 #include "sysport.h"
@@ -60,7 +60,7 @@ SysPort::SysPort(VM *p) : MemDevice(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SysPort::Init()
+int FASTCALL SysPort::Init()
 {
 	ASSERT(this);
 
@@ -135,7 +135,7 @@ void FASTCALL SysPort::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SysPort::Save(Fileio *fio, int /*ver*/)
+int FASTCALL SysPort::Save(Fileio *fio, int /*ver*/)
 {
 	size_t sz;
 
@@ -164,7 +164,7 @@ BOOL FASTCALL SysPort::Save(Fileio *fio, int /*ver*/)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SysPort::Load(Fileio *fio, int /*ver*/)
+int FASTCALL SysPort::Load(Fileio *fio, int /*ver*/)
 {
 	size_t sz;
 
@@ -242,9 +242,9 @@ void FASTCALL SysPort::AssertDiag() const
 //	バイト読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SysPort::ReadByte(DWORD addr)
+uint32_t FASTCALL SysPort::ReadByte(uint32_t addr)
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -356,7 +356,7 @@ DWORD FASTCALL SysPort::ReadByte(DWORD addr)
 //	ワード読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SysPort::ReadWord(DWORD addr)
+uint32_t FASTCALL SysPort::ReadWord(uint32_t addr)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -371,7 +371,7 @@ DWORD FASTCALL SysPort::ReadWord(DWORD addr)
 //	バイト書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SysPort::WriteByte(DWORD addr, DWORD data)
+void FASTCALL SysPort::WriteByte(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -535,7 +535,7 @@ void FASTCALL SysPort::WriteByte(DWORD addr, DWORD data)
 //	ワード書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SysPort::WriteWord(DWORD addr, DWORD data)
+void FASTCALL SysPort::WriteWord(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -543,7 +543,7 @@ void FASTCALL SysPort::WriteWord(DWORD addr, DWORD data)
 	ASSERT(data < 0x10000);
 	ASSERT_DIAG();
 
-	WriteByte(addr + 1, (BYTE)data);
+	WriteByte(addr + 1, (uint8_t)data);
 }
 
 //---------------------------------------------------------------------------
@@ -551,9 +551,9 @@ void FASTCALL SysPort::WriteWord(DWORD addr, DWORD data)
 //	読み込みのみ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SysPort::ReadOnly(DWORD addr) const
+uint32_t FASTCALL SysPort::ReadOnly(uint32_t addr) const
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -655,10 +655,10 @@ DWORD FASTCALL SysPort::ReadOnly(DWORD addr) const
 //	バージョン情報読み出し
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SysPort::GetVR()
+uint32_t FASTCALL SysPort::GetVR()
 {
-	DWORD major;
-	DWORD minor;
+	uint32_t major;
+	uint32_t minor;
 
 	ASSERT(this);
 	ASSERT_DIAG();

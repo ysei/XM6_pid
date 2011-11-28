@@ -23,62 +23,62 @@ public:
 	// 内部データ定義(チャネル別)
 	typedef struct {
 		// 基本パラメータ
-		DWORD xrm;						// リクエストモード
-		DWORD dtyp;						// デバイスタイプ
-		BOOL dps;						// ポートサイズ (TRUEで16bit)
-		DWORD pcl;						// PCLセレクタ
-		BOOL dir;						// 方向 (TRUEでDAR→メモリ)
-		BOOL btd;						// DONEで次ブロックへ
-		DWORD size;						// オペランドサイズ
-		DWORD chain;					// チェイン動作
-		DWORD reqg;						// REQ生成モード
-		DWORD mac;						// メモリアドレス更新モード
-		DWORD dac;						// デバイスアドレス更新モード
+		uint32_t xrm;						// リクエストモード
+		uint32_t dtyp;						// デバイスタイプ
+		int dps;						// ポートサイズ (TRUEで16bit)
+		uint32_t pcl;						// PCLセレクタ
+		int dir;						// 方向 (TRUEでDAR→メモリ)
+		int btd;						// DONEで次ブロックへ
+		uint32_t size;						// オペランドサイズ
+		uint32_t chain;					// チェイン動作
+		uint32_t reqg;						// REQ生成モード
+		uint32_t mac;						// メモリアドレス更新モード
+		uint32_t dac;						// デバイスアドレス更新モード
 
 		// 制御フラグ
-		BOOL str;						// スタートフラグ
-		BOOL cnt;						// コンティニューフラグ
-		BOOL hlt;						// HALTフラグ
-		BOOL sab;						// ソフトウェアアボートフラグ
-		BOOL intr;						// 割り込み可能フラグ
-		BOOL coc;						// チャンネル動作完了フラグ
-		BOOL boc;						// ブロック動作完了フラグ
-		BOOL ndt;						// 正常終了フラグ
-		BOOL err;						// エラーフラグ
-		BOOL act;						// アクティブフラグ
-		BOOL dit;						// DONE入力フラグ
-		BOOL pct;						// PCL negedge検出フラグ
-		BOOL pcs;						// PCLの状態 (TRUEでHレベル)
-		DWORD ecode;					// エラーコード
+		int str;						// スタートフラグ
+		int cnt;						// コンティニューフラグ
+		int hlt;						// HALTフラグ
+		int sab;						// ソフトウェアアボートフラグ
+		int intr;						// 割り込み可能フラグ
+		int coc;						// チャンネル動作完了フラグ
+		int boc;						// ブロック動作完了フラグ
+		int ndt;						// 正常終了フラグ
+		int err;						// エラーフラグ
+		int act;						// アクティブフラグ
+		int dit;						// DONE入力フラグ
+		int pct;						// PCL negedge検出フラグ
+		int pcs;						// PCLの状態 (TRUEでHレベル)
+		uint32_t ecode;					// エラーコード
 
 		// アドレス、レングス
-		DWORD mar;						// メモリアドレスカウンタ
-		DWORD dar;						// デバイスアドレスレジスタ
-		DWORD bar;						// ベースアドレスレジスタ
-		DWORD mtc;						// メモリトランスファカウンタ
-		DWORD btc;						// ベーストランスファカウンタ
-		DWORD mfc;						// メモリファンクションコード
-		DWORD dfc;						// デバイスファンクションコード
-		DWORD bfc;						// ベースファンクションコード
-		DWORD niv;						// ノーマルインタラプトベクタ
-		DWORD eiv;						// エラーインタラプトベクタ
+		uint32_t mar;						// メモリアドレスカウンタ
+		uint32_t dar;						// デバイスアドレスレジスタ
+		uint32_t bar;						// ベースアドレスレジスタ
+		uint32_t mtc;						// メモリトランスファカウンタ
+		uint32_t btc;						// ベーストランスファカウンタ
+		uint32_t mfc;						// メモリファンクションコード
+		uint32_t dfc;						// デバイスファンクションコード
+		uint32_t bfc;						// ベースファンクションコード
+		uint32_t niv;						// ノーマルインタラプトベクタ
+		uint32_t eiv;						// エラーインタラプトベクタ
 
 		// バースト転送
-		DWORD cp;						// プライオリティ
-		DWORD bt;						// バースト転送タイム
-		DWORD br;						// バンド幅
+		uint32_t cp;						// プライオリティ
+		uint32_t bt;						// バースト転送タイム
+		uint32_t br;						// バンド幅
 		int type;						// 転送タイプ
 
 		// 動作カウンタ(デバッグ向け)
-		DWORD startcnt;					// スタートカウンタ
-		DWORD errorcnt;					// エラーカウンタ
+		uint32_t startcnt;					// スタートカウンタ
+		uint32_t errorcnt;					// エラーカウンタ
 	} dma_t;
 
 	// 内部データ定義(グローバル)
 	typedef struct {
 		int transfer;					// 転送中フラグ(チャネル兼用)
 		int load;						// チェインロードフラグ(チャネル兼用)
-		BOOL exec;						// オートリクエスト有無フラグ
+		int exec;						// オートリクエスト有無フラグ
 		int current_ch;					// オートリクエスト処理チャネル
 		int cpu_cycle;					// CPUサイクルカウンタ
 		int vector;						// 割り込み要求中ベクタ
@@ -88,29 +88,29 @@ public:
 	// 基本ファンクション
 	DMAC(VM *p);
 										// コンストラクタ
-	BOOL FASTCALL Init();
+	int FASTCALL Init();
 										// 初期化
 	void FASTCALL Cleanup();
 										// クリーンアップ
 	void FASTCALL Reset();
 										// リセット
-	BOOL FASTCALL Save(Fileio *fio, int ver);
+	int FASTCALL Save(Fileio *fio, int ver);
 										// セーブ
-	BOOL FASTCALL Load(Fileio *fio, int ver);
+	int FASTCALL Load(Fileio *fio, int ver);
 										// ロード
 	void FASTCALL ApplyCfg(const Config *config);
 										// 設定適用
 
 	// メモリデバイス
-	DWORD FASTCALL ReadByte(DWORD addr);
+	uint32_t FASTCALL ReadByte(uint32_t addr);
 										// バイト読み込み
-	DWORD FASTCALL ReadWord(DWORD addr);
+	uint32_t FASTCALL ReadWord(uint32_t addr);
 										// ワード読み込み
-	void FASTCALL WriteByte(DWORD addr, DWORD data);
+	void FASTCALL WriteByte(uint32_t addr, uint32_t data);
 										// バイト書き込み
-	void FASTCALL WriteWord(DWORD addr, DWORD data);
+	void FASTCALL WriteWord(uint32_t addr, uint32_t data);
 										// ワード読み込み
-	DWORD FASTCALL ReadOnly(DWORD addr) const;
+	uint32_t FASTCALL ReadOnly(uint32_t addr) const;
 										// 読み込みのみ
 
 	// 外部API
@@ -118,50 +118,50 @@ public:
 										// DMA情報取得
 	void FASTCALL GetDMACtrl(dmactrl_t *buffer) const;
 										// DMA制御情報取得
-	BOOL FASTCALL ReqDMA(int ch);
+	int FASTCALL ReqDMA(int ch);
 										// DMA転送要求
-	DWORD FASTCALL AutoDMA(DWORD cycle);
+	uint32_t FASTCALL AutoDMA(uint32_t cycle);
 										// DMAオートリクエスト
-	BOOL FASTCALL IsDMA() const;
+	int FASTCALL IsDMA() const;
 										// DMA転送中か問い合わせ
-	void FASTCALL BusErr(DWORD addr, BOOL read);
+	void FASTCALL BusErr(uint32_t addr, int read);
 										// バスエラー
-	void FASTCALL AddrErr(DWORD addr, BOOL read);
+	void FASTCALL AddrErr(uint32_t addr, int read);
 										// アドレスエラー
-	DWORD FASTCALL GetVector(int type) const;
+	uint32_t FASTCALL GetVector(int type) const;
 										// ベクタ取得
 	void FASTCALL IntAck();
 										// 割り込みACK
-	BOOL FASTCALL IsAct(int ch) const;
+	int FASTCALL IsAct(int ch) const;
 										// DMA転送可能か問い合わせ
 
 private:
 	// チャネルメモリアクセス
-	DWORD FASTCALL ReadDMA(int ch, DWORD addr) const;
+	uint32_t FASTCALL ReadDMA(int ch, uint32_t addr) const;
 										// DMA読み込み
-	void FASTCALL WriteDMA(int ch, DWORD addr, DWORD data);
+	void FASTCALL WriteDMA(int ch, uint32_t addr, uint32_t data);
 										// DMA書き込み
-	void FASTCALL SetDCR(int ch, DWORD data);
+	void FASTCALL SetDCR(int ch, uint32_t data);
 										// DCRセット
-	DWORD FASTCALL GetDCR(int ch) const;
+	uint32_t FASTCALL GetDCR(int ch) const;
 										// DCR取得
-	void FASTCALL SetOCR(int ch, DWORD data);
+	void FASTCALL SetOCR(int ch, uint32_t data);
 										// OCRセット
-	DWORD FASTCALL GetOCR(int ch) const;
+	uint32_t FASTCALL GetOCR(int ch) const;
 										// OCR取得
-	void FASTCALL SetSCR(int ch, DWORD data);
+	void FASTCALL SetSCR(int ch, uint32_t data);
 										// SCRセット
-	DWORD FASTCALL GetSCR(int ch) const;
+	uint32_t FASTCALL GetSCR(int ch) const;
 										// SCR取得
-	void FASTCALL SetCCR(int ch, DWORD data);
+	void FASTCALL SetCCR(int ch, uint32_t data);
 										// CCRセット
-	DWORD FASTCALL GetCCR(int ch) const;
+	uint32_t FASTCALL GetCCR(int ch) const;
 										// CCR取得
-	void FASTCALL SetCSR(int ch, DWORD data);
+	void FASTCALL SetCSR(int ch, uint32_t data);
 										// CSRセット
-	DWORD FASTCALL GetCSR(int ch) const;
+	uint32_t FASTCALL GetCSR(int ch) const;
 										// CSR取得
-	void FASTCALL SetGCR(DWORD data);
+	void FASTCALL SetGCR(uint32_t data);
 										// GCRセット
 
 	// チャネルオペレーション
@@ -175,11 +175,11 @@ private:
 										// DMAソフトウェアアボート
 	void FASTCALL LoadDMA(int ch);
 										// DMAブロックロード
-	void FASTCALL ErrorDMA(int ch, DWORD code);
+	void FASTCALL ErrorDMA(int ch, uint32_t code);
 										// エラー
 	void FASTCALL Interrupt();
 										// 割り込み
-	BOOL FASTCALL TransDMA(int ch);
+	int FASTCALL TransDMA(int ch);
 										// DMA1回転送
 
 	// テーブル、内部ワーク

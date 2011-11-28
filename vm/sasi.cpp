@@ -19,9 +19,12 @@
 #include "sram.h"
 #include "config.h"
 #include "disk.h"
-#include "memory.h"
+#include "memory_xm6.h"
 #include "scsi.h"
 #include "sasi.h"
+
+#include <new>	// placement new
+
 
 //===========================================================================
 //
@@ -35,7 +38,7 @@
 //	コンストラクタ
 //
 //---------------------------------------------------------------------------
-SASI::SASI(VM *p) : MemDevice(p)
+SASI::SASI(VM *p) : MemDevice(p), sasihd(0), scsihd(0), scsimo(0)
 {
 	// デバイスIDを初期化
 	dev.id = MAKEID('S', 'A', 'S', 'I');
@@ -44,6 +47,16 @@ SASI::SASI(VM *p) : MemDevice(p)
 	// 開始アドレス、終了アドレス
 	memdev.first = 0xe96000;
 	memdev.last = 0xe97fff;
+
+	sasihd = new Filepath [SASIMax];
+	for(int i = 0; i < SASIMax; ++i) {
+		new (&sasihd[i]) Filepath;
+	}
+	scsihd = new Filepath [SCSIMax];
+	for(int i = 0; i < SCSIMax; ++i) {
+		new (&scsihd[i]) Filepath;
+	}
+	scsimo = new Filepath;
 }
 
 //---------------------------------------------------------------------------
@@ -51,7 +64,7 @@ SASI::SASI(VM *p) : MemDevice(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SASI::Init()
+int FASTCALL SASI::Init()
 {
 	int i;
 
@@ -92,7 +105,9 @@ BOOL FASTCALL SASI::Init()
 
 	// イベント作成
 	event.SetDevice(this);
+#if defined(XM6_USE_EVENT_DESC)
 	event.SetDesc("Data Transfer");
+#endif
 	event.SetUser(0);
 	event.SetTime(0);
 	scheduler->AddEvent(&event);
@@ -110,6 +125,19 @@ void FASTCALL SASI::Cleanup()
 	int i;
 
 	ASSERT(this);
+
+	if(scsimo) {
+		delete scsimo;
+		scsimo = 0;
+	}
+	if(scsihd) {
+		delete [] scsihd;
+		scsihd = 0;
+	}
+	if(sasihd) {
+		delete [] sasihd;
+		sasihd = 0;
+	}
 
 	// ディスクを削除
 	for (i=0; i<SASIMax; i++) {
@@ -205,7 +233,7 @@ void FASTCALL SASI::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SASI::Save(Fileio *fio, int ver)
+int FASTCALL SASI::Save(Fileio *fio, int ver)
 {
 	size_t sz;
 	int i;
@@ -250,7 +278,7 @@ BOOL FASTCALL SASI::Save(Fileio *fio, int ver)
 			return FALSE;
 		}
 	}
-	if (!scsimo.Save(fio, ver)) {
+	if (!scsimo->Save(fio, ver)) {
 		return FALSE;
 	}
 
@@ -275,7 +303,7 @@ BOOL FASTCALL SASI::Save(Fileio *fio, int ver)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SASI::Load(Fileio *fio, int ver)
+int FASTCALL SASI::Load(Fileio *fio, int ver)
 {
 	sasi_t buf;
 	size_t sz;
@@ -332,7 +360,7 @@ BOOL FASTCALL SASI::Load(Fileio *fio, int ver)
 			return FALSE;
 		}
 	}
-	if (!scsimo.Load(fio, ver)) {
+	if (!scsimo->Load(fio, ver)) {
 		return FALSE;
 	}
 
@@ -408,9 +436,9 @@ void FASTCALL SASI::ApplyCfg(const Config *config)
 //	バイト読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SASI::ReadByte(DWORD addr)
+uint32_t FASTCALL SASI::ReadByte(uint32_t addr)
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -483,7 +511,7 @@ DWORD FASTCALL SASI::ReadByte(DWORD addr)
 //	ワード読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SASI::ReadWord(DWORD addr)
+uint32_t FASTCALL SASI::ReadWord(uint32_t addr)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -497,7 +525,7 @@ DWORD FASTCALL SASI::ReadWord(DWORD addr)
 //	バイト書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SASI::WriteByte(DWORD addr, DWORD data)
+void FASTCALL SASI::WriteByte(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -566,14 +594,14 @@ void FASTCALL SASI::WriteByte(DWORD addr, DWORD data)
 //	ワード書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SASI::WriteWord(DWORD addr, DWORD data)
+void FASTCALL SASI::WriteWord(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
 	ASSERT((addr & 1) == 0);
 	ASSERT(data < 0x10000);
 
-	WriteByte(addr + 1, (BYTE)data);
+	WriteByte(addr + 1, (uint8_t)data);
 }
 
 //---------------------------------------------------------------------------
@@ -581,9 +609,9 @@ void FASTCALL SASI::WriteWord(DWORD addr, DWORD data)
 //	読み込みのみ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SASI::ReadOnly(DWORD addr) const
+uint32_t FASTCALL SASI::ReadOnly(uint32_t addr) const
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -654,7 +682,7 @@ DWORD FASTCALL SASI::ReadOnly(DWORD addr) const
 //	イベントコールバック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SASI::Callback(Event *ev)
+int FASTCALL SASI::Callback(Event *ev)
 {
 	int thres;
 
@@ -758,9 +786,9 @@ void FASTCALL SASI::Construct()
 	int map[SASIMax];
 	Filepath path;
 	Filepath mopath;
-	BOOL moready;
-	BOOL mowritep;
-	BOOL moattn;
+	int moready;
+	int mowritep;
+	int moattn;
 	SASIHD *sasitmp;
 	SCSIHD *scsitmp;
 
@@ -978,7 +1006,7 @@ void FASTCALL SASI::Construct()
 //	HD BUSYチェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SASI::IsBusy() const
+int FASTCALL SASI::IsBusy() const
 {
 	ASSERT(this);
 
@@ -1001,7 +1029,7 @@ BOOL FASTCALL SASI::IsBusy() const
 //	BUSYデバイス取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SASI::GetBusyDevice() const
+uint32_t FASTCALL SASI::GetBusyDevice() const
 {
 	ASSERT(this);
 
@@ -1028,9 +1056,9 @@ DWORD FASTCALL SASI::GetBusyDevice() const
 //	データ読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SASI::ReadData()
+uint32_t FASTCALL SASI::ReadData()
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 
@@ -1068,7 +1096,7 @@ DWORD FASTCALL SASI::ReadData()
 				sxsicpu = !sxsicpu;
 			}
 
-			data = (DWORD)sasi.buffer[sasi.offset];
+			data = (uint32_t)sasi.buffer[sasi.offset];
 			sasi.offset++;
 			sasi.length--;
 			sasi.req = FALSE;
@@ -1124,7 +1152,7 @@ DWORD FASTCALL SASI::ReadData()
 //	データ書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SASI::WriteData(DWORD data)
+void FASTCALL SASI::WriteData(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1186,7 +1214,7 @@ void FASTCALL SASI::WriteData(DWORD data)
 				sxsicpu = !sxsicpu;
 			}
 
-			sasi.buffer[sasi.offset] = (BYTE)data;
+			sasi.buffer[sasi.offset] = (uint8_t)data;
 			sasi.offset++;
 			sasi.length--;
 			sasi.req = FALSE;
@@ -1289,7 +1317,7 @@ void FASTCALL SASI::BusFree()
 //	セレクションフェーズ
 //
 //---------------------------------------------------------------------------
-void FASTCALL SASI::Selection(DWORD data)
+void FASTCALL SASI::Selection(uint32_t data)
 {
 	int c;
 	int i;
@@ -1325,7 +1353,7 @@ void FASTCALL SASI::Selection(DWORD data)
 	}
 
 	// BSYを上げてセレクションフェーズ
-	sasi.ctrl = (DWORD)c;
+	sasi.ctrl = (uint32_t)c;
 	sasi.phase = selection;
 	sasi.bsy = TRUE;
 }
@@ -1616,7 +1644,7 @@ void FASTCALL SASI::Error()
 //---------------------------------------------------------------------------
 void FASTCALL SASI::TestUnitReady()
 {
-	BOOL status;
+	int status;
 
 	ASSERT(this);
 	ASSERT(sasi.current);
@@ -1648,7 +1676,7 @@ void FASTCALL SASI::TestUnitReady()
 //---------------------------------------------------------------------------
 void FASTCALL SASI::Rezero()
 {
-	BOOL status;
+	int status;
 
 	ASSERT(this);
 	ASSERT(sasi.current);
@@ -1722,7 +1750,7 @@ void FASTCALL SASI::RequestSense()
 //---------------------------------------------------------------------------
 void FASTCALL SASI::Format()
 {
-	BOOL status;
+	int status;
 
 	ASSERT(this);
 	ASSERT(sasi.current);
@@ -1755,7 +1783,7 @@ void FASTCALL SASI::Format()
 //---------------------------------------------------------------------------
 void FASTCALL SASI::Reassign()
 {
-	BOOL status;
+	int status;
 
 	ASSERT(this);
 	ASSERT(sasi.current);
@@ -1794,7 +1822,7 @@ void FASTCALL SASI::Reassign()
 //---------------------------------------------------------------------------
 void FASTCALL SASI::Read6()
 {
-	DWORD record;
+	uint32_t record;
 
 	ASSERT(this);
 	ASSERT(sasi.current);
@@ -1847,7 +1875,7 @@ void FASTCALL SASI::Read6()
 //---------------------------------------------------------------------------
 void FASTCALL SASI::Write6()
 {
-	DWORD record;
+	uint32_t record;
 
 	ASSERT(this);
 	ASSERT(sasi.current);
@@ -1899,7 +1927,7 @@ void FASTCALL SASI::Write6()
 //---------------------------------------------------------------------------
 void FASTCALL SASI::Seek6()
 {
-	BOOL status;
+	int status;
 
 	ASSERT(this);
 	ASSERT(sasi.current);
@@ -2061,7 +2089,7 @@ void FASTCALL SASI::ModeSense()
 //---------------------------------------------------------------------------
 void FASTCALL SASI::StartStop()
 {
-	BOOL status;
+	int status;
 
 	ASSERT(this);
 	ASSERT(sasi.current);
@@ -2094,7 +2122,7 @@ void FASTCALL SASI::StartStop()
 //---------------------------------------------------------------------------
 void FASTCALL SASI::Removal()
 {
-	BOOL status;
+	int status;
 
 	ASSERT(this);
 	ASSERT(sasi.current);
@@ -2179,7 +2207,7 @@ void FASTCALL SASI::ReadCapacity()
 //---------------------------------------------------------------------------
 void FASTCALL SASI::Read10()
 {
-	DWORD record;
+	uint32_t record;
 
 	ASSERT(this);
 	ASSERT(sasi.current);
@@ -2242,7 +2270,7 @@ void FASTCALL SASI::Read10()
 //---------------------------------------------------------------------------
 void FASTCALL SASI::Write10()
 {
-	DWORD record;
+	uint32_t record;
 
 	ASSERT(this);
 	ASSERT(sasi.current);
@@ -2304,7 +2332,7 @@ void FASTCALL SASI::Write10()
 //---------------------------------------------------------------------------
 void FASTCALL SASI::Seek10()
 {
-	BOOL status;
+	int status;
 
 	ASSERT(this);
 	ASSERT(sasi.current);
@@ -2337,7 +2365,7 @@ void FASTCALL SASI::Seek10()
 //---------------------------------------------------------------------------
 void FASTCALL SASI::Verify()
 {
-	BOOL status;
+	int status;
 
 	ASSERT(this);
 	ASSERT(sasi.current);
@@ -2406,7 +2434,7 @@ void FASTCALL SASI::Specify()
 //	MO オープン
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SASI::Open(const Filepath& path)
+int FASTCALL SASI::Open(const Filepath& path)
 {
 	ASSERT(this);
 
@@ -2433,7 +2461,7 @@ BOOL FASTCALL SASI::Open(const Filepath& path)
 	if (sasi.mo->Open(path, TRUE)) {
 		// 成功であれば、ファイルパスと書き込み禁止状態を記憶
 		sasi.writep = sasi.mo->IsWriteP();
-		sasi.mo->GetPath(scsimo);
+		sasi.mo->GetPath(*scsimo);
 		return TRUE;
 	}
 
@@ -2446,7 +2474,7 @@ BOOL FASTCALL SASI::Open(const Filepath& path)
 //	MO イジェクト
 //
 //---------------------------------------------------------------------------
-void FASTCALL SASI::Eject(BOOL force)
+void FASTCALL SASI::Eject(int force)
 {
 	ASSERT(this);
 
@@ -2471,7 +2499,7 @@ void FASTCALL SASI::Eject(BOOL force)
 //	MO 書き込み禁止
 //
 //---------------------------------------------------------------------------
-void FASTCALL SASI::WriteP(BOOL flag)
+void FASTCALL SASI::WriteP(int flag)
 {
 	ASSERT(this);
 
@@ -2499,7 +2527,7 @@ void FASTCALL SASI::WriteP(BOOL flag)
 //	MO 書き込み禁止取得
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SASI::IsWriteP() const
+int FASTCALL SASI::IsWriteP() const
 {
 	ASSERT(this);
 
@@ -2523,7 +2551,7 @@ BOOL FASTCALL SASI::IsWriteP() const
 //	MO Read Onlyチェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SASI::IsReadOnly() const
+int FASTCALL SASI::IsReadOnly() const
 {
 	ASSERT(this);
 
@@ -2547,7 +2575,7 @@ BOOL FASTCALL SASI::IsReadOnly() const
 //	MO Lockedチェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SASI::IsLocked() const
+int FASTCALL SASI::IsLocked() const
 {
 	ASSERT(this);
 
@@ -2570,7 +2598,7 @@ BOOL FASTCALL SASI::IsLocked() const
 //	MO Readyチェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SASI::IsReady() const
+int FASTCALL SASI::IsReady() const
 {
 	ASSERT(this);
 
@@ -2593,7 +2621,7 @@ BOOL FASTCALL SASI::IsReady() const
 //	MO 有効チェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SASI::IsValid() const
+int FASTCALL SASI::IsValid() const
 {
 	ASSERT(this);
 

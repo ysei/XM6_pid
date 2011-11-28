@@ -51,7 +51,7 @@ Sprite::Sprite(VM *p) : MemDevice(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Sprite::Init()
+int FASTCALL Sprite::Init()
 {
 	ASSERT(this);
 
@@ -62,7 +62,7 @@ BOOL FASTCALL Sprite::Init()
 
 	// メモリ確保、クリア
 	try {
-		sprite = new BYTE[ 0x10000 ];
+		sprite = new uint8_t[ 0x10000 ];
 	}
 	catch (...) {
 		return FALSE;
@@ -148,7 +148,7 @@ void FASTCALL Sprite::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Sprite::Save(Fileio *fio, int /*ver*/)
+int FASTCALL Sprite::Save(Fileio *fio, int /*ver*/)
 {
 	size_t sz;
 
@@ -182,12 +182,12 @@ BOOL FASTCALL Sprite::Save(Fileio *fio, int /*ver*/)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Sprite::Load(Fileio *fio, int /*ver*/)
+int FASTCALL Sprite::Load(Fileio *fio, int /*ver*/)
 {
 	size_t sz;
 	int i;
-	DWORD addr;
-	DWORD data;
+	uint32_t addr;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT(fio);
@@ -238,7 +238,7 @@ BOOL FASTCALL Sprite::Load(Fileio *fio, int /*ver*/)
 	// レンダラへ通知(メモリ:偶数アドレスのみ)
 	for (addr=0; addr<0x10000; addr+=2) {
 		if (addr < 0x400) {
-			data = *(WORD*)(&sprite[addr]);
+			data = *(uint16_t*)(&sprite[addr]);
 			render->SpriteReg(addr, data);
 			continue;
 		}
@@ -246,9 +246,9 @@ BOOL FASTCALL Sprite::Load(Fileio *fio, int /*ver*/)
 			continue;
 		}
 		if (addr >= 0xc000) {
-			data = *(WORD*)(&sprite[addr]);
+			data = *(uint16_t*)(&sprite[addr]);
 //			render->BGMem(addr, data);			//-XM6_pid//
-			render->BGMem(addr, (WORD)data);	//+XM6_pid//
+			render->BGMem(addr, (uint16_t)data);	//+XM6_pid//
 		}
 		render->PCGMem(addr);
 	}
@@ -272,7 +272,7 @@ void FASTCALL Sprite::ApplyCfg(const Config *config)
 //	バイト読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL Sprite::ReadByte(DWORD addr)
+uint32_t FASTCALL Sprite::ReadByte(uint32_t addr)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -310,7 +310,7 @@ DWORD FASTCALL Sprite::ReadByte(DWORD addr)
 //	ワード読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL Sprite::ReadWord(DWORD addr)
+uint32_t FASTCALL Sprite::ReadWord(uint32_t addr)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -321,7 +321,7 @@ DWORD FASTCALL Sprite::ReadWord(DWORD addr)
 
 	// 0800～7FFFはバスエラーの影響を受けない
 	if ((addr >= 0x800) && (addr < 0x8000)) {
-		return *(WORD *)(&sprite[addr]);
+		return *(uint16_t *)(&sprite[addr]);
 	}
 
 	// 接続チェック
@@ -339,7 +339,7 @@ DWORD FASTCALL Sprite::ReadWord(DWORD addr)
 	}
 
 	// 読み込み
-	return *(WORD *)(&sprite[addr]);
+	return *(uint16_t *)(&sprite[addr]);
 }
 
 //---------------------------------------------------------------------------
@@ -347,9 +347,9 @@ DWORD FASTCALL Sprite::ReadWord(DWORD addr)
 //	バイト書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL Sprite::WriteByte(DWORD addr, DWORD data)
+void FASTCALL Sprite::WriteByte(uint32_t addr, uint32_t data)
 {
-	DWORD ctrl;
+	uint32_t ctrl;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -366,20 +366,20 @@ void FASTCALL Sprite::WriteByte(DWORD addr, DWORD data)
 	// 800～811はコントロールレジスタ
 	if ((addr >= 0x800) && (addr < 0x812)) {
 		// データ書き込み
-		sprite[addr ^ 1] = (BYTE)data;
+		sprite[addr ^ 1] = (uint8_t)data;
 
 		if (addr & 1) {
 			// 下位書き込み。上位とあわせてコントロール
-			ctrl = (DWORD)sprite[addr];
+			ctrl = (uint32_t)sprite[addr];
 			ctrl <<= 8;
 			ctrl |= data;
-			Control((DWORD)(addr & 0xfffe), ctrl);
+			Control((uint32_t)(addr & 0xfffe), ctrl);
 		}
 		else {
 			// 上位書き込み。下位とあわせてコントロール
 			ctrl = data;
 			ctrl <<= 8;
-			ctrl |= (DWORD)sprite[addr];
+			ctrl |= (uint32_t)sprite[addr];
 			Control(addr, ctrl);
 		}
 		return;
@@ -412,12 +412,12 @@ void FASTCALL Sprite::WriteByte(DWORD addr, DWORD data)
 	}
 
 	// 書き込み
-	sprite[addr ^ 1] = (BYTE)data;
+	sprite[addr ^ 1] = (uint8_t)data;
 
 	// レンダラ処理
 	addr &= 0xfffe;
 	if (addr < 0x400) {
-		ctrl = *(WORD*)(&sprite[addr]);
+		ctrl = *(uint16_t*)(&sprite[addr]);
 		render->SpriteReg(addr, ctrl);
 		return;
 	}
@@ -425,9 +425,9 @@ void FASTCALL Sprite::WriteByte(DWORD addr, DWORD data)
 		render->PCGMem(addr);
 	}
 	if (addr >= 0xc000) {
-		ctrl = *(WORD*)(&sprite[addr]);
+		ctrl = *(uint16_t*)(&sprite[addr]);
 //		render->BGMem(addr, ctrl);			//-XM6_pid//
-		render->BGMem(addr, (WORD)ctrl);	//+XM6_pid//
+		render->BGMem(addr, (uint16_t)ctrl);	//+XM6_pid//
 	}
 }
 
@@ -436,7 +436,7 @@ void FASTCALL Sprite::WriteByte(DWORD addr, DWORD data)
 //	ワード書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL Sprite::WriteWord(DWORD addr, DWORD data)
+void FASTCALL Sprite::WriteWord(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -447,14 +447,14 @@ void FASTCALL Sprite::WriteWord(DWORD addr, DWORD data)
 	addr &= 0xfffe;
 
 	// 一致チェック
-	if (*(WORD *)(&sprite[addr]) == data) {
+	if (*(uint16_t *)(&sprite[addr]) == data) {
 		return;
 	}
 
 	// 800～811はコントロールレジスタ
 	if ((addr >= 0x800) && (addr < 0x812)) {
-//		*(WORD *)(&sprite[addr]) = data;		//-XM6_pid//
-		*(WORD *)(&sprite[addr]) = (WORD)data;	//+XM6_pid//
+//		*(uint16_t *)(&sprite[addr]) = data;		//-XM6_pid//
+		*(uint16_t *)(&sprite[addr]) = (uint16_t)data;	//+XM6_pid//
 		Control(addr, data);
 		return;
 	}
@@ -477,7 +477,7 @@ void FASTCALL Sprite::WriteWord(DWORD addr, DWORD data)
 	}
 
 	// 書き込み
-	*(WORD *)(&sprite[addr]) = (WORD)data;
+	*(uint16_t *)(&sprite[addr]) = (uint16_t)data;
 
 	// レンダラ
 	if (addr < 0x400) {
@@ -489,7 +489,7 @@ void FASTCALL Sprite::WriteWord(DWORD addr, DWORD data)
 	}
 	if (addr >= 0xc000) {
 //		render->BGMem(addr, data);			//-XM6_pid//
-		render->BGMem(addr, (WORD)data);	//+XM6_pid//
+		render->BGMem(addr, (uint16_t)data);	//+XM6_pid//
 	}
 }
 
@@ -498,7 +498,7 @@ void FASTCALL Sprite::WriteWord(DWORD addr, DWORD data)
 //	読み込みのみ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL Sprite::ReadOnly(DWORD addr) const
+uint32_t FASTCALL Sprite::ReadOnly(uint32_t addr) const
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -515,7 +515,7 @@ DWORD FASTCALL Sprite::ReadOnly(DWORD addr) const
 //	コントロール
 //
 //---------------------------------------------------------------------------
-void FASTCALL Sprite::Control(DWORD addr, DWORD data)
+void FASTCALL Sprite::Control(uint32_t addr, uint32_t data)
 {
 	ASSERT((addr >= 0x800) && (addr < 0x812));
 	ASSERT((addr & 1) == 0);
@@ -671,7 +671,7 @@ void FASTCALL Sprite::GetSprite(sprite_t *buffer) const
 //	メモリエリア取得
 //
 //---------------------------------------------------------------------------
-const BYTE* FASTCALL Sprite::GetMem() const
+const uint8_t* FASTCALL Sprite::GetMem() const
 {
 	ASSERT(this);
 	ASSERT(spr.mem);
@@ -684,7 +684,7 @@ const BYTE* FASTCALL Sprite::GetMem() const
 //	PCGエリア取得
 //
 //---------------------------------------------------------------------------
-const BYTE* FASTCALL Sprite::GetPCG() const
+const uint8_t* FASTCALL Sprite::GetPCG() const
 {
 	ASSERT(this);
 	ASSERT(spr.pcg);

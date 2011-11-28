@@ -60,42 +60,42 @@ class FDISector
 public:
 	// 内部データ定義
 	typedef struct {
-		DWORD chrn[4];					// CHRN
-		BOOL mfm;						// MFMフラグ
+		uint32_t chrn[4];					// CHRN
+		int mfm;						// MFMフラグ
 		int error;						// エラーコード
 		int length;						// データ長
 		int gap3;						// GAP3
-		BYTE *buffer;					// データバッファ
-		DWORD pos;						// ポジション
-		BOOL changed;					// 変更済みフラグ
+		uint8_t *buffer;					// データバッファ
+		uint32_t pos;						// ポジション
+		int changed;					// 変更済みフラグ
 		FDISector *next;				// 次のセクタ
 	} sector_t;
 
 public:
 	// 基本ファンクション
-	FDISector(BOOL mfm, const DWORD *chrn);
+	FDISector(int mfm, const uint32_t *chrn);
 										// コンストラクタ
 	virtual ~FDISector();
 										// デストラクタ
-	void FASTCALL Load(const BYTE *buf, int len, int gap, int err);
+	void FASTCALL Load(const uint8_t *buf, int len, int gap, int err);
 										// 初期ロード
 
 	// リード・ライト
-	BOOL FASTCALL IsMatch(BOOL mfm, const DWORD *chrn) const;
+	int FASTCALL IsMatch(int mfm, const uint32_t *chrn) const;
 										// セクタマッチするか
-	void FASTCALL GetCHRN(DWORD *chrn)	const;
+	void FASTCALL GetCHRN(uint32_t *chrn)	const;
 										// CHRNを取得
-	BOOL FASTCALL IsMFM() const			{ return sec.mfm; }
+	int FASTCALL IsMFM() const			{ return sec.mfm; }
 										// MFMか
-	int FASTCALL Read(BYTE *buf) const;
+	int FASTCALL Read(uint8_t *buf) const;
 										// リード
-	int FASTCALL Write(const BYTE *buf, BOOL deleted);
+	int FASTCALL Write(const uint8_t *buf, int deleted);
 										// ライト
-	int FASTCALL Fill(DWORD d);
+	int FASTCALL Fill(uint32_t d);
 										// フィル
 
 	// プロパティ
-	const BYTE* FASTCALL GetSector() const	{ return sec.buffer; }
+	const uint8_t* FASTCALL GetSector() const	{ return sec.buffer; }
 										// セクタデータ取得
 	int FASTCALL GetLength() const		{ return sec.length; }
 										// データ長取得
@@ -105,13 +105,13 @@ public:
 										// GAP3バイト数取得
 
 	// ポジション
-	void FASTCALL SetPos(DWORD pos)		{  sec.pos = pos; }
+	void FASTCALL SetPos(uint32_t pos)		{  sec.pos = pos; }
 										// ポジション設定
-	DWORD FASTCALL GetPos() const		{ return sec.pos; }
+	uint32_t FASTCALL GetPos() const		{ return sec.pos; }
 										// ポジション取得
 
 	// 変更フラグ
-	BOOL FASTCALL IsChanged() const		{ return sec.changed; }
+	int FASTCALL IsChanged() const		{ return sec.changed; }
 										// 変更フラグチェック
 	void FASTCALL ClrChanged()			{ sec.changed = FALSE; }
 										// 変更フラグを落とす
@@ -142,39 +142,39 @@ public:
 	typedef struct {
 		FDIDisk *disk;					// 親ディスク
 		int track;						// トラック
-		BOOL init;						// ロード済みか
+		int init;						// ロード済みか
 		int sectors[3];					// 所有セクタ数(ALL/FM/MFM)
-		BOOL hd;						// 密度フラグ
-		BOOL mfm;						// 先頭セクタMFMフラグ
+		int hd;						// 密度フラグ
+		int mfm;						// 先頭セクタMFMフラグ
 		FDISector *first;				// 最初のセクタ
 		FDITrack *next;					// 次のトラック
 	} track_t;
 
 public:
 	// 基本ファンクション
-	FDITrack(FDIDisk *disk, int track, BOOL hd = TRUE);
+	FDITrack(FDIDisk *disk, int track, int hd = TRUE);
 										// コンストラクタ
 	virtual ~FDITrack();
 										// デストラクタ
-	virtual BOOL FASTCALL Save(Fileio *fio, DWORD offset);
+	virtual int FASTCALL Save(Fileio *fio, uint32_t offset);
 										// セーブ
-	virtual BOOL FASTCALL Save(const Filepath& path, DWORD offset);
+	virtual int FASTCALL Save(const Filepath& path, uint32_t offset);
 										// セーブ
-	void FASTCALL Create(DWORD phyfmt);
+	void FASTCALL Create(uint32_t phyfmt);
 										// 物理フォーマット
-	BOOL FASTCALL IsHD() const			{ return trk.hd; }
+	int FASTCALL IsHD() const			{ return trk.hd; }
 										// HDフラグ取得
 
 	// リード・ライト
-	int FASTCALL ReadID(DWORD *buf, BOOL mfm);
+	int FASTCALL ReadID(uint32_t *buf, int mfm);
 										// リードID
-	int FASTCALL ReadSector(BYTE *buf, int *len, BOOL mfm, const DWORD *chrn);
+	int FASTCALL ReadSector(uint8_t *buf, int *len, int mfm, const uint32_t *chrn);
 										// リードセクタ
-	int FASTCALL WriteSector(const BYTE *buf, int *len, BOOL mfm, const DWORD *chrn, BOOL deleted);
+	int FASTCALL WriteSector(const uint8_t *buf, int *len, int mfm, const uint32_t *chrn, int deleted);
 										// ライトセクタ
-	int FASTCALL ReadDiag(BYTE *buf, int *len, BOOL mfm, const DWORD *chrn);
+	int FASTCALL ReadDiag(uint8_t *buf, int *len, int mfm, const uint32_t *chrn);
 										// リードダイアグ
-	virtual int FASTCALL WriteID(const BYTE *buf, DWORD d, int sc, BOOL mfm, int gpl);
+	virtual int FASTCALL WriteID(const uint8_t *buf, uint32_t d, int sc, int mfm, int gpl);
 										// ライトID
 
 	// インデックス・リンク
@@ -186,13 +186,13 @@ public:
 										// 次のトラックを取得
 
 	// セクタ
-	BOOL FASTCALL IsChanged() const;
+	int FASTCALL IsChanged() const;
 										// 変更フラグチェック
-	DWORD FASTCALL GetTotalLength() const;
+	uint32_t FASTCALL GetTotalLength() const;
 										// セクタレングス累計算出
 	void FASTCALL ForceChanged();
 										// 強制変更
-	FDISector* FASTCALL Search(BOOL mfm, const DWORD *chrn);
+	FDISector* FASTCALL Search(int mfm, const uint32_t *chrn);
 										// 条件に合うセクタをサーチ
 	FDISector* FASTCALL GetFirst() const{ return trk.first; }
 										// 最初のセクタを取得
@@ -219,7 +219,7 @@ protected:
 	// ディスク、回転管理
 	FDIDisk* FASTCALL GetDisk() const	{ return trk.disk; }
 										// ディスク取得
-	BOOL FASTCALL IsMFM() const			{ return trk.mfm; }
+	int FASTCALL IsMFM() const			{ return trk.mfm; }
 										// 先頭セクタがMFMか
 	int FASTCALL GetGAP1() const;
 										// GAP1長さ取得
@@ -227,13 +227,13 @@ protected:
 										// トータル長さ取得
 	void FASTCALL CalcPos();
 										// セクタ先頭の位置を算出
-	DWORD FASTCALL GetSize(FDISector *sector) const;
+	uint32_t FASTCALL GetSize(FDISector *sector) const;
 										// セクタのサイズ(ID,GAP3含む)を取得
 	FDISector* FASTCALL GetCurSector() const;
 										// カレント位置以降の最初のセクタを取得
 
 	// トラック
-	BOOL IsInit() const					{ return trk.init; }
+	int IsInit() const					{ return trk.init; }
 
 	// セクタ
 	void FASTCALL AddSector(FDISector *sector);
@@ -248,17 +248,17 @@ protected:
 										// セクタ数取得(FM)
 
 	// ダイアグ
-	int FASTCALL MakeGAP1(BYTE *buf, int offset) const;
+	int FASTCALL MakeGAP1(uint8_t *buf, int offset) const;
 										// GAP1作成
-	int FASTCALL MakeSector(BYTE *buf, int offset, FDISector *sector) const;
+	int FASTCALL MakeSector(uint8_t *buf, int offset, FDISector *sector) const;
 										// セクタデータ作成
-	int FASTCALL MakeGAP4(BYTE *buf, int offset) const;
+	int FASTCALL MakeGAP4(uint8_t *buf, int offset) const;
 										// GAP4作成
-	int FASTCALL MakeData(BYTE *buf, int offset, BYTE data, int length) const;
+	int FASTCALL MakeData(uint8_t *buf, int offset, uint8_t data, int length) const;
 										// Diagデータ作成
-	WORD FASTCALL CalcCRC(BYTE *buf, int length) const;
+uint16_t FASTCALL CalcCRC(uint8_t *buf, int length) const;
 										// CRC算出
-	static const WORD CRCTable[0x100];
+	static const uint16_t CRCTable[0x100];
 										// CRC算出テーブル
 
 	// 内部データ
@@ -276,8 +276,8 @@ class FDIDisk
 public:
 	// 新規オプション定義
 	typedef struct {
-		DWORD phyfmt;					// 物理フォーマット種別
-		BOOL logfmt;					// 論理フォーマット有無
+		uint32_t phyfmt;					// 物理フォーマット種別
+		int logfmt;					// 論理フォーマット有無
 		char name[60];					// コメント(DIM)/ディスク名(D68)
 	} option_t;
 
@@ -285,12 +285,12 @@ public:
 	typedef struct {
 		int index;						// インデックス
 		FDI *fdi;						// 親FDI
-		DWORD id;						// ID
-		BOOL writep;					// 書き込み禁止
-		BOOL readonly;					// 読み込み専用
+		uint32_t id;						// ID
+		int writep;					// 書き込み禁止
+		int readonly;					// 読み込み専用
 		char name[60];					// ディスク名
 		Filepath path;					// パス
-		DWORD offset;					// ファイルのオフセット
+		uint32_t offset;					// ファイルのオフセット
 		FDITrack *first;				// 最初のトラック
 		FDITrack *head[2];				// ヘッドに対応したトラック
 		int search;						// 検索時間(１周=0x10000)
@@ -302,53 +302,53 @@ public:
 										// コンストラクタ
 	virtual ~FDIDisk();
 										// デストラクタ
-	DWORD FASTCALL GetID() const		{ return disk.id; }
+	uint32_t FASTCALL GetID() const		{ return disk.id; }
 										// ID取得
 
 	// メディア操作
-	virtual BOOL FASTCALL Create(const Filepath& path, const option_t *opt);
+	virtual int FASTCALL Create(const Filepath& path, const option_t *opt);
 										// 新規ディスク作成
-	virtual BOOL FASTCALL Open(const Filepath& path, DWORD offset = 0);
+	virtual int FASTCALL Open(const Filepath& path, uint32_t offset = 0);
 										// オープン
 	void FASTCALL GetName(char *buf) const;
 										// ディスク名取得
 	void FASTCALL GetPath(Filepath& path) const;
 										// パス取得
-	BOOL FASTCALL IsWriteP() const		{ return disk.writep; }
+	int FASTCALL IsWriteP() const		{ return disk.writep; }
 										// ライトプロテクトか
-	BOOL FASTCALL IsReadOnly() const	{ return disk.readonly; }
+	int FASTCALL IsReadOnly() const	{ return disk.readonly; }
 										// Read Onlyディスクイメージか
-	void FASTCALL WriteP(BOOL flag);
+	void FASTCALL WriteP(int flag);
 										// 書き込み禁止をセット
-	virtual BOOL FASTCALL Flush();
+	virtual int FASTCALL Flush();
 										// バッファをフラッシュ
 
 	// アクセス
 	virtual void FASTCALL Seek(int c);
 										// シーク
-	int FASTCALL ReadID(DWORD *buf, BOOL mfm, int hd);
+	int FASTCALL ReadID(uint32_t *buf, int mfm, int hd);
 										// リードID
-	int FASTCALL ReadSector(BYTE *buf, int *len, BOOL mfm, const DWORD *chrn, int hd);
+	int FASTCALL ReadSector(uint8_t *buf, int *len, int mfm, const uint32_t *chrn, int hd);
 										// リードセクタ
-	int FASTCALL WriteSector(const BYTE *buf, int *len, BOOL mfm, const DWORD *chrn, int hd, BOOL deleted);
+	int FASTCALL WriteSector(const uint8_t *buf, int *len, int mfm, const uint32_t *chrn, int hd, int deleted);
 										// ライトセクタ
-	int FASTCALL ReadDiag(BYTE *buf, int *len, BOOL mfm, const DWORD *chrn, int hd);
+	int FASTCALL ReadDiag(uint8_t *buf, int *len, int mfm, const uint32_t *chrn, int hd);
 										// リードダイアグ
-	int FASTCALL WriteID(const BYTE *buf, DWORD d, int sc, BOOL mfm, int hd, int gpl);
+	int FASTCALL WriteID(const uint8_t *buf, uint32_t d, int sc, int mfm, int hd, int gpl);
 										// ライトID
 
 	// 回転管理
-	DWORD FASTCALL GetRotationPos() const;
+	uint32_t FASTCALL GetRotationPos() const;
 										// 回転位置取得
-	DWORD FASTCALL GetRotationTime() const;
+	uint32_t FASTCALL GetRotationTime() const;
 										// 回転時間取得
-	DWORD FASTCALL GetSearch() const	{ return disk.search; }
+	uint32_t FASTCALL GetSearch() const	{ return disk.search; }
 										// 検索長さ取得
-	void FASTCALL SetSearch(DWORD len)	{ disk.search = len; }
+	void FASTCALL SetSearch(uint32_t len)	{ disk.search = len; }
 										// 検索長さ設定
-	void FASTCALL CalcSearch(DWORD pos);
+	void FASTCALL CalcSearch(uint32_t pos);
 										// 検索長さ算出
-	BOOL FASTCALL IsHD() const;
+	int FASTCALL IsHD() const;
 										// ドライブHD状態取得
 	FDITrack* FASTCALL Search(int track) const;
 										// トラックサーチ
@@ -363,25 +363,25 @@ public:
 
 protected:
 	// 論理フォーマット
-	void FASTCALL Create2HD(BOOL flag2hd);
+	void FASTCALL Create2HD(int flag2hd);
 										// 論理フォーマット(2HD, 2HDA)
-	static const BYTE IPL2HD[0x200];
+	static const uint8_t IPL2HD[0x200];
 										// IPL(2HD, 2HDA)
 	void FASTCALL Create2HS();
 										// 論理フォーマット(2HS)
-	static const BYTE IPL2HS[0x800];
+	static const uint8_t IPL2HS[0x800];
 										// IPL(2HS)
 	void FASTCALL Create2HC();
 										// 論理フォーマット(2HC)
-	static const BYTE IPL2HC[0x200];
+	static const uint8_t IPL2HC[0x200];
 										// IPL(2HC)
 	void FASTCALL Create2HDE();
 										// 論理フォーマット(2HDE)
-	static const BYTE IPL2HDE[0x800];
+	static const uint8_t IPL2HDE[0x800];
 										// IPL(2HDE)
 	void FASTCALL Create2HQ();
 										// 論理フォーマット(2HQ)
-	static const BYTE IPL2HQ[0x200];
+	static const uint8_t IPL2HQ[0x200];
 										// IPL(2HQ)
 	void FASTCALL Create2DD();
 										// 論理フォーマット(2DD)
@@ -428,11 +428,11 @@ public:
 										// デストラクタ
 
 	// メディア操作
-	BOOL FASTCALL Open(const Filepath& path, int media);
+	int FASTCALL Open(const Filepath& path, int media);
 										// オープン
-	DWORD FASTCALL GetID() const;
+	uint32_t FASTCALL GetID() const;
 										// ID取得
-	BOOL FASTCALL IsMulti() const;
+	int FASTCALL IsMulti() const;
 										// マルチディスクイメージか
 	FDIDisk* GetDisk() const			{ return fdi.disk; }
 										// 現在のディスクを取得
@@ -444,45 +444,45 @@ public:
 										// ディスク名取得
 	void FASTCALL GetPath(Filepath& path) const;
 										// パス取得
-	BOOL FASTCALL Save(Fileio *fio, int ver);
+	int FASTCALL Save(Fileio *fio, int ver);
 										// セーブ
-	BOOL FASTCALL Load(Fileio *fio, int ver, BOOL *ready, int *media, Filepath& path);
+	int FASTCALL Load(Fileio *fio, int ver, int *ready, int *media, Filepath& path);
 										// ロード
 	void FASTCALL Adjust();
 										// 調整(特殊)
 
 	// メディア状態
-	BOOL FASTCALL IsReady() const;
+	int FASTCALL IsReady() const;
 										// メディアがセットされているか
-	BOOL FASTCALL IsWriteP() const;
+	int FASTCALL IsWriteP() const;
 										// ライトプロテクトか
-	BOOL FASTCALL IsReadOnly() const;
+	int FASTCALL IsReadOnly() const;
 										// Read Onlyディスクイメージか
-	void FASTCALL WriteP(BOOL flag);
+	void FASTCALL WriteP(int flag);
 										// 書き込み禁止をセット
 
 	// アクセス
 	void FASTCALL Seek(int c);
 										// シーク
-	int FASTCALL ReadID(DWORD *buf, BOOL mfm, int hd);
+	int FASTCALL ReadID(uint32_t *buf, int mfm, int hd);
 										// リードID
-	int FASTCALL ReadSector(BYTE *buf, int *len, BOOL mfm, const DWORD *chrn, int hd);
+	int FASTCALL ReadSector(uint8_t *buf, int *len, int mfm, const uint32_t *chrn, int hd);
 										// リードセクタ
-	int FASTCALL WriteSector(const BYTE *buf, int *len, BOOL mfm, const DWORD *chrn, int hd, BOOL deleted);
+	int FASTCALL WriteSector(const uint8_t *buf, int *len, int mfm, const uint32_t *chrn, int hd, int deleted);
 										// ライトセクタ
-	int FASTCALL ReadDiag(BYTE *buf, int *len, BOOL mfm, const DWORD *chrn, int hd);
+	int FASTCALL ReadDiag(uint8_t *buf, int *len, int mfm, const uint32_t *chrn, int hd);
 										// リードダイアグ
-	int FASTCALL WriteID(const BYTE *buf, DWORD d, int sc, BOOL mfm, int hd, int gpl);
+	int FASTCALL WriteID(const uint8_t *buf, uint32_t d, int sc, int mfm, int hd, int gpl);
 										// ライトID
 
 	// 回転管理
-	DWORD FASTCALL GetRotationPos() const;
+	uint32_t FASTCALL GetRotationPos() const;
 										// 回転位置取得
-	DWORD FASTCALL GetRotationTime() const;
+	uint32_t FASTCALL GetRotationTime() const;
 										// 回転時間取得
-	DWORD FASTCALL GetSearch() const;
+	uint32_t FASTCALL GetSearch() const;
 										// 検索時間取得
-	BOOL FASTCALL IsHD() const;
+	int FASTCALL IsHD() const;
 										// ドライブHD状態取得
 
 private:
@@ -515,7 +515,7 @@ public:
 	// 基本ファンクション
 	FDITrack2HD(FDIDisk *disk, int track);
 										// コンストラクタ
-	BOOL FASTCALL Load(const Filepath& path, DWORD offset);
+	int FASTCALL Load(const Filepath& path, uint32_t offset);
 										// ロード
 };
 
@@ -531,13 +531,13 @@ public:
 										// コンストラクタ
 	virtual ~FDIDisk2HD();
 										// デストラクタ
-	BOOL FASTCALL Open(const Filepath& path, DWORD offset = 0);
+	int FASTCALL Open(const Filepath& path, uint32_t offset = 0);
 										// オープン
 	void FASTCALL Seek(int c);
 										// シーク
-	BOOL FASTCALL Create(const Filepath& path, const option_t *opt);
+	int FASTCALL Create(const Filepath& path, const option_t *opt);
 										// 新規ディスク作成
-	BOOL FASTCALL Flush();
+	int FASTCALL Flush();
 										// バッファをフラッシュ
 };
 
@@ -552,9 +552,9 @@ public:
 	// 基本ファンクション
 	FDITrackDIM(FDIDisk *disk, int track, int type);
 										// コンストラクタ
-	BOOL FASTCALL Load(const Filepath& path, DWORD offset, BOOL load);
+	int FASTCALL Load(const Filepath& path, uint32_t offset, int load);
 										// ロード
-	BOOL FASTCALL IsDIMMFM() const		{ return dim_mfm; }
+	int FASTCALL IsDIMMFM() const		{ return dim_mfm; }
 										// DIM MFMフラグ取得
 	int FASTCALL GetDIMSectors() const	{ return dim_secs; }
 										// DIM セクタ数取得
@@ -562,7 +562,7 @@ public:
 										// DIM レングス取得
 
 private:
-	BOOL dim_mfm;
+	int dim_mfm;
 										// DIM MFMフラグ
 	int dim_secs;
 										// DIM セクタ数
@@ -584,25 +584,25 @@ public:
 										// コンストラクタ
 	virtual ~FDIDiskDIM();
 										// デストラクタ
-	BOOL FASTCALL Open(const Filepath& path, DWORD offset = 0);
+	int FASTCALL Open(const Filepath& path, uint32_t offset = 0);
 										// オープン
 	void FASTCALL Seek(int c);
 										// シーク
-	BOOL FASTCALL Create(const Filepath& path, const option_t *opt);
+	int FASTCALL Create(const Filepath& path, const option_t *opt);
 										// 新規ディスク作成
-	BOOL FASTCALL Flush();
+	int FASTCALL Flush();
 										// バッファをフラッシュ
 
 private:
-	BOOL FASTCALL GetDIMMap(int track) const;
+	int FASTCALL GetDIMMap(int track) const;
 										// トラックマップ取得
-	DWORD FASTCALL GetDIMOffset(int track) const;
+	uint32_t FASTCALL GetDIMOffset(int track) const;
 										// トラックオフセット取得
-	BOOL FASTCALL Save();
+	int FASTCALL Save();
 										// 削除前の保存
-	BYTE dim_hdr[0x100];
+	uint8_t dim_hdr[0x100];
 										// DIMヘッダ
-	BOOL dim_load;
+	int dim_load;
 										// ヘッダ確認フラグ
 };
 
@@ -615,25 +615,25 @@ class FDITrackD68 : public FDITrack
 {
 public:
 	// 基本ファンクション
-	FDITrackD68(FDIDisk *disk, int track, BOOL hd);
+	FDITrackD68(FDIDisk *disk, int track, int hd);
 										// コンストラクタ
-	BOOL FASTCALL Load(const Filepath& path, DWORD offset);
+	int FASTCALL Load(const Filepath& path, uint32_t offset);
 										// ロード
-	BOOL FASTCALL Save(const Filepath& path, DWORD offset);
+	int FASTCALL Save(const Filepath& path, uint32_t offset);
 										// セーブ
-	BOOL FASTCALL Save(Fileio *fio, DWORD offset);
+	int FASTCALL Save(Fileio *fio, uint32_t offset);
 										// セーブ
-	int FASTCALL WriteID(const BYTE *buf, DWORD d, int sc, BOOL mfm, int gpl);
+	int FASTCALL WriteID(const uint8_t *buf, uint32_t d, int sc, int mfm, int gpl);
 										// ライトID
 	void FASTCALL ForceFormat()			{ d68_format = TRUE; }
 										// 強制フォーマット
-	BOOL FASTCALL IsFormated() const	{ return d68_format; }
+	int FASTCALL IsFormated() const	{ return d68_format; }
 										// フォーマット変更されているか
-	DWORD FASTCALL GetD68Length() const;
+	uint32_t FASTCALL GetD68Length() const;
 										// D68形式での長さを取得
 
 private:
-	BOOL d68_format;
+	int d68_format;
 										// フォーマット変更フラグ
 	static const int Gap3Table[];
 										// GAP3テーブル
@@ -651,27 +651,27 @@ public:
 										// コンストラクタ
 	virtual ~FDIDiskD68();
 										// デストラクタ
-	BOOL FASTCALL Open(const Filepath& path, DWORD offset = 0);
+	int FASTCALL Open(const Filepath& path, uint32_t offset = 0);
 										// オープン
 	void FASTCALL Seek(int c);
 										// シーク
 	void FASTCALL AdjustOffset();
 										// オフセット更新
-	static int FASTCALL CheckDisks(const Filepath& path, DWORD *offbuf);
+	static int FASTCALL CheckDisks(const Filepath& path, uint32_t *offbuf);
 										// D68ヘッダチェック
-	BOOL FASTCALL Create(const Filepath& path, const option_t *opt);
+	int FASTCALL Create(const Filepath& path, const option_t *opt);
 										// 新規ディスク作成
-	BOOL FASTCALL Flush();
+	int FASTCALL Flush();
 										// バッファをフラッシュ
 
 private:
-	DWORD FASTCALL GetD68Offset(int track) const;
+	uint32_t FASTCALL GetD68Offset(int track) const;
 										// トラックオフセット取得
-	BOOL FASTCALL Save();
+	int FASTCALL Save();
 										// 削除前の保存
-	BYTE d68_hdr[0x2b0];
+	uint8_t d68_hdr[0x2b0];
 										// D68ヘッダ
-	BOOL d68_load;
+	int d68_load;
 										// ヘッダ確認フラグ
 };
 
@@ -686,9 +686,9 @@ public:
 	// 基本ファンクション
 	FDITrackBAD(FDIDisk *disk, int track);
 										// コンストラクタ
-	BOOL FASTCALL Load(const Filepath& path, DWORD offset);
+	int FASTCALL Load(const Filepath& path, uint32_t offset);
 										// ロード
-	BOOL FASTCALL Save(const Filepath& path, DWORD offset);
+	int FASTCALL Save(const Filepath& path, uint32_t offset);
 										// セーブ
 
 private:
@@ -708,11 +708,11 @@ public:
 										// コンストラクタ
 	virtual ~FDIDiskBAD();
 										// デストラクタ
-	BOOL FASTCALL Open(const Filepath& path, DWORD offset = 0);
+	int FASTCALL Open(const Filepath& path, uint32_t offset = 0);
 										// オープン
 	void FASTCALL Seek(int c);
 										// シーク
-	BOOL FASTCALL Flush();
+	int FASTCALL Flush();
 										// バッファをフラッシュ
 };
 
@@ -727,7 +727,7 @@ public:
 	// 基本ファンクション
 	FDITrack2DD(FDIDisk *disk, int track);
 										// コンストラクタ
-	BOOL FASTCALL Load(const Filepath& path, DWORD offset);
+	int FASTCALL Load(const Filepath& path, uint32_t offset);
 										// ロード
 };
 
@@ -743,13 +743,13 @@ public:
 										// コンストラクタ
 	virtual ~FDIDisk2DD();
 										// デストラクタ
-	BOOL FASTCALL Open(const Filepath& path, DWORD offset = 0);
+	int FASTCALL Open(const Filepath& path, uint32_t offset = 0);
 										// オープン
 	void FASTCALL Seek(int c);
 										// シーク
-	BOOL FASTCALL Create(const Filepath& path, const option_t *opt);
+	int FASTCALL Create(const Filepath& path, const option_t *opt);
 										// 新規ディスク作成
-	BOOL FASTCALL Flush();
+	int FASTCALL Flush();
 										// バッファをフラッシュ
 };
 
@@ -764,7 +764,7 @@ public:
 	// 基本ファンクション
 	FDITrack2HQ(FDIDisk *disk, int track);
 										// コンストラクタ
-	BOOL FASTCALL Load(const Filepath& path, DWORD offset);
+	int FASTCALL Load(const Filepath& path, uint32_t offset);
 										// ロード
 };
 
@@ -780,13 +780,13 @@ public:
 										// コンストラクタ
 	virtual ~FDIDisk2HQ();
 										// デストラクタ
-	BOOL FASTCALL Open(const Filepath& path, DWORD offset = 0);
+	int FASTCALL Open(const Filepath& path, uint32_t offset = 0);
 										// オープン
 	void FASTCALL Seek(int c);
 										// シーク
-	BOOL FASTCALL Create(const Filepath& path, const option_t *opt);
+	int FASTCALL Create(const Filepath& path, const option_t *opt);
 										// 新規ディスク作成
-	BOOL FASTCALL Flush();
+	int FASTCALL Flush();
 										// バッファをフラッシュ
 };
 

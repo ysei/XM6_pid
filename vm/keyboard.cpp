@@ -48,7 +48,7 @@ Keyboard::Keyboard(VM *p) : Device(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Keyboard::Init()
+int FASTCALL Keyboard::Init()
 {
 	int i;
 	Scheduler *scheduler;
@@ -77,7 +77,9 @@ BOOL FASTCALL Keyboard::Init()
 
 	// イベント追加
 	event.SetDevice(this);
+#if defined(XM6_USE_EVENT_DESC)
 	event.SetDesc("Key Repeat");
+#endif
 	event.SetUser(0);
 	event.SetTime(0);
 	scheduler->AddEvent(&event);
@@ -156,7 +158,7 @@ void FASTCALL Keyboard::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Keyboard::Save(Fileio *fio, int ver)
+int FASTCALL Keyboard::Save(Fileio *fio, int ver)
 {
 	size_t sz;
 
@@ -189,7 +191,7 @@ BOOL FASTCALL Keyboard::Save(Fileio *fio, int ver)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Keyboard::Load(Fileio *fio, int ver)
+int FASTCALL Keyboard::Load(Fileio *fio, int ver)
 {
 	size_t sz;
 
@@ -238,7 +240,7 @@ void FASTCALL Keyboard::ApplyCfg(const Config *config)
 //	接続
 //
 //---------------------------------------------------------------------------
-void FASTCALL Keyboard::Connect(BOOL connect)
+void FASTCALL Keyboard::Connect(int connect)
 {
 	int i;
 
@@ -293,7 +295,7 @@ void FASTCALL Keyboard::GetKeyboard(keyboard_t *buffer) const
 //	イベントコールバック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Keyboard::Callback(Event *ev)
+int FASTCALL Keyboard::Callback(Event *ev)
 {
 	ASSERT(this);
 	ASSERT(ev);
@@ -332,7 +334,7 @@ BOOL FASTCALL Keyboard::Callback(Event *ev)
 //	メイク
 //
 //---------------------------------------------------------------------------
-void FASTCALL Keyboard::MakeKey(DWORD code)
+void FASTCALL Keyboard::MakeKey(uint32_t code)
 {
 	ASSERT(this);
 	ASSERT((code >= 0x01) && (code <= 0x73));
@@ -370,7 +372,7 @@ void FASTCALL Keyboard::MakeKey(DWORD code)
 //	ブレーク
 //
 //---------------------------------------------------------------------------
-void FASTCALL Keyboard::BreakKey(DWORD code)
+void FASTCALL Keyboard::BreakKey(uint32_t code)
 {
 	ASSERT(this);
 	ASSERT((code >= 0x01) && (code <= 0x73));
@@ -393,7 +395,7 @@ void FASTCALL Keyboard::BreakKey(DWORD code)
 	keyboard.status[code] = FALSE;
 
 	// リピート中のキーなら、リピート取り下げ
-	if (keyboard.rep_code == (DWORD)code) {
+	if (keyboard.rep_code == (uint32_t)code) {
 		keyboard.rep_code = 0;
 		event.SetTime(0);
 	}
@@ -410,7 +412,7 @@ void FASTCALL Keyboard::BreakKey(DWORD code)
 //	キーデータ送信ウェイト
 //
 //---------------------------------------------------------------------------
-void FASTCALL Keyboard::SendWait(BOOL flag)
+void FASTCALL Keyboard::SendWait(int flag)
 {
 	ASSERT(this);
 
@@ -422,7 +424,7 @@ void FASTCALL Keyboard::SendWait(BOOL flag)
 //	コマンド
 //
 //---------------------------------------------------------------------------
-void FASTCALL Keyboard::Command(DWORD data)
+void FASTCALL Keyboard::Command(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -556,7 +558,7 @@ void FASTCALL Keyboard::Command(DWORD data)
 //	コマンド取得
 //
 //---------------------------------------------------------------------------
-BOOL Keyboard::GetCommand(DWORD& data)
+int Keyboard::GetCommand(uint32_t& data)
 {
 	ASSERT(this);
 	ASSERT(sync);

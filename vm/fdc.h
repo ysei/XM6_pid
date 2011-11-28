@@ -74,83 +74,83 @@ public:
 
 		int in_len;						// 入力レングス
 		int in_cnt;						// 入力カウント
-		DWORD in_pkt[0x10];				// 入力パケット
+		uint32_t in_pkt[0x10];				// 入力パケット
 		int out_len;					// 出力レングス
 		int out_cnt;					// 出力カウント
-		DWORD out_pkt[0x10];			// 出力パケット
+		uint32_t out_pkt[0x10];			// 出力パケット
 
-		DWORD dcr;						// ドライブコントロールレジスタ
-		DWORD dsr;						// ドライブセレクトレジスタ
-		DWORD sr;						// ステータスレジスタ
-		DWORD dr;						// データレジスタ
-		DWORD st[4];					// ST0-ST3
+		uint32_t dcr;						// ドライブコントロールレジスタ
+		uint32_t dsr;						// ドライブセレクトレジスタ
+		uint32_t sr;						// ステータスレジスタ
+		uint32_t dr;						// データレジスタ
+		uint32_t st[4];					// ST0-ST3
 
-		DWORD srt;						// SRT
-		DWORD hut;						// HUT
-		DWORD hlt;						// HLT
-		DWORD hd;						// HD
-		DWORD us;						// US
-		DWORD cyl[4];					// 内部トラック
-		DWORD chrn[4];					// 要求されたC,H,R,N
+		uint32_t srt;						// SRT
+		uint32_t hut;						// HUT
+		uint32_t hlt;						// HLT
+		uint32_t hd;						// HD
+		uint32_t us;						// US
+		uint32_t cyl[4];					// 内部トラック
+		uint32_t chrn[4];					// 要求されたC,H,R,N
 
-		DWORD eot;						// EOT
-		DWORD gsl;						// GSL
-		DWORD dtl;						// DTL
-		DWORD sc; 						// SC
-		DWORD gpl;						// GAP3
-		DWORD d;						// フォーマットデータ
-		DWORD err;						// エラーコード
-		BOOL seek;						// シーク系割り込み要求
-		BOOL ndm;						// Non-DMAモード
-		BOOL mfm;						// MFMモード
-		BOOL mt;						// マルチトラック
-		BOOL sk;						// Skip DDAM
-		BOOL tc;						// TC
-		BOOL load;						// ヘッドロード
+		uint32_t eot;						// EOT
+		uint32_t gsl;						// GSL
+		uint32_t dtl;						// DTL
+		uint32_t sc; 						// SC
+		uint32_t gpl;						// GAP3
+		uint32_t d;						// フォーマットデータ
+		uint32_t err;						// エラーコード
+		int seek;						// シーク系割り込み要求
+		int ndm;						// Non-DMAモード
+		int mfm;						// MFMモード
+		int mt;						// マルチトラック
+		int sk;						// Skip DDAM
+		int tc;						// TC
+		int load;						// ヘッドロード
 
 		int offset;						// バッファオフセット
 		int len;						// 残りレングス
-		BYTE buffer[0x4000];			// データバッファ
+		uint8_t buffer[0x4000];			// データバッファ
 
-		BOOL fast;						// 高速モード
-		BOOL dual;						// デュアルドライブ
+		int fast;						// 高速モード
+		int dual;						// デュアルドライブ
 	} fdc_t;
 
 public:
 	// 基本ファンクション
 	FDC(VM *p);
 										// コンストラクタ
-	BOOL FASTCALL Init();
+	int FASTCALL Init();
 										// 初期化
 	void FASTCALL Cleanup();
 										// クリーンアップ
 	void FASTCALL Reset();
 										// リセット
-	BOOL FASTCALL Save(Fileio *fio, int ver);
+	int FASTCALL Save(Fileio *fio, int ver);
 										// セーブ
-	BOOL FASTCALL Load(Fileio *fio, int ver);
+	int FASTCALL Load(Fileio *fio, int ver);
 										// ロード
 	void FASTCALL ApplyCfg(const Config *config);
 										// 設定適用
 
 	// メモリデバイス
-	DWORD FASTCALL ReadByte(DWORD addr);
+	uint32_t FASTCALL ReadByte(uint32_t addr);
 										// バイト読み込み
-	DWORD FASTCALL ReadWord(DWORD addr);
+	uint32_t FASTCALL ReadWord(uint32_t addr);
 										// ワード読み込み
-	void FASTCALL WriteByte(DWORD addr, DWORD data);
+	void FASTCALL WriteByte(uint32_t addr, uint32_t data);
 										// バイト書き込み
-	void FASTCALL WriteWord(DWORD addr, DWORD data);
+	void FASTCALL WriteWord(uint32_t addr, uint32_t data);
 										// ワード書き込み
-	DWORD FASTCALL ReadOnly(DWORD addr) const;
+	uint32_t FASTCALL ReadOnly(uint32_t addr) const;
 										// 読み込みのみ
 
 	// 外部API
-	BOOL FASTCALL Callback(Event *ev);
+	int FASTCALL Callback(Event *ev);
 										// イベントコールバック
 	const fdc_t* FASTCALL GetWork() const;
 										// 内部ワークアドレス取得
-	void FASTCALL CompleteSeek(int drive, BOOL result);
+	void FASTCALL CompleteSeek(int drive, int result);
 										// シーク完了
 	void FASTCALL SetTC();
 										// TCアサート
@@ -158,9 +158,9 @@ public:
 private:
 	void FASTCALL Idle();
 										// アイドルフェーズ
-	void FASTCALL Command(DWORD data);
+	void FASTCALL Command(uint32_t data);
 										// コマンドフェーズ
-	void FASTCALL CommandRW(fdccmd cmd, DWORD data);
+	void FASTCALL CommandRW(fdccmd cmd, uint32_t data);
 										// コマンドフェーズ(R/W系)
 	void FASTCALL Execute();
 										// 実行フェーズ
@@ -168,39 +168,39 @@ private:
 										// 実行フェーズ(Read ID)
 	void FASTCALL ExecuteRW();
 										// 実行フェーズ(R/W系)
-	BYTE FASTCALL Read();
+	uint8_t FASTCALL Read();
 										// 実行フェーズ(Read)
-	void FASTCALL Write(DWORD data);
+	void FASTCALL Write(uint32_t data);
 										// 実行フェーズ(Write)
-	void FASTCALL Compare(DWORD data);
+	void FASTCALL Compare(uint32_t data);
 										// 実行フェーズ(Compare)
 	void FASTCALL Result();
 										// リザルトフェーズ
 	void FASTCALL ResultRW();
 										// リザルトフェーズ(R/W系)
-	void FASTCALL Interrupt(BOOL flag);
+	void FASTCALL Interrupt(int flag);
 										// 割り込み
 	void FASTCALL SoftReset();
 										// ソフトウェアリセット
 	void FASTCALL MakeST3();
 										// ST3作成
-	BOOL FASTCALL ReadData();
+	int FASTCALL ReadData();
 										// READ (DELETED) DATAコマンド
-	BOOL FASTCALL WriteData();
+	int FASTCALL WriteData();
 										// WRITE (DELETED) DATAコマンド
-	BOOL FASTCALL ReadDiag();
+	int FASTCALL ReadDiag();
 										// READ DIAGNOSTICコマンド
-	BOOL FASTCALL WriteID();
+	int FASTCALL WriteID();
 										// WRITE IDコマンド
-	BOOL FASTCALL Scan();
+	int FASTCALL Scan();
 										// SCAN系コマンド
 	void FASTCALL EventRW();
 										// イベント処理(R/W)
-	void FASTCALL EventErr(DWORD hus);
+	void FASTCALL EventErr(uint32_t hus);
 										// イベント処理(エラー)
 	void FASTCALL WriteBack();
 										// 書き込み完了
-	BOOL FASTCALL NextSector();
+	int FASTCALL NextSector();
 										// マルチセクタ処理
 	IOSC *iosc;
 										// IOSC

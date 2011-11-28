@@ -12,8 +12,36 @@
 #include "xm6.h"
 #include "filepath.h"
 #include "fileio.h"
+#include <stdio.h>
+#include <io.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 #if defined(_WIN32)
+
+
+
+#if defined(UNICODE)
+#define _T(x)	L x
+#else
+#define _T(x)	x
+#endif
+
+
+
+#if defined(UNICODE)
+#define _topen      _wopen
+#else
+#ifdef  _POSIX_
+#define _topen      open
+#define _taccess    access
+#else
+#define _topen      _open
+#define _taccess    _access
+#define _taccess_s  _access_s
+#endif
+#endif
+
 
 //===========================================================================
 //
@@ -21,6 +49,68 @@
 //
 //===========================================================================
 
+#if 0
+static Vm* vm = 0;
+static XM6_FILEIO_SYSTEM* fios = 0;
+
+Fileio::Fileio()
+	: handle(0)
+{
+	if(vm == 0) {
+		vm = GetVM();
+	}
+	if(fios == 0) {
+		if(vm) {
+			fios = vm->GetHostFileSystem();
+		}
+	}
+	if(fios) {
+		fios->setInvalid(&handle);
+	}
+}
+
+Fileio::~Fileio() {
+	Close();
+}
+
+int FASTCALL Fileio::Open(const Filepath* path, OpenMode mode) {
+	return fios->open(path, mode, &handle);
+}
+
+
+int FASTCALL Fileio::Seek(long offset) {
+	return fios->seek(handle, path, offset);
+}
+									// シーク
+int FASTCALL Fileio::Read(void *buffer, int size) {
+	return fios->read(handle, buffer, size);
+}
+									// 読み込み
+int FASTCALL Fileio::Write(const void *buffer, int size) {
+	return fios->write(handle, buffer, size);
+}
+
+uint32_t FASTCALL Fileio::GetFileSize() const {
+	uint32_t size = 0;
+	fios->getFileSize(handle, buffer, &size);
+	return size;
+}
+
+uint32_t FASTCALL Fileio::GetFilePos() const {
+	uint32_t size = 0;
+	fios->getFilePos(handle, buffer, &size);
+	return size;
+}
+
+void FASTCALL Fileio::Close() {
+	fios->close(handle);
+	fios->setInvalid(&handle);
+}
+
+int FASTCALL Fileio::IsValid() const {
+	return fios->isValid(handle);
+}
+#else
 //---------------------------------------------------------------------------
 //
 //	コンストラクタ
@@ -50,7 +140,7 @@ Fileio::~Fileio()
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Fileio::Load(const Filepath& path, void *buffer, int size)
+int FASTCALL Fileio::Load(const Filepath& path, void *buffer, int size)
 {
 	ASSERT(this);
 	ASSERT(buffer);
@@ -79,7 +169,7 @@ BOOL FASTCALL Fileio::Load(const Filepath& path, void *buffer, int size)
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Fileio::Save(const Filepath& path, void *buffer, int size)
+int FASTCALL Fileio::Save(const Filepath& path, void *buffer, int size)
 {
 	ASSERT(this);
 	ASSERT(buffer);
@@ -108,7 +198,7 @@ BOOL FASTCALL Fileio::Save(const Filepath& path, void *buffer, int size)
 //	オープン
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Fileio::Open(LPCTSTR fname, OpenMode mode)
+int FASTCALL Fileio::Open(LPCTSTR fname, OpenMode mode)
 {
 	ASSERT(this);
 	ASSERT(fname);
@@ -167,7 +257,7 @@ BOOL FASTCALL Fileio::Open(LPCTSTR fname, OpenMode mode)
 //	オープン
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Fileio::Open(const Filepath& path, OpenMode mode)
+int FASTCALL Fileio::Open(const Filepath& path, OpenMode mode)
 {
 	ASSERT(this);
 
@@ -179,7 +269,7 @@ BOOL FASTCALL Fileio::Open(const Filepath& path, OpenMode mode)
 //	読み込み
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Fileio::Read(void *buffer, int size)
+int FASTCALL Fileio::Read(void *buffer, int size)
 {
 	int count;
 
@@ -202,7 +292,7 @@ BOOL FASTCALL Fileio::Read(void *buffer, int size)
 //	書き込み
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Fileio::Write(const void *buffer, int size)
+int FASTCALL Fileio::Write(const void *buffer, int size)
 {
 	int count;
 
@@ -225,7 +315,7 @@ BOOL FASTCALL Fileio::Write(const void *buffer, int size)
 //	シーク
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Fileio::Seek(long offset)
+int FASTCALL Fileio::Seek(long offset)
 {
 	ASSERT(this);
 	ASSERT(handle >= 0);
@@ -243,7 +333,7 @@ BOOL FASTCALL Fileio::Seek(long offset)
 //	ファイルサイズ取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL Fileio::GetFileSize() const
+uint32_t FASTCALL Fileio::GetFileSize() const
 {
 #if defined(_MSC_VER)
 	__int64 len;
@@ -260,12 +350,12 @@ DWORD FASTCALL Fileio::GetFileSize() const
 	}
 
 	// 下位のみ
-	return (DWORD)len;
+	return (uint32_t)len;
 #else
 	ASSERT(this);
 	ASSERT(handle >= 0);
 
-	return (DWORD)filelength(handle);
+	return (uint32_t)filelength(handle);
 #endif	// _MSC_VER
 }
 
@@ -274,7 +364,7 @@ DWORD FASTCALL Fileio::GetFileSize() const
 //	ファイル位置取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL Fileio::GetFilePos() const
+uint32_t FASTCALL Fileio::GetFilePos() const
 {
 	ASSERT(this);
 	ASSERT(handle >= 0);
@@ -297,5 +387,5 @@ void FASTCALL Fileio::Close()
 		handle = -1;
 	}
 }
-
+#endif
 #endif	// _WIN32

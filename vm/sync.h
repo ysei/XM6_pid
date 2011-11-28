@@ -27,19 +27,19 @@ extern "C" typedef struct _RTL_CRITICAL_SECTION CRITICAL_SECTION;
 class Sync
 {
 public:
-	Sync();
+	Sync() {}
 										// コンストラクタ
-	virtual ~Sync();
+	virtual ~Sync() {}
 										// デストラクタ
-	void FASTCALL Lock();
+	void FASTCALL Lock() {}
 										// ロック
-	void FASTCALL Unlock();
+	void FASTCALL Unlock() {}
 										// アンロック
 
 private:
 //	CCriticalSection *csect;
 //										// クリティカルセクション
-	CRITICAL_SECTION*	pCriticalSection;
+//	CRITICAL_SECTION*	pCriticalSection;
 };
 
 #endif	// _WIN32

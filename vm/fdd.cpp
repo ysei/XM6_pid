@@ -51,7 +51,7 @@ FDD::FDD(VM *p) : Device(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDD::Init()
+int FASTCALL FDD::Init()
 {
 	int i;
 	Scheduler *scheduler;
@@ -105,21 +105,27 @@ BOOL FASTCALL FDD::Init()
 
 	// シークイベント初期化
 	seek.SetDevice(this);
+#if defined(XM6_USE_EVENT_DESC)
 	seek.SetDesc("Seek");
+#endif
 	seek.SetUser(0);
 	seek.SetTime(0);
 	scheduler->AddEvent(&seek);
 
 	// 回転数イベント初期化(セトリング兼用)
 	rotation.SetDevice(this);
+#if defined(XM6_USE_EVENT_DESC)
 	rotation.SetDesc("Rotation Stopped");
+#endif
 	rotation.SetUser(1);
 	rotation.SetTime(0);
 	scheduler->AddEvent(&rotation);
 
 	// イジェクトイベント初期化(誤挿入兼用)
 	eject.SetDevice(this);
+#if defined(XM6_USE_EVENT_DESC)
 	eject.SetDesc("Eject");
+#endif
 	eject.SetUser(2);
 	eject.SetTime(0);
 	scheduler->AddEvent(&eject);
@@ -209,7 +215,9 @@ void FASTCALL FDD::Reset()
 	seek.SetTime(0);
 
 	// 回転数・セトリングイベントなし(motor=FALSE, settle=FALSE)
+#if defined(XM6_USE_EVENT_DESC)
 	rotation.SetDesc("Rotation Stopped");
+#endif
 	rotation.SetTime(0);
 
 	// イジェクトイベントなし(格上げ＆invalid)
@@ -221,7 +229,7 @@ void FASTCALL FDD::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDD::Save(Fileio *fio, int ver)
+int FASTCALL FDD::Save(Fileio *fio, int ver)
 {
 	int i;
 	size_t sz;
@@ -285,16 +293,16 @@ BOOL FASTCALL FDD::Save(Fileio *fio, int ver)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDD::Load(Fileio *fio, int ver)
+int FASTCALL FDD::Load(Fileio *fio, int ver)
 {
 	int i;
 	size_t sz;
 	drv_t work;
-	BOOL ready;
+	int ready;
 	Filepath path;
 	int media;
-	BOOL success;
-	BOOL failed;
+	int success;
+	int failed;
 
 	ASSERT(this);
 	ASSERT(fio);
@@ -496,9 +504,9 @@ FDI* FASTCALL FDD::GetFDI(int drive)
 //	イベントコールバック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDD::Callback(Event *ev)
+int FASTCALL FDD::Callback(Event *ev)
 {
-	DWORD user;
+	uint32_t user;
 	int i;
 
 	ASSERT(this);
@@ -581,7 +589,7 @@ BOOL FASTCALL FDD::Callback(Event *ev)
 //	オープン
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDD::Open(int drive, const Filepath& path, int media)
+int FASTCALL FDD::Open(int drive, const Filepath& path, int media)
 {
 	FDI *fdi;
 
@@ -667,7 +675,7 @@ void FASTCALL FDD::Insert(int drive)
 //	ディスクイジェクト
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDD::Eject(int drive, BOOL force)
+void FASTCALL FDD::Eject(int drive, int force)
 {
 	ASSERT(this);
 	ASSERT((drive >= 0) && (drive <= 3));
@@ -761,7 +769,7 @@ void FASTCALL FDD::Invalid(int drive)
 //	ドライブコントロール
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDD::Control(int drive, DWORD func)
+void FASTCALL FDD::Control(int drive, uint32_t func)
 {
 	ASSERT(this);
 	ASSERT((drive >= 0) && (drive <= 3));
@@ -804,7 +812,7 @@ void FASTCALL FDD::Control(int drive, DWORD func)
 //	強制レディ
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDD::ForceReady(BOOL flag)
+void FASTCALL FDD::ForceReady(int flag)
 {
 	ASSERT(this);
 
@@ -826,10 +834,10 @@ void FASTCALL FDD::ForceReady(BOOL flag)
 //	回転位置取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL FDD::GetRotationPos() const
+uint32_t FASTCALL FDD::GetRotationPos() const
 {
-	DWORD remain;
-	DWORD hus;
+	uint32_t remain;
+	uint32_t hus;
 
 	ASSERT(this);
 
@@ -848,7 +856,7 @@ DWORD FASTCALL FDD::GetRotationPos() const
 	}
 
 	// 逆順に
-	return (DWORD)(hus - remain);
+	return (uint32_t)(hus - remain);
 }
 
 //---------------------------------------------------------------------------
@@ -856,7 +864,7 @@ DWORD FASTCALL FDD::GetRotationPos() const
 //	回転時間取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL FDD::GetRotationTime() const
+uint32_t FASTCALL FDD::GetRotationTime() const
 {
 	ASSERT(this);
 
@@ -876,9 +884,8 @@ DWORD FASTCALL FDD::GetRotationTime() const
 //---------------------------------------------------------------------------
 void FASTCALL FDD::Rotation()
 {
-	DWORD rpm;
-	DWORD hus;
-	char desc[0x20];
+	uint32_t rpm;
+	uint32_t hus;
 
 	ASSERT(this);
 	ASSERT(!fdd.settle);
@@ -887,8 +894,13 @@ void FASTCALL FDD::Rotation()
 	rpm = 2000 * 1000 * 60;
 	hus = GetRotationTime();
 	rpm /= hus;
-	sprintf(desc, "Rotation %drpm", rpm);
-	rotation.SetDesc(desc);
+#if defined(XM6_USE_EVENT_DESC)
+	{
+		char desc[0x20];
+		sprintf(desc, "Rotation %drpm", rpm);
+		rotation.SetDesc(desc);
+	}
+#endif
 	rotation.SetTime(hus);
 }
 
@@ -897,9 +909,9 @@ void FASTCALL FDD::Rotation()
 //	検索時間取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL FDD::GetSearch()
+uint32_t FASTCALL FDD::GetSearch()
 {
-	DWORD schtime;
+	uint32_t schtime;
 
 	ASSERT(this);
 
@@ -919,7 +931,7 @@ DWORD FASTCALL FDD::GetSearch()
 //	HD設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDD::SetHD(BOOL hd)
+void FASTCALL FDD::SetHD(int hd)
 {
 
 	ASSERT(this);
@@ -957,7 +969,7 @@ void FASTCALL FDD::SetHD(BOOL hd)
 //	HD取得
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDD::IsHD() const
+int FASTCALL FDD::IsHD() const
 {
 	ASSERT(this);
 
@@ -969,7 +981,7 @@ BOOL FASTCALL FDD::IsHD() const
 //	アクセスLED設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDD::Access(BOOL flag)
+void FASTCALL FDD::Access(int flag)
 {
 	int i;
 
@@ -991,7 +1003,7 @@ void FASTCALL FDD::Access(BOOL flag)
 //	レディチェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDD::IsReady(int drive, BOOL fdc) const
+int FASTCALL FDD::IsReady(int drive, int fdc) const
 {
 	ASSERT(this);
 	ASSERT((drive >= 0) && (drive <= 3));
@@ -1023,7 +1035,7 @@ BOOL FASTCALL FDD::IsReady(int drive, BOOL fdc) const
 //	書き込み禁止チェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDD::IsWriteP(int drive) const
+int FASTCALL FDD::IsWriteP(int drive) const
 {
 	ASSERT(this);
 	ASSERT((drive >= 0) && (drive <= 3));
@@ -1042,7 +1054,7 @@ BOOL FASTCALL FDD::IsWriteP(int drive) const
 //	Read Onlyチェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL FDD::IsReadOnly(int drive) const
+int FASTCALL FDD::IsReadOnly(int drive) const
 {
 	ASSERT(this);
 	ASSERT((drive >= 0) && (drive <= 3));
@@ -1061,7 +1073,7 @@ BOOL FASTCALL FDD::IsReadOnly(int drive) const
 //	書き込み禁止
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDD::WriteP(int drive, BOOL flag)
+void FASTCALL FDD::WriteP(int drive, int flag)
 {
 	ASSERT(this);
 	ASSERT((drive >= 0) && (drive <= 3));
@@ -1141,7 +1153,7 @@ int FASTCALL FDD::GetStatus(int drive) const
 //	モータ設定＋ドライブセレクト
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDD::SetMotor(int drive, BOOL flag)
+void FASTCALL FDD::SetMotor(int drive, int flag)
 {
 	ASSERT(this);
 	ASSERT((drive >= 0) && (drive <= 3));
@@ -1164,7 +1176,9 @@ void FASTCALL FDD::SetMotor(int drive, BOOL flag)
 		fdd.selected = drive;
 
 		// スタンバイイベントを設定
+#if defined(XM6_USE_EVENT_DESC)
 		rotation.SetDesc("Standby 54000ms");
+#endif
 		rotation.SetTime(54 * 1000 * 2 * 1000);
 		return;
 	}
@@ -1198,7 +1212,9 @@ void FASTCALL FDD::SetMotor(int drive, BOOL flag)
 	fdd.settle = TRUE;
 
 	// セトリングイベントを設定(高速モード時64us、通常モード時384ms)
+#if defined(XM6_USE_EVENT_DESC)
 	rotation.SetDesc("Settle 384ms");
+#endif
 	if (fdd.fast) {
 		rotation.SetTime(128);
 	}
@@ -1306,7 +1322,7 @@ int FASTCALL FDD::GetMedia(int drive) const
 //	リキャリブレート
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDD::Recalibrate(DWORD srt)
+void FASTCALL FDD::Recalibrate(uint32_t srt)
 {
 	ASSERT(this);
 
@@ -1329,7 +1345,7 @@ void FASTCALL FDD::Recalibrate(DWORD srt)
 //	ステップイン
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDD::StepIn(int step, DWORD srt)
+void FASTCALL FDD::StepIn(int step, uint32_t srt)
 {
 	int cylinder;
 
@@ -1363,7 +1379,7 @@ void FASTCALL FDD::StepIn(int step, DWORD srt)
 //	ステップアウト
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDD::StepOut(int step, DWORD srt)
+void FASTCALL FDD::StepOut(int step, uint32_t srt)
 {
 	int cylinder;
 
@@ -1396,7 +1412,7 @@ void FASTCALL FDD::StepOut(int step, DWORD srt)
 //	シーク共通
 //
 //---------------------------------------------------------------------------
-void FASTCALL FDD::SeekInOut(int cylinder, DWORD srt)
+void FASTCALL FDD::SeekInOut(int cylinder, uint32_t srt)
 {
 	int step;
 
@@ -1446,7 +1462,7 @@ void FASTCALL FDD::SeekInOut(int cylinder, DWORD srt)
 //						または有効なセクタすべてID CRC
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDD::ReadID(DWORD *buf, BOOL mfm, int hd)
+int FASTCALL FDD::ReadID(uint32_t *buf, int mfm, int hd)
 {
 	ASSERT(this);
 	ASSERT(buf);
@@ -1476,7 +1492,7 @@ int FASTCALL FDD::ReadID(DWORD *buf, BOOL mfm, int hd)
 //		FDD_DDAM		デリーテッドセクタである
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDD::ReadSector(BYTE *buf, int *len, BOOL mfm, DWORD *chrn, int hd)
+int FASTCALL FDD::ReadSector(uint8_t *buf, int *len, int mfm, uint32_t *chrn, int hd)
 {
 	ASSERT(this);
 	ASSERT(buf);
@@ -1509,7 +1525,7 @@ int FASTCALL FDD::ReadSector(BYTE *buf, int *len, BOOL mfm, DWORD *chrn, int hd)
 //		FDD_DDAM		デリーテッドセクタである
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDD::WriteSector(const BYTE *buf, int *len, BOOL mfm, DWORD *chrn, int hd, BOOL deleted)
+int FASTCALL FDD::WriteSector(const uint8_t *buf, int *len, int mfm, uint32_t *chrn, int hd, int deleted)
 {
 	ASSERT(this);
 	ASSERT(len);
@@ -1530,7 +1546,7 @@ int FASTCALL FDD::WriteSector(const BYTE *buf, int *len, BOOL mfm, DWORD *chrn, 
 //	リードダイアグ
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDD::ReadDiag(BYTE *buf, int *len, BOOL mfm, DWORD *chrn, int hd)
+int FASTCALL FDD::ReadDiag(uint8_t *buf, int *len, int mfm, uint32_t *chrn, int hd)
 {
 	ASSERT(this);
 	ASSERT(len);
@@ -1551,7 +1567,7 @@ int FASTCALL FDD::ReadDiag(BYTE *buf, int *len, BOOL mfm, DWORD *chrn, int hd)
 //	ライトID
 //
 //---------------------------------------------------------------------------
-int FASTCALL FDD::WriteID(const BYTE *buf, DWORD d, int sc, BOOL mfm, int hd, int gpl)
+int FASTCALL FDD::WriteID(const uint8_t *buf, uint32_t d, int sc, int mfm, int hd, int gpl)
 {
 	ASSERT(this);
 	ASSERT(sc > 0);

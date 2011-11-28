@@ -22,84 +22,84 @@ class RTC : public MemDevice
 {
 public:
 	typedef struct {
-		DWORD sec;						// 秒
-		DWORD min;						// 分
-		DWORD hour;						// 時間
-		DWORD week;						// 週の曜日
-		DWORD day;						// 日
-		DWORD month;					// 月
-		DWORD year;						// 年
-		BOOL carry;						// 秒キャリー
+		uint32_t sec;						// 秒
+		uint32_t min;						// 分
+		uint32_t hour;						// 時間
+		uint32_t week;						// 週の曜日
+		uint32_t day;						// 日
+		uint32_t month;					// 月
+		uint32_t year;						// 年
+		int carry;						// 秒キャリー
 
-		BOOL timer_en;					// タイマー動作許可
-		BOOL alarm_en;					// アラーム動作許可
-		DWORD bank;						// バンク番号
-		DWORD test;						// TESTレジスタ
-		BOOL alarm_1hz;					// 1Hzパルス出力制御
-		BOOL alarm_16hz;				// 16Hzパルス出力制御
-		BOOL under_reset;				// 秒アンダーリセット
-		BOOL alarm_reset;				// アラームリセット
+		int timer_en;					// タイマー動作許可
+		int alarm_en;					// アラーム動作許可
+		uint32_t bank;						// バンク番号
+		uint32_t test;						// TESTレジスタ
+		int alarm_1hz;					// 1Hzパルス出力制御
+		int alarm_16hz;				// 16Hzパルス出力制御
+		int under_reset;				// 秒アンダーリセット
+		int alarm_reset;				// アラームリセット
 
-		DWORD clkout;					// CLKOUTレジスタ
-		BOOL adjust;					// アジャスト
+		uint32_t clkout;					// CLKOUTレジスタ
+		int adjust;					// アジャスト
 
-		DWORD alarm_min;				// 分
-		DWORD alarm_hour;				// 時間
-		DWORD alarm_week;				// 週の曜日
-		DWORD alarm_day;				// 日
+		uint32_t alarm_min;				// 分
+		uint32_t alarm_hour;				// 時間
+		uint32_t alarm_week;				// 週の曜日
+		uint32_t alarm_day;				// 日
 
-		BOOL fullhour;					// 24時間フラグ
-		DWORD leap;						// 閏年カウンタ
+		int fullhour;					// 24時間フラグ
+		uint32_t leap;						// 閏年カウンタ
 
-		BOOL signal_1hz;				// 1Hzシグナル(500msおきに変化)
-		BOOL signal_16hz;				// 16Hzシグナル(31.25msおきに変化)
-		DWORD signal_count;				// 16Hzカウンタ(0～15)
-		DWORD signal_blink;				// 点滅シグナル(781.25msおきに変化)
-		BOOL alarm;						// アラーム信号
-		BOOL alarmout;					// ALARM OUT
+		int signal_1hz;				// 1Hzシグナル(500msおきに変化)
+		int signal_16hz;				// 16Hzシグナル(31.25msおきに変化)
+		uint32_t signal_count;				// 16Hzカウンタ(0～15)
+		uint32_t signal_blink;				// 点滅シグナル(781.25msおきに変化)
+		int alarm;						// アラーム信号
+		int alarmout;					// ALARM OUT
 	} rtc_t;
 
 public:
 	// 基本ファンクション
 	RTC(VM *p);
 										// コンストラクタ
-	BOOL FASTCALL Init();
+	int FASTCALL Init();
 										// 初期化
 	void FASTCALL Cleanup();
 										// クリーンアップ
 	void FASTCALL Reset();
 										// リセット
-	BOOL FASTCALL Save(Fileio *fio, int ver);
+	int FASTCALL Save(Fileio *fio, int ver);
 										// セーブ
-	BOOL FASTCALL Load(Fileio *fio, int ver);
+	int FASTCALL Load(Fileio *fio, int ver);
 										// ロード
 	void FASTCALL ApplyCfg(const Config *config);
 										// 設定適用
 
 	// メモリデバイス
-	DWORD FASTCALL ReadByte(DWORD addr);
+	uint32_t FASTCALL ReadByte(uint32_t addr);
 										// バイト読み込み
-	DWORD FASTCALL ReadWord(DWORD addr);
+	uint32_t FASTCALL ReadWord(uint32_t addr);
 										// ワード読み込み
-	void FASTCALL WriteByte(DWORD addr, DWORD data);
+	void FASTCALL WriteByte(uint32_t addr, uint32_t data);
 										// バイト書き込み
-	void FASTCALL WriteWord(DWORD addr, DWORD data);
+	void FASTCALL WriteWord(uint32_t addr, uint32_t data);
 										// ワード書き込み
-	DWORD FASTCALL ReadOnly(DWORD addr) const;
+	uint32_t FASTCALL ReadOnly(uint32_t addr) const;
 										// 読み込みのみ
 
 	// 外部API
 	void FASTCALL GetRTC(rtc_t *buffer);
 										// 内部データ取得
-	BOOL FASTCALL Callback(Event *ev);
+	int FASTCALL Callback(Event *ev);
 										// イベントコールバック
-	BOOL FASTCALL GetTimerLED() const;
+	int FASTCALL GetTimerLED() const;
 										// タイマーLED取得
-	BOOL FASTCALL GetAlarmOut() const;
+	int FASTCALL GetAlarmOut() const;
 										// ALARM信号取得
-	BOOL FASTCALL GetBlink(int drive) const;
+	int FASTCALL GetBlink(int drive) const;
 										// FDD用点滅信号取得
-	void FASTCALL Adjust(BOOL alarm);
+	void FASTCALL Adjust(int alarm);
 										// 現在時刻を設定
 
 private:
@@ -117,7 +117,7 @@ private:
 										// 内部データ
 	Event event;
 										// イベント
-	static const DWORD DayTable[];
+	static const uint32_t DayTable[];
 										// 日付テーブル
 };
 

@@ -75,7 +75,7 @@ MIDI::MIDI(VM *p) : MemDevice(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL MIDI::Init()
+int FASTCALL MIDI::Init()
 {
 	ASSERT(this);
 
@@ -115,15 +115,21 @@ BOOL FASTCALL MIDI::Init()
 
 	// イベント初期化
 	event[0].SetDevice(this);
+#if defined(XM6_USE_EVENT_DESC)
 	event[0].SetDesc("MIDI 31250bps");
+#endif
 	event[0].SetUser(0);
 	event[0].SetTime(0);
 	event[1].SetDevice(this);
+#if defined(XM6_USE_EVENT_DESC)
 	event[1].SetDesc("Clock");
+#endif
 	event[1].SetUser(1);
 	event[1].SetTime(0);
 	event[2].SetDevice(this);
+#if defined(XM6_USE_EVENT_DESC)
 	event[2].SetDesc("General Timer");
+#endif
 	event[2].SetUser(2);
 	event[2].SetTime(0);
 
@@ -202,7 +208,7 @@ void FASTCALL MIDI::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL MIDI::Save(Fileio *fio, int ver)
+int FASTCALL MIDI::Save(Fileio *fio, int ver)
 {
 	size_t sz;
 	int i;
@@ -240,7 +246,7 @@ BOOL FASTCALL MIDI::Save(Fileio *fio, int ver)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL MIDI::Load(Fileio *fio, int ver)
+int FASTCALL MIDI::Load(Fileio *fio, int ver)
 {
 	midi_t bk;
 	size_t sz;
@@ -322,8 +328,8 @@ void FASTCALL MIDI::ApplyCfg(const Config *config)
 
 	LOG0(Log::Normal, "設定適用");
 
-	if (midi.bid != (DWORD)config->midi_bid) {
-		midi.bid = (DWORD)config->midi_bid;
+	if (midi.bid != (uint32_t)config->midi_bid) {
+		midi.bid = (uint32_t)config->midi_bid;
 
 		// イベントを動的に追加・削除
 		if (midi.bid == 0) {
@@ -388,7 +394,7 @@ void FASTCALL MIDI::AssertDiag() const
 //	バイト読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MIDI::ReadByte(DWORD addr)
+uint32_t FASTCALL MIDI::ReadByte(uint32_t addr)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -448,7 +454,7 @@ DWORD FASTCALL MIDI::ReadByte(DWORD addr)
 //	ワード読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MIDI::ReadWord(DWORD addr)
+uint32_t FASTCALL MIDI::ReadWord(uint32_t addr)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -463,7 +469,7 @@ DWORD FASTCALL MIDI::ReadWord(DWORD addr)
 //	バイト書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::WriteByte(DWORD addr, DWORD data)
+void FASTCALL MIDI::WriteByte(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -524,7 +530,7 @@ void FASTCALL MIDI::WriteByte(DWORD addr, DWORD data)
 //	ワード書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::WriteWord(DWORD addr, DWORD data)
+void FASTCALL MIDI::WriteWord(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -532,7 +538,7 @@ void FASTCALL MIDI::WriteWord(DWORD addr, DWORD data)
 	ASSERT(data < 0x10000);
 	ASSERT_DIAG();
 
-	WriteByte(addr + 1, (BYTE)data);
+	WriteByte(addr + 1, (uint8_t)data);
 }
 
 //---------------------------------------------------------------------------
@@ -540,7 +546,7 @@ void FASTCALL MIDI::WriteWord(DWORD addr, DWORD data)
 //	読み込みのみ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MIDI::ReadOnly(DWORD addr) const
+uint32_t FASTCALL MIDI::ReadOnly(uint32_t addr) const
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -597,7 +603,7 @@ DWORD FASTCALL MIDI::ReadOnly(DWORD addr) const
 //	MIDIアクティブチェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL MIDI::IsActive() const
+int FASTCALL MIDI::IsActive() const
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -619,10 +625,10 @@ BOOL FASTCALL MIDI::IsActive() const
 //	イベントコールバック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL MIDI::Callback(Event *ev)
+int FASTCALL MIDI::Callback(Event *ev)
 {
-	DWORD mtr;
-	DWORD hus;
+	uint32_t mtr;
+	uint32_t hus;
 
 	ASSERT(this);
 	ASSERT(ev);
@@ -727,10 +733,10 @@ BOOL FASTCALL MIDI::Callback(Event *ev)
 //---------------------------------------------------------------------------
 void FASTCALL MIDI::Receive()
 {
-	BOOL recv;
+	int recv;
 	mididata_t *p;
-	DWORD diff;
-	DWORD data;
+	uint32_t diff;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -986,7 +992,7 @@ void FASTCALL MIDI::Clock()
 //---------------------------------------------------------------------------
 void FASTCALL MIDI::General()
 {
-	DWORD hus;
+	uint32_t hus;
 
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -1006,7 +1012,7 @@ void FASTCALL MIDI::General()
 //	送信バッファへ挿入
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::InsertTrans(DWORD data)
+void FASTCALL MIDI::InsertTrans(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1039,7 +1045,7 @@ void FASTCALL MIDI::InsertTrans(DWORD data)
 //	受信バッファへ挿入
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::InsertRecv(DWORD data)
+void FASTCALL MIDI::InsertRecv(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1072,7 +1078,7 @@ void FASTCALL MIDI::InsertRecv(DWORD data)
 //	通常バッファへ挿入
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::InsertNorm(DWORD data)
+void FASTCALL MIDI::InsertNorm(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1105,7 +1111,7 @@ void FASTCALL MIDI::InsertNorm(DWORD data)
 //	リアルタイム送信バッファへ挿入
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::InsertRT(DWORD data)
+void FASTCALL MIDI::InsertRT(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1138,7 +1144,7 @@ void FASTCALL MIDI::InsertRT(DWORD data)
 //	一般バッファへ挿入
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::InsertStd(DWORD data)
+void FASTCALL MIDI::InsertStd(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1184,7 +1190,7 @@ void FASTCALL MIDI::InsertStd(DWORD data)
 //	リアルタイム受信バッファへ挿入
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::InsertRR(DWORD data)
+void FASTCALL MIDI::InsertRR(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1219,7 +1225,7 @@ void FASTCALL MIDI::InsertRR(DWORD data)
 //	送信バッファ個数取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MIDI::GetTransNum() const
+uint32_t FASTCALL MIDI::GetTransNum() const
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -1234,7 +1240,7 @@ DWORD FASTCALL MIDI::GetTransNum() const
 //	送信バッファデータ取得
 //
 //---------------------------------------------------------------------------
-const MIDI::mididata_t* FASTCALL MIDI::GetTransData(DWORD proceed)
+const MIDI::mididata_t* FASTCALL MIDI::GetTransData(uint32_t proceed)
 {
 	const mididata_t *ptr;
 	int offset;
@@ -1264,7 +1270,7 @@ const MIDI::mididata_t* FASTCALL MIDI::GetTransData(DWORD proceed)
 //	送信バッファ削除
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::DelTransData(DWORD number)
+void FASTCALL MIDI::DelTransData(uint32_t number)
 {
 	ASSERT(this);
 	ASSERT(number < TransMax);
@@ -1313,9 +1319,9 @@ void FASTCALL MIDI::ClrTransData()
 //	受信バッファデータ設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetRecvData(const BYTE *ptr, DWORD length)
+void FASTCALL MIDI::SetRecvData(const uint8_t *ptr, uint32_t length)
 {
-	DWORD lp;
+	uint32_t lp;
 
 	ASSERT(this);
 	ASSERT(ptr);
@@ -1330,14 +1336,14 @@ void FASTCALL MIDI::SetRecvData(const BYTE *ptr, DWORD length)
 	if (midi.rcr & 1) {
 		// 受信バッファへ挿入
 		for (lp=0; lp<length; lp++) {
-			InsertRecv((DWORD)ptr[lp]);
+			InsertRecv((uint32_t)ptr[lp]);
 		}
 	}
 
 	// 受信できる、できないにかかわらず、THRU指定があれば送信バッファへ
 	if (midi.trr & 0x40) {
 		for (lp=0; lp<length; lp++) {
-			InsertTrans((DWORD)ptr[lp]);
+			InsertTrans((uint32_t)ptr[lp]);
 		}
 	}
 }
@@ -1469,7 +1475,9 @@ void FASTCALL MIDI::ResetReg()
 	event[2].SetTime(0);
 
 	// イベント開始(MIDIクロック)(OPMDRV3.X)
+#if defined(XM6_USE_EVENT_DESC)
 	event[1].SetDesc("Clock");
+#endif
 	event[1].SetTime(0x40000);
 
 	// エクスクルーシブカウンタ
@@ -1490,9 +1498,9 @@ void FASTCALL MIDI::ResetReg()
 //	レジスタ読み出し
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MIDI::ReadReg(DWORD reg)
+uint32_t FASTCALL MIDI::ReadReg(uint32_t reg)
 {
-	DWORD group;
+	uint32_t group;
 
 	ASSERT(this);
 	ASSERT(reg < 8);
@@ -1581,9 +1589,9 @@ DWORD FASTCALL MIDI::ReadReg(DWORD reg)
 //	レジスタ書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::WriteReg(DWORD reg, DWORD data)
+void FASTCALL MIDI::WriteReg(uint32_t reg, uint32_t data)
 {
-	DWORD group;
+	uint32_t group;
 
 	ASSERT(this);
 	ASSERT(reg < 8);
@@ -1784,9 +1792,9 @@ void FASTCALL MIDI::WriteReg(DWORD reg, DWORD data)
 //	レジスタ読み出し(ReadOnly)
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MIDI::ReadRegRO(DWORD reg) const
+uint32_t FASTCALL MIDI::ReadRegRO(uint32_t reg) const
 {
-	DWORD group;
+	uint32_t group;
 
 	ASSERT(this);
 	ASSERT(reg < 8);
@@ -1858,7 +1866,7 @@ DWORD FASTCALL MIDI::ReadRegRO(DWORD reg) const
 //	ICR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetICR(DWORD data)
+void FASTCALL MIDI::SetICR(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1880,7 +1888,7 @@ void FASTCALL MIDI::SetICR(DWORD data)
 //	IOR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetIOR(DWORD data)
+void FASTCALL MIDI::SetIOR(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1904,7 +1912,7 @@ void FASTCALL MIDI::SetIOR(DWORD data)
 //	IMR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetIMR(DWORD data)
+void FASTCALL MIDI::SetIMR(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1928,7 +1936,7 @@ void FASTCALL MIDI::SetIMR(DWORD data)
 //	IER設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetIER(DWORD data)
+void FASTCALL MIDI::SetIER(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1952,7 +1960,7 @@ void FASTCALL MIDI::SetIER(DWORD data)
 //	DMR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetDMR(DWORD data)
+void FASTCALL MIDI::SetDMR(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1976,9 +1984,9 @@ void FASTCALL MIDI::SetDMR(DWORD data)
 //	DCR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetDCR(DWORD data)
+void FASTCALL MIDI::SetDCR(uint32_t data)
 {
-	DWORD msg;
+	uint32_t msg;
 
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -2037,7 +2045,7 @@ void FASTCALL MIDI::SetDCR(DWORD data)
 //	DSR取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MIDI::GetDSR() const
+uint32_t FASTCALL MIDI::GetDSR() const
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -2059,7 +2067,7 @@ DWORD FASTCALL MIDI::GetDSR() const
 //	DNR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetDNR(DWORD data)
+void FASTCALL MIDI::SetDNR(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -2086,7 +2094,7 @@ void FASTCALL MIDI::SetDNR(DWORD data)
 //	RRR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetRRR(DWORD data)
+void FASTCALL MIDI::SetRRR(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -2115,7 +2123,7 @@ void FASTCALL MIDI::SetRRR(DWORD data)
 //	RMR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetRMR(DWORD data)
+void FASTCALL MIDI::SetRMR(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -2144,7 +2152,7 @@ void FASTCALL MIDI::SetRMR(DWORD data)
 //	AMR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetAMR(DWORD data)
+void FASTCALL MIDI::SetAMR(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -2169,7 +2177,7 @@ void FASTCALL MIDI::SetAMR(DWORD data)
 //	ADR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetADR(DWORD data)
+void FASTCALL MIDI::SetADR(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -2194,7 +2202,7 @@ void FASTCALL MIDI::SetADR(DWORD data)
 //	RSR取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MIDI::GetRSR() const
+uint32_t FASTCALL MIDI::GetRSR() const
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -2211,7 +2219,7 @@ DWORD FASTCALL MIDI::GetRSR() const
 //	RCR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetRCR(DWORD data)
+void FASTCALL MIDI::SetRCR(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -2304,9 +2312,9 @@ void FASTCALL MIDI::SetRCR(DWORD data)
 //	RDR取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MIDI::GetRDR()
+uint32_t FASTCALL MIDI::GetRDR()
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -2357,9 +2365,9 @@ DWORD FASTCALL MIDI::GetRDR()
 //	RDR取得 (Read Only)
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MIDI::GetRDRRO() const
+uint32_t FASTCALL MIDI::GetRDRRO() const
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -2380,7 +2388,7 @@ DWORD FASTCALL MIDI::GetRDRRO() const
 //	TRR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetTRR(DWORD data)
+void FASTCALL MIDI::SetTRR(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -2415,7 +2423,7 @@ void FASTCALL MIDI::SetTRR(DWORD data)
 //	TMR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetTMR(DWORD data)
+void FASTCALL MIDI::SetTMR(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -2444,9 +2452,9 @@ void FASTCALL MIDI::SetTMR(DWORD data)
 //	TSR取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MIDI::GetTSR() const
+uint32_t FASTCALL MIDI::GetTSR() const
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -2483,7 +2491,7 @@ DWORD FASTCALL MIDI::GetTSR() const
 //	TCR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetTCR(DWORD data)
+void FASTCALL MIDI::SetTCR(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -2538,7 +2546,7 @@ void FASTCALL MIDI::SetTCR(DWORD data)
 //	TDR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetTDR(DWORD data)
+void FASTCALL MIDI::SetTDR(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -2578,7 +2586,7 @@ void FASTCALL MIDI::SetTDR(DWORD data)
 //	FSR取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MIDI::GetFSR() const
+uint32_t FASTCALL MIDI::GetFSR() const
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -2595,7 +2603,7 @@ DWORD FASTCALL MIDI::GetFSR() const
 //	FCR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetFCR(DWORD data)
+void FASTCALL MIDI::SetFCR(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -2619,7 +2627,7 @@ void FASTCALL MIDI::SetFCR(DWORD data)
 //	CCR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetCCR(DWORD data)
+void FASTCALL MIDI::SetCCR(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -2646,7 +2654,7 @@ void FASTCALL MIDI::SetCCR(DWORD data)
 //	CDR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetCDR(DWORD data)
+void FASTCALL MIDI::SetCDR(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -2677,7 +2685,7 @@ void FASTCALL MIDI::SetCDR(DWORD data)
 //	SRR取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MIDI::GetSRR() const
+uint32_t FASTCALL MIDI::GetSRR() const
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -2694,10 +2702,9 @@ DWORD FASTCALL MIDI::GetSRR() const
 //	SCR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetSCR(DWORD data)
+void FASTCALL MIDI::SetSCR(uint32_t data)
 {
-	DWORD mtr;
-	char desc[16];
+	uint32_t mtr;
 
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -2735,13 +2742,16 @@ void FASTCALL MIDI::SetSCR(DWORD data)
 		ASSERT(midi.sct > 0);
 
 		// イベント文字列
+#if defined(XM6_USE_EVENT_DESC)
 		if (midi.scr == 1) {
 			event[1].SetDesc("Clock");
 		}
 		else {
+			char desc[16];
 			sprintf(desc, "Clock (Div%d)", midi.scr);
 			event[1].SetDesc(desc);
 		}
+#endif
 	}
 
 	// プレイバックカウンタクリア
@@ -2773,7 +2783,7 @@ void FASTCALL MIDI::SetSCR(DWORD data)
 //	SPR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetSPR(DWORD data, BOOL high)
+void FASTCALL MIDI::SetSPR(uint32_t data, int high)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -2800,7 +2810,7 @@ void FASTCALL MIDI::SetSPR(DWORD data, BOOL high)
 //	GTR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetGTR(DWORD data, BOOL high)
+void FASTCALL MIDI::SetGTR(uint32_t data, int high)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -2837,9 +2847,9 @@ void FASTCALL MIDI::SetGTR(DWORD data, BOOL high)
 //	MTR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetMTR(DWORD data, BOOL high)
+void FASTCALL MIDI::SetMTR(uint32_t data, int high)
 {
-	DWORD mtr;
+	uint32_t mtr;
 
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -2880,7 +2890,7 @@ void FASTCALL MIDI::SetMTR(DWORD data, BOOL high)
 //	EDR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetEDR(DWORD data)
+void FASTCALL MIDI::SetEDR(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -2900,7 +2910,7 @@ void FASTCALL MIDI::SetEDR(DWORD data)
 //	EOR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::SetEOR(DWORD data)
+void FASTCALL MIDI::SetEOR(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -2920,7 +2930,7 @@ void FASTCALL MIDI::SetEOR(DWORD data)
 //	EIR取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MIDI::GetEIR() const
+uint32_t FASTCALL MIDI::GetEIR() const
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -2939,7 +2949,7 @@ DWORD FASTCALL MIDI::GetEIR() const
 //---------------------------------------------------------------------------
 void FASTCALL MIDI::CheckRR()
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -2981,7 +2991,7 @@ void FASTCALL MIDI::CheckRR()
 //	割り込み要求
 //
 //---------------------------------------------------------------------------
-void FASTCALL MIDI::Interrupt(int type, BOOL flag)
+void FASTCALL MIDI::Interrupt(int type, int flag)
 {
 	ASSERT(this);
 	ASSERT((type >= 0) && (type <= 7));
@@ -3046,7 +3056,7 @@ void FASTCALL MIDI::IntCheck()
 {
 	int i;
 	int vector;
-	DWORD bit;
+	uint32_t bit;
 
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -3082,7 +3092,7 @@ void FASTCALL MIDI::IntCheck()
 					// 割り込み要求
 					cpu->Interrupt(midi.ilevel, vector);
 					midi.vector = vector;
-					midi.ivr = (DWORD)vector;
+					midi.ivr = (uint32_t)vector;
 
 #if defined(MIDI_LOG)
 					LOG3(Log::Normal, "割り込み要求 レベル%d タイプ%d ベクタ$%02X", midi.ilevel, i, vector);
@@ -3129,7 +3139,7 @@ void FASTCALL MIDI::GetMIDI(midi_t *buffer) const
 //	エクスクルーシブカウント取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MIDI::GetExCount(int index) const
+uint32_t FASTCALL MIDI::GetExCount(int index) const
 {
 	ASSERT(this);
 	ASSERT((index >= 0) && (index < 4));

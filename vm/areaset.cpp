@@ -14,7 +14,7 @@
 #include "cpu.h"
 #include "log.h"
 #include "fileio.h"
-#include "memory.h"
+#include "memory_xm6.h"
 #include "areaset.h"
 
 //===========================================================================
@@ -48,7 +48,7 @@ AreaSet::AreaSet(VM *p) : MemDevice(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL AreaSet::Init()
+int FASTCALL AreaSet::Init()
 {
 	ASSERT(this);
 
@@ -101,7 +101,7 @@ void FASTCALL AreaSet::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL AreaSet::Save(Fileio *fio, int /*ver*/)
+int FASTCALL AreaSet::Save(Fileio *fio, int /*ver*/)
 {
 	size_t sz;
 
@@ -127,7 +127,7 @@ BOOL FASTCALL AreaSet::Save(Fileio *fio, int /*ver*/)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL AreaSet::Load(Fileio *fio, int /*ver*/)
+int FASTCALL AreaSet::Load(Fileio *fio, int /*ver*/)
 {
 	size_t sz;
 
@@ -171,7 +171,7 @@ void FASTCALL AreaSet::ApplyCfg(const Config* /*config*/)
 //	バイト読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL AreaSet::ReadByte(DWORD addr)
+uint32_t FASTCALL AreaSet::ReadByte(uint32_t addr)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -186,7 +186,7 @@ DWORD FASTCALL AreaSet::ReadByte(DWORD addr)
 //	バイト書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL AreaSet::WriteByte(DWORD addr, DWORD data)
+void FASTCALL AreaSet::WriteByte(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -214,7 +214,7 @@ void FASTCALL AreaSet::WriteByte(DWORD addr, DWORD data)
 //	読み込みのみ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL AreaSet::ReadOnly(DWORD addr) const
+uint32_t FASTCALL AreaSet::ReadOnly(uint32_t addr) const
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -231,7 +231,7 @@ DWORD FASTCALL AreaSet::ReadOnly(DWORD addr) const
 //	エリアセット取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL AreaSet::GetArea() const
+uint32_t FASTCALL AreaSet::GetArea() const
 {
 	ASSERT(this);
 	return area;

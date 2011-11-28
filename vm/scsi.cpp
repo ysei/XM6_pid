@@ -13,13 +13,15 @@
 #include "vm.h"
 #include "log.h"
 #include "schedule.h"
-#include "memory.h"
+#include "memory_xm6.h"
 #include "sram.h"
 #include "config.h"
 #include "disk.h"
 #include "fileio.h"
 #include "filepath.h"
 #include "scsi.h"
+
+#include <new>	// placement new
 
 //===========================================================================
 //
@@ -49,6 +51,11 @@ SCSI::SCSI(VM *p) : MemDevice(p)
 	// デバイス
 	memory = NULL;
 	sram = NULL;
+
+	scsihd = new Filepath [DeviceMax];
+	for(int i = 0; i < DeviceMax; ++i) {
+		new (&scsihd[i]) Filepath;		// inplace new
+	}
 }
 
 //---------------------------------------------------------------------------
@@ -56,7 +63,7 @@ SCSI::SCSI(VM *p) : MemDevice(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSI::Init()
+int FASTCALL SCSI::Init()
 {
 	int i;
 
@@ -92,11 +99,15 @@ BOOL FASTCALL SCSI::Init()
 
 	// イベント初期化
 	event.SetDevice(this);
+#if defined(XM6_USE_EVENT_DESC)
 	event.SetDesc("Selection");
+#endif
 	event.SetUser(0);
 	event.SetTime(0);
 	cdda.SetDevice(this);
+#if defined(XM6_USE_EVENT_DESC)
 	cdda.SetDesc("CD-DA 75fps");
+#endif
 	cdda.SetUser(1);
 	cdda.SetTime(0);
 
@@ -123,6 +134,11 @@ void FASTCALL SCSI::Cleanup()
 	int i;
 
 	ASSERT(this);
+
+	if(scsihd) {
+		delete [] scsihd;
+		scsihd = 0;
+	}
 
 	// HD削除
 	for (i=0; i<HDMax; i++) {
@@ -257,7 +273,7 @@ void FASTCALL SCSI::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSI::Save(Fileio *fio, int ver)
+int FASTCALL SCSI::Save(Fileio *fio, int ver)
 {
 	size_t sz;
 	int i;
@@ -349,7 +365,7 @@ BOOL FASTCALL SCSI::Save(Fileio *fio, int ver)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSI::Load(Fileio *fio, int ver)
+int FASTCALL SCSI::Load(Fileio *fio, int ver)
 {
 	size_t sz;
 	int i;
@@ -548,9 +564,9 @@ void FASTCALL SCSI::AssertDiag() const
 //	バイト読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCSI::ReadByte(DWORD addr)
+uint32_t FASTCALL SCSI::ReadByte(uint32_t addr)
 {
-	const BYTE *rom;
+	const uint8_t *rom;
 
 	ASSERT(this);
 	ASSERT(addr <= 0xffffff);
@@ -641,15 +657,15 @@ DWORD FASTCALL SCSI::ReadByte(DWORD addr)
 
 		// TCH
 		case 12:
-			return (BYTE)(scsi.tc >> 16);
+			return (uint8_t)(scsi.tc >> 16);
 
 		// TCM
 		case 13:
-			return (BYTE)(scsi.tc >> 8);
+			return (uint8_t)(scsi.tc >> 8);
 
 		// TCL
 		case 14:
-			return (BYTE)scsi.tc;
+			return (uint8_t)scsi.tc;
 
 		// リザーブ
 		case 15:
@@ -666,7 +682,7 @@ DWORD FASTCALL SCSI::ReadByte(DWORD addr)
 //	ワード読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCSI::ReadWord(DWORD addr)
+uint32_t FASTCALL SCSI::ReadWord(uint32_t addr)
 {
 	ASSERT(this);
 	ASSERT((addr & 1) == 0);
@@ -679,7 +695,7 @@ DWORD FASTCALL SCSI::ReadWord(DWORD addr)
 //	バイト書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCSI::WriteByte(DWORD addr, DWORD data)
+void FASTCALL SCSI::WriteByte(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(addr <= 0xffffff);
@@ -803,13 +819,13 @@ void FASTCALL SCSI::WriteByte(DWORD addr, DWORD data)
 //	ワード書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCSI::WriteWord(DWORD addr, DWORD data)
+void FASTCALL SCSI::WriteWord(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr & 1) == 0);
 	ASSERT(data < 0x10000);
 
-	WriteByte(addr + 1, (BYTE)data);
+	WriteByte(addr + 1, (uint8_t)data);
 }
 
 //---------------------------------------------------------------------------
@@ -817,9 +833,9 @@ void FASTCALL SCSI::WriteWord(DWORD addr, DWORD data)
 //	読み込みのみ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCSI::ReadOnly(DWORD addr) const
+uint32_t FASTCALL SCSI::ReadOnly(uint32_t addr) const
 {
-	const BYTE *rom;
+	const uint8_t *rom;
 
 	ASSERT(this);
 
@@ -901,15 +917,15 @@ DWORD FASTCALL SCSI::ReadOnly(DWORD addr) const
 
 		// TCH
 		case 12:
-			return (BYTE)(scsi.tc >> 16);
+			return (uint8_t)(scsi.tc >> 16);
 
 		// TCM
 		case 13:
-			return (BYTE)(scsi.tc >> 8);
+			return (uint8_t)(scsi.tc >> 8);
 
 		// TCL
 		case 14:
-			return (BYTE)scsi.tc;
+			return (uint8_t)scsi.tc;
 
 		// リザーブ
 		case 15:
@@ -939,9 +955,9 @@ void FASTCALL SCSI::GetSCSI(scsi_t *buffer) const
 //	イベントコールバック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSI::Callback(Event* ev)
+int FASTCALL SCSI::Callback(Event* ev)
 {
-	BOOL success;
+	int success;
 
 	ASSERT(this);
 	ASSERT(ev);
@@ -1089,7 +1105,7 @@ void FASTCALL SCSI::ResetCtrl()
 //	バスリセット
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCSI::ResetBus(BOOL reset)
+void FASTCALL SCSI::ResetBus(int reset)
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -1131,9 +1147,9 @@ void FASTCALL SCSI::ResetBus(BOOL reset)
 //	BDID設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCSI::SetBDID(DWORD data)
+void FASTCALL SCSI::SetBDID(uint32_t data)
 {
-	DWORD bdid;
+	uint32_t bdid;
 
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1146,7 +1162,7 @@ void FASTCALL SCSI::SetBDID(DWORD data)
 #endif	// SCSI_LOG
 
 	// 数値からビットへ変換
-	bdid = (DWORD)(1 << data);
+	bdid = (uint32_t)(1 << data);
 
 	// 異なるときは、ディスク再構築が必要
 	if (scsi.bdid != bdid) {
@@ -1160,7 +1176,7 @@ void FASTCALL SCSI::SetBDID(DWORD data)
 //	SCTL設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCSI::SetSCTL(DWORD data)
+void FASTCALL SCSI::SetSCTL(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1192,7 +1208,7 @@ void FASTCALL SCSI::SetSCTL(DWORD data)
 //	SCMD設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCSI::SetSCMD(DWORD data)
+void FASTCALL SCSI::SetSCMD(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1275,7 +1291,7 @@ void FASTCALL SCSI::SetSCMD(DWORD data)
 //	INTS設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCSI::SetINTS(DWORD data)
+void FASTCALL SCSI::SetINTS(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1297,9 +1313,9 @@ void FASTCALL SCSI::SetINTS(DWORD data)
 //	PSNS取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCSI::GetPSNS() const
+uint32_t FASTCALL SCSI::GetPSNS() const
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -1355,7 +1371,7 @@ DWORD FASTCALL SCSI::GetPSNS() const
 //	SDGC設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCSI::SetSDGC(DWORD data)
+void FASTCALL SCSI::SetSDGC(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1372,9 +1388,9 @@ void FASTCALL SCSI::SetSDGC(DWORD data)
 //	SSTS取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCSI::GetSSTS() const
+uint32_t FASTCALL SCSI::GetSSTS() const
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -1437,7 +1453,7 @@ DWORD FASTCALL SCSI::GetSSTS() const
 //	SERR取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCSI::GetSERR() const
+uint32_t FASTCALL SCSI::GetSERR() const
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -1461,7 +1477,7 @@ DWORD FASTCALL SCSI::GetSERR() const
 //	PCTL設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCSI::SetPCTL(DWORD data)
+void FASTCALL SCSI::SetPCTL(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1475,9 +1491,9 @@ void FASTCALL SCSI::SetPCTL(DWORD data)
 //	DREG取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCSI::GetDREG()
+uint32_t FASTCALL SCSI::GetDREG()
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -1528,7 +1544,7 @@ DWORD FASTCALL SCSI::GetDREG()
 //	DREG設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCSI::SetDREG(DWORD data)
+void FASTCALL SCSI::SetDREG(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1577,7 +1593,7 @@ void FASTCALL SCSI::SetDREG(DWORD data)
 //	TEMP設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCSI::SetTEMP(DWORD data)
+void FASTCALL SCSI::SetTEMP(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1599,7 +1615,7 @@ void FASTCALL SCSI::SetTEMP(DWORD data)
 //	TCH設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCSI::SetTCH(DWORD data)
+void FASTCALL SCSI::SetTCH(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1620,7 +1636,7 @@ void FASTCALL SCSI::SetTCH(DWORD data)
 //	TCM設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCSI::SetTCM(DWORD data)
+void FASTCALL SCSI::SetTCM(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1640,7 +1656,7 @@ void FASTCALL SCSI::SetTCM(DWORD data)
 //	TCL設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCSI::SetTCL(DWORD data)
+void FASTCALL SCSI::SetTCL(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1867,7 +1883,7 @@ void FASTCALL SCSI::SetACKREQ()
 //	データ転送
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCSI::Xfer(DWORD *reg)
+void FASTCALL SCSI::Xfer(uint32_t *reg)
 {
 	ASSERT(this);
 	ASSERT(reg);
@@ -1916,12 +1932,12 @@ void FASTCALL SCSI::Xfer(DWORD *reg)
 
 		// データインフェーズ
 		case datain:
-			*reg = (DWORD)scsi.buffer[scsi.offset];
+			*reg = (uint32_t)scsi.buffer[scsi.offset];
 			break;
 
 		// データアウトフェーズ
 		case dataout:
-			scsi.buffer[scsi.offset] = (BYTE)*reg;
+			scsi.buffer[scsi.offset] = (uint8_t)*reg;
 			break;
 
 		// ステータスフェーズ
@@ -1949,7 +1965,7 @@ void FASTCALL SCSI::Xfer(DWORD *reg)
 //---------------------------------------------------------------------------
 void FASTCALL SCSI::XferNext()
 {
-	BOOL result;
+	int result;
 
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -2076,7 +2092,7 @@ void FASTCALL SCSI::XferNext()
 //	※offset, lengthを再設定すること
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSI::XferIn()
+int FASTCALL SCSI::XferIn()
 {
 	ASSERT(this);
 	ASSERT(scsi.phase == datain);
@@ -2125,7 +2141,7 @@ BOOL FASTCALL SCSI::XferIn()
 //	※cont=TRUEの場合、offset, lengthを再設定すること
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSI::XferOut(BOOL cont)
+int FASTCALL SCSI::XferOut(int cont)
 {
 	ASSERT(this);
 	ASSERT(scsi.phase == dataout);
@@ -2185,7 +2201,7 @@ BOOL FASTCALL SCSI::XferOut(BOOL cont)
 //	データ転送MSG
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSI::XferMsg(DWORD /*msg*/)
+int FASTCALL SCSI::XferMsg(uint32_t /*msg*/)
 {
 	ASSERT(this);
 	ASSERT(scsi.phase == msgout);
@@ -2269,7 +2285,7 @@ void FASTCALL SCSI::Arbitration()
 void FASTCALL SCSI::Selection()
 {
 	int i;
-	DWORD temp;
+	uint32_t temp;
 
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -2288,7 +2304,7 @@ void FASTCALL SCSI::Selection()
 
 		// ターゲットを探す
 		for (i=0; i<8; i++) {
-			if (temp == (DWORD)(1 << i)) {
+			if (temp == (uint32_t)(1 << i)) {
 				scsi.id = i;
 				break;
 			}
@@ -2320,7 +2336,7 @@ void FASTCALL SCSI::Selection()
 //---------------------------------------------------------------------------
 void FASTCALL SCSI::SelectTime()
 {
-	DWORD tc;
+	uint32_t tc;
 
 	ASSERT(this);
 	ASSERT((scsi.scmd & 0xe0) == 0x20);
@@ -2347,7 +2363,9 @@ void FASTCALL SCSI::SelectTime()
 	scsi.sel = TRUE;
 
 	// イベントタイム設定
+#if defined(XM6_USE_EVENT_DESC)
 	event.SetDesc("Selection");
+#endif
 	if (scsi.id != -1) {
 		if (scsi.disk[scsi.id]) {
 			// 指定IDが正常の場合、16usでセレクションを成功させる
@@ -2738,9 +2756,9 @@ void FASTCALL SCSI::Status()
 //	割り込み要求
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCSI::Interrupt(int type, BOOL flag)
+void FASTCALL SCSI::Interrupt(int type, int flag)
 {
-	DWORD ints;
+	uint32_t ints;
 
 	ASSERT(this);
 	ASSERT((type >= 0) && (type <= 7));
@@ -2879,7 +2897,7 @@ void FASTCALL SCSI::IntAck(int level)
 int FASTCALL SCSI::GetSCSIID() const
 {
 	int id;
-	DWORD bdid;
+	uint32_t bdid;
 
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -2912,7 +2930,7 @@ int FASTCALL SCSI::GetSCSIID() const
 //	BUSYチェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSI::IsBusy() const
+int FASTCALL SCSI::IsBusy() const
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -2936,7 +2954,7 @@ BOOL FASTCALL SCSI::IsBusy() const
 //	BUSYチェック
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCSI::GetBusyDevice() const
+uint32_t FASTCALL SCSI::GetBusyDevice() const
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -2995,7 +3013,7 @@ void FASTCALL SCSI::Error()
 //---------------------------------------------------------------------------
 void FASTCALL SCSI::TestUnitReady()
 {
-	BOOL status;
+	int status;
 
 	ASSERT(this);
 	ASSERT(scsi.disk[scsi.id]);
@@ -3024,7 +3042,7 @@ void FASTCALL SCSI::TestUnitReady()
 //---------------------------------------------------------------------------
 void FASTCALL SCSI::Rezero()
 {
-	BOOL status;
+	int status;
 
 	ASSERT(this);
 	ASSERT(scsi.disk[scsi.id]);
@@ -3080,7 +3098,7 @@ void FASTCALL SCSI::RequestSense()
 //---------------------------------------------------------------------------
 void FASTCALL SCSI::Format()
 {
-	BOOL status;
+	int status;
 
 	ASSERT(this);
 	ASSERT(scsi.disk[scsi.id]);
@@ -3109,7 +3127,7 @@ void FASTCALL SCSI::Format()
 //---------------------------------------------------------------------------
 void FASTCALL SCSI::Reassign()
 {
-	BOOL status;
+	int status;
 
 	ASSERT(this);
 	ASSERT(scsi.disk[scsi.id]);
@@ -3138,7 +3156,7 @@ void FASTCALL SCSI::Reassign()
 //---------------------------------------------------------------------------
 void FASTCALL SCSI::Read6()
 {
-	DWORD record;
+	uint32_t record;
 
 	ASSERT(this);
 	ASSERT(scsi.disk[scsi.id]);
@@ -3181,7 +3199,7 @@ void FASTCALL SCSI::Read6()
 //---------------------------------------------------------------------------
 void FASTCALL SCSI::Write6()
 {
-	DWORD record;
+	uint32_t record;
 
 	ASSERT(this);
 	ASSERT(scsi.disk[scsi.id]);
@@ -3224,7 +3242,7 @@ void FASTCALL SCSI::Write6()
 //---------------------------------------------------------------------------
 void FASTCALL SCSI::Seek6()
 {
-	BOOL status;
+	int status;
 
 	ASSERT(this);
 	ASSERT(scsi.disk[scsi.id]);
@@ -3337,7 +3355,7 @@ void FASTCALL SCSI::ModeSense()
 //---------------------------------------------------------------------------
 void FASTCALL SCSI::StartStop()
 {
-	BOOL status;
+	int status;
 
 	ASSERT(this);
 	ASSERT(scsi.disk[scsi.id]);
@@ -3366,7 +3384,7 @@ void FASTCALL SCSI::StartStop()
 //---------------------------------------------------------------------------
 void FASTCALL SCSI::SendDiag()
 {
-	BOOL status;
+	int status;
 
 	ASSERT(this);
 	ASSERT(scsi.disk[scsi.id]);
@@ -3395,7 +3413,7 @@ void FASTCALL SCSI::SendDiag()
 //---------------------------------------------------------------------------
 void FASTCALL SCSI::Removal()
 {
-	BOOL status;
+	int status;
 
 	ASSERT(this);
 	ASSERT(scsi.disk[scsi.id]);
@@ -3456,7 +3474,7 @@ void FASTCALL SCSI::ReadCapacity()
 //---------------------------------------------------------------------------
 void FASTCALL SCSI::Read10()
 {
-	DWORD record;
+	uint32_t record;
 
 	ASSERT(this);
 	ASSERT(scsi.disk[scsi.id]);
@@ -3506,7 +3524,7 @@ void FASTCALL SCSI::Read10()
 //---------------------------------------------------------------------------
 void FASTCALL SCSI::Write10()
 {
-	DWORD record;
+	uint32_t record;
 
 	ASSERT(this);
 	ASSERT(scsi.disk[scsi.id]);
@@ -3556,7 +3574,7 @@ void FASTCALL SCSI::Write10()
 //---------------------------------------------------------------------------
 void FASTCALL SCSI::Seek10()
 {
-	BOOL status;
+	int status;
 
 	ASSERT(this);
 	ASSERT(scsi.disk[scsi.id]);
@@ -3585,8 +3603,8 @@ void FASTCALL SCSI::Seek10()
 //---------------------------------------------------------------------------
 void FASTCALL SCSI::Verify()
 {
-	BOOL status;
-	DWORD record;
+	int status;
+	uint32_t record;
 
 	ASSERT(this);
 	ASSERT(scsi.disk[scsi.id]);
@@ -3674,7 +3692,7 @@ void FASTCALL SCSI::ReadToc()
 //---------------------------------------------------------------------------
 void FASTCALL SCSI::PlayAudio10()
 {
-	BOOL status;
+	int status;
 
 	ASSERT(this);
 	ASSERT(scsi.disk[scsi.id]);
@@ -3704,7 +3722,7 @@ void FASTCALL SCSI::PlayAudio10()
 //---------------------------------------------------------------------------
 void FASTCALL SCSI::PlayAudioMSF()
 {
-	BOOL status;
+	int status;
 
 	ASSERT(this);
 	ASSERT(scsi.disk[scsi.id]);
@@ -3734,7 +3752,7 @@ void FASTCALL SCSI::PlayAudioMSF()
 //---------------------------------------------------------------------------
 void FASTCALL SCSI::PlayAudioTrack()
 {
-	BOOL status;
+	int status;
 
 	ASSERT(this);
 	ASSERT(scsi.disk[scsi.id]);
@@ -3765,8 +3783,8 @@ void FASTCALL SCSI::PlayAudioTrack()
 void FASTCALL SCSI::Construct()
 {
 	int hd;
-	BOOL mo;
-	BOOL cd;
+	int mo;
+	int cd;
 	int i;
 	int init;
 	int index;
@@ -4003,7 +4021,7 @@ void FASTCALL SCSI::Construct()
 //	MO/CD オープン
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSI::Open(const Filepath& path, BOOL mo)
+int FASTCALL SCSI::Open(const Filepath& path, int mo)
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -4046,7 +4064,7 @@ BOOL FASTCALL SCSI::Open(const Filepath& path, BOOL mo)
 //	MO/CD イジェクト
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCSI::Eject(BOOL force, BOOL mo)
+void FASTCALL SCSI::Eject(int force, int mo)
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -4072,7 +4090,7 @@ void FASTCALL SCSI::Eject(BOOL force, BOOL mo)
 //	MO 書き込み禁止
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCSI::WriteP(BOOL flag)
+void FASTCALL SCSI::WriteP(int flag)
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -4092,7 +4110,7 @@ void FASTCALL SCSI::WriteP(BOOL flag)
 //	MO 書き込み禁止取得
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSI::IsWriteP() const
+int FASTCALL SCSI::IsWriteP() const
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -4112,7 +4130,7 @@ BOOL FASTCALL SCSI::IsWriteP() const
 //	MO ReadOnlyチェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSI::IsReadOnly() const
+int FASTCALL SCSI::IsReadOnly() const
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -4132,7 +4150,7 @@ BOOL FASTCALL SCSI::IsReadOnly() const
 //	MO/CD Lockedチェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSI::IsLocked(BOOL mo) const
+int FASTCALL SCSI::IsLocked(int mo) const
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -4162,7 +4180,7 @@ BOOL FASTCALL SCSI::IsLocked(BOOL mo) const
 //	MO/CD Readyチェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSI::IsReady(BOOL mo) const
+int FASTCALL SCSI::IsReady(int mo) const
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -4192,7 +4210,7 @@ BOOL FASTCALL SCSI::IsReady(BOOL mo) const
 //	MO/CD 有効チェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSI::IsValid(BOOL mo) const
+int FASTCALL SCSI::IsValid(int mo) const
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -4219,7 +4237,7 @@ BOOL FASTCALL SCSI::IsValid(BOOL mo) const
 //	MO/CD パス取得
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCSI::GetPath(Filepath& path, BOOL mo) const
+void FASTCALL SCSI::GetPath(Filepath& path, int mo) const
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -4256,7 +4274,7 @@ void FASTCALL SCSI::GetPath(Filepath& path, BOOL mo) const
 //	CD-DAバッファ取得
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCSI::GetBuf(DWORD *buffer, int samples, DWORD rate)
+void FASTCALL SCSI::GetBuf(uint32_t *buffer, int samples, uint32_t rate)
 {
 	ASSERT(this);
 	ASSERT(buffer);

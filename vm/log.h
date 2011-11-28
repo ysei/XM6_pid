@@ -9,7 +9,7 @@
 
 #if !defined(log_h)
 #define log_h
-
+#if defined(XM6_USE_LOG)
 //===========================================================================
 //
 //	ログ
@@ -24,11 +24,11 @@ public:
 		Warning							// 警告レベル
 	};
 	typedef struct {
-		DWORD number;					// 通し番号(リセットでクリア)
-		DWORD total;					// 通し番号(累積)
-		DWORD time;						// 仮想時間
-		DWORD id;						// デバイスID
-		DWORD pc;						// プログラムカウンタ
+		uint32_t number;					// 通し番号(リセットでクリア)
+		uint32_t total;					// 通し番号(累積)
+		uint32_t time;						// 仮想時間
+		uint32_t id;						// デバイスID
+		uint32_t pc;						// プログラムカウンタ
 		loglevel level;					// レベル
 		char *string;					// 文字列実体
 	} logdata_t;
@@ -37,7 +37,7 @@ public:
 	// 基本ファンクション
 	Log();
 										// コンストラクタ
-	BOOL FASTCALL Init(VM *vm);
+	int FASTCALL Init(VM *vm);
 										// 初期化
 	void FASTCALL Cleanup();
 										// クリーンアップ
@@ -53,7 +53,7 @@ public:
 										// ログ出力(...)
 	void vFormat(loglevel level, const Device *dev, char *format, va_list args);
 										// ログ出力(va)
-	void FASTCALL AddString(DWORD id, loglevel level, char *string);
+	void FASTCALL AddString(uint32_t id, loglevel level, char *string);
 										// ログデータ追加
 
 	// 取得
@@ -61,7 +61,7 @@ public:
 										// ログ項目数を取得
 	int FASTCALL GetMax() const;
 										// ログ最大記録数を取得
-	BOOL FASTCALL GetData(int index, logdata_t *ptr);
+	int FASTCALL GetData(int index, logdata_t *ptr);
 										// ログデータ取得
 
 private:
@@ -97,20 +97,10 @@ private:
 class LogProxy {
 public:
 	// コンストラクタ
-	LogProxy(const Device* device, Log* log)
-	{
-		m_device = device;
-		m_log = log;
-	}
+	LogProxy(const Device* device, Log* log);
 
 	// ログ出力
-	void operator()(enum Log::loglevel level, char* format, ...) const
-	{
-		va_list args;
-		va_start(args, format);
-		m_log->vFormat(level, m_device, format, args);
-		va_end(args);
-	}
+	void operator()(enum Log::loglevel level, char* format, ...) const;
 private:
 	const Device* m_device;
 	Log* m_log;
@@ -130,5 +120,12 @@ private:
 #define LOG4(l, s, a, b, c, d)	((void)0)
 static inline LOG_NONE(enum Log::loglevel level, char *format, ...) {}
 #endif	// !NO_LOG
-
+#else	//XM6_USE_LOG
+#define LOG(...)				((void)0)
+#define LOG0(l, s)				((void)0)
+#define LOG1(l, s, a)			((void)0)
+#define LOG2(l, s, a, b)		((void)0)
+#define LOG3(l, s, a, b, c)	  	((void)0)
+#define LOG4(l, s, a, b, c, d)	((void)0)
+#endif	// XM6_USE_LOG
 #endif	// log_h

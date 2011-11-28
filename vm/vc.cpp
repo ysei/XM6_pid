@@ -49,7 +49,7 @@ VC::VC(VM *p) : MemDevice(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL VC::Init()
+int FASTCALL VC::Init()
 {
 	ASSERT(this);
 
@@ -106,7 +106,7 @@ void FASTCALL VC::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL VC::Save(Fileio *fio, int /*ver*/)
+int FASTCALL VC::Save(Fileio *fio, int /*ver*/)
 {
 	size_t sz;
 
@@ -139,10 +139,10 @@ BOOL FASTCALL VC::Save(Fileio *fio, int /*ver*/)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL VC::Load(Fileio *fio, int /*ver*/)
+int FASTCALL VC::Load(Fileio *fio, int /*ver*/)
 {
 	size_t sz;
-	DWORD addr;
+	uint32_t addr;
 
 	ASSERT(this);
 	ASSERT(fio);
@@ -192,7 +192,7 @@ void FASTCALL VC::ApplyCfg(const Config *config)
 //	バイト読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL VC::ReadByte(DWORD addr)
+uint32_t FASTCALL VC::ReadByte(uint32_t addr)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -211,7 +211,7 @@ DWORD FASTCALL VC::ReadByte(DWORD addr)
 	// ビデオコントローラレジスタ
 	if (addr < 0x500) {
 		if (addr & 1) {
-			return (BYTE)GetVR0();
+			return (uint8_t)GetVR0();
 		}
 		else {
 			return (GetVR0() >> 8);
@@ -219,7 +219,7 @@ DWORD FASTCALL VC::ReadByte(DWORD addr)
 	}
 	if (addr < 0x600) {
 		if (addr & 1) {
-			return (BYTE)GetVR1();
+			return (uint8_t)GetVR1();
 		}
 		else {
 			return (GetVR1() >> 8);
@@ -227,7 +227,7 @@ DWORD FASTCALL VC::ReadByte(DWORD addr)
 	}
 	if (addr < 0x700) {
 		if (addr & 1) {
-			return (BYTE)GetVR2();
+			return (uint8_t)GetVR2();
 		}
 		else {
 			return (GetVR2() >> 8);
@@ -243,7 +243,7 @@ DWORD FASTCALL VC::ReadByte(DWORD addr)
 //	ワード読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL VC::ReadWord(DWORD addr)
+uint32_t FASTCALL VC::ReadWord(uint32_t addr)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -256,7 +256,7 @@ DWORD FASTCALL VC::ReadWord(DWORD addr)
 	if (addr < 0x400) {
 		// パレット
 		scheduler->Wait(1);
-		return *(WORD *)(&palette[addr]);
+		return *(uint16_t *)(&palette[addr]);
 	}
 
 	// ビデオコントローラレジスタ
@@ -279,7 +279,7 @@ DWORD FASTCALL VC::ReadWord(DWORD addr)
 //	バイト書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL VC::WriteByte(DWORD addr, DWORD data)
+void FASTCALL VC::WriteByte(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -302,7 +302,7 @@ void FASTCALL VC::WriteByte(DWORD addr, DWORD data)
 
 		// 比較
 		if (palette[addr] != data) {
-			palette[addr] = (BYTE)data;
+			palette[addr] = (uint8_t)data;
 
 			// レンダラへ通知
 			render->SetPalette(addr >> 1);
@@ -344,7 +344,7 @@ void FASTCALL VC::WriteByte(DWORD addr, DWORD data)
 //	ワード書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL VC::WriteWord(DWORD addr, DWORD data)
+void FASTCALL VC::WriteWord(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -366,8 +366,8 @@ void FASTCALL VC::WriteWord(DWORD addr, DWORD data)
 		scheduler->Wait(1);
 
 		// 比較
-		if (data != *(WORD*)(&palette[addr])) {
-			*(WORD *)(&palette[addr]) = (WORD)data;
+		if (data != *(uint16_t*)(&palette[addr])) {
+			*(uint16_t *)(&palette[addr]) = (uint16_t)data;
 
 			// レンダラへ通知
 			render->SetPalette(addr >> 1);
@@ -377,16 +377,16 @@ void FASTCALL VC::WriteWord(DWORD addr, DWORD data)
 
 	// ビデオコントローラレジスタ
 	if (addr < 0x500) {
-		SetVR0L((BYTE)data);
+		SetVR0L((uint8_t)data);
 		return;
 	}
 	if (addr < 0x600) {
-		SetVR1L((BYTE)data);
+		SetVR1L((uint8_t)data);
 		SetVR1H(data >> 8);
 		return;
 	}
 	if (addr < 0x700) {
-		SetVR2L((BYTE)data);
+		SetVR2L((uint8_t)data);
 		SetVR2H(data >> 8);
 		return;
 	}
@@ -399,7 +399,7 @@ void FASTCALL VC::WriteWord(DWORD addr, DWORD data)
 //	読み込みのみ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL VC::ReadOnly(DWORD addr) const
+uint32_t FASTCALL VC::ReadOnly(uint32_t addr) const
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -417,7 +417,7 @@ DWORD FASTCALL VC::ReadOnly(DWORD addr) const
 	// ビデオコントローラレジスタ
 	if (addr < 0x500) {
 		if (addr & 1) {
-			return (BYTE)GetVR0();
+			return (uint8_t)GetVR0();
 		}
 		else {
 			return (GetVR0() >> 8);
@@ -425,7 +425,7 @@ DWORD FASTCALL VC::ReadOnly(DWORD addr) const
 	}
 	if (addr < 0x600) {
 		if (addr & 1) {
-			return (BYTE)GetVR1();
+			return (uint8_t)GetVR1();
 		}
 		else {
 			return (GetVR1() >> 8);
@@ -433,7 +433,7 @@ DWORD FASTCALL VC::ReadOnly(DWORD addr) const
 	}
 	if (addr < 0x700) {
 		if (addr & 1) {
-			return (BYTE)GetVR2();
+			return (uint8_t)GetVR2();
 		}
 		else {
 			return (GetVR2() >> 8);
@@ -463,10 +463,10 @@ void FASTCALL VC::GetVC(vc_t *buffer)
 //	ビデオレジスタ0(L)設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL VC::SetVR0L(DWORD data)
+void FASTCALL VC::SetVR0L(uint32_t data)
 {
-	BOOL siz;
-	DWORD col;
+	int siz;
+	uint32_t col;
 
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -495,9 +495,9 @@ void FASTCALL VC::SetVR0L(DWORD data)
 //	ビデオレジスタ0取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL VC::GetVR0() const
+uint32_t FASTCALL VC::GetVR0() const
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 
@@ -515,7 +515,7 @@ DWORD FASTCALL VC::GetVR0() const
 //	ビデオレジスタ1(H)設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL VC::SetVR1H(DWORD data)
+void FASTCALL VC::SetVR1H(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -543,7 +543,7 @@ void FASTCALL VC::SetVR1H(DWORD data)
 //	ビデオレジスタ1(L)設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL VC::SetVR1L(DWORD data)
+void FASTCALL VC::SetVR1L(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -571,9 +571,9 @@ void FASTCALL VC::SetVR1L(DWORD data)
 //	ビデオレジスタ1取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL VC::GetVR1() const
+uint32_t FASTCALL VC::GetVR1() const
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 
@@ -599,7 +599,7 @@ DWORD FASTCALL VC::GetVR1() const
 //	ビデオレジスタ2(H)設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL VC::SetVR2H(DWORD data)
+void FASTCALL VC::SetVR2H(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -683,7 +683,7 @@ void FASTCALL VC::SetVR2H(DWORD data)
 //	ビデオレジスタ2(L)設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL VC::SetVR2L(DWORD data)
+void FASTCALL VC::SetVR2L(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -767,9 +767,9 @@ void FASTCALL VC::SetVR2L(DWORD data)
 //	ビデオレジスタ2取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL VC::GetVR2() const
+uint32_t FASTCALL VC::GetVR2() const
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 

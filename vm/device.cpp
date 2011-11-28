@@ -35,7 +35,9 @@ Device::Device(VM *p)
 	// ワーク記憶、デバイス追加
 	vm = p;
 	vm->AddDevice(this);
+#if defined(XM6_USE_LOG)
 	log = &(vm->log);
+#endif
 }
 
 //---------------------------------------------------------------------------
@@ -52,7 +54,7 @@ Device::~Device()
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Device::Init()
+int FASTCALL Device::Init()
 {
 	ASSERT(this);
 
@@ -93,7 +95,7 @@ void FASTCALL Device::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Device::Save(Fileio* /*fio*/, int /*ver*/)
+int FASTCALL Device::Save(Fileio* /*fio*/, int /*ver*/)
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -106,7 +108,7 @@ BOOL FASTCALL Device::Save(Fileio* /*fio*/, int /*ver*/)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Device::Load(Fileio* /*fio*/, int /*ver*/)
+int FASTCALL Device::Load(Fileio* /*fio*/, int /*ver*/)
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -137,8 +139,10 @@ void FASTCALL Device::AssertDiag() const
 	ASSERT(dev.id != 0);
 	ASSERT(dev.desc);
 	ASSERT(vm);
+#if defined(XM6_USE_LOG)
 	ASSERT(log);
 	ASSERT(log == &(vm->log));
+#endif
 }
 #endif	// NDEBUG
 
@@ -147,7 +151,7 @@ void FASTCALL Device::AssertDiag() const
 //	イベントコールバック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Device::Callback(Event* /*ev*/)
+int FASTCALL Device::Callback(Event* /*ev*/)
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -182,7 +186,7 @@ MemDevice::MemDevice(VM *p) : Device(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL MemDevice::Init()
+int FASTCALL MemDevice::Init()
 {
 	ASSERT(this);
 	ASSERT((memdev.first != 0) || (memdev.last != 0));
@@ -209,7 +213,7 @@ BOOL FASTCALL MemDevice::Init()
 //	バイト読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MemDevice::ReadByte(DWORD /*addr*/)
+uint32_t FASTCALL MemDevice::ReadByte(uint32_t /*addr*/)
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -222,9 +226,9 @@ DWORD FASTCALL MemDevice::ReadByte(DWORD /*addr*/)
 //	ワード読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MemDevice::ReadWord(DWORD addr)
+uint32_t FASTCALL MemDevice::ReadWord(uint32_t addr)
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -244,7 +248,7 @@ DWORD FASTCALL MemDevice::ReadWord(DWORD addr)
 //	バイト書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL MemDevice::WriteByte(DWORD /*addr*/, DWORD /*data*/)
+void FASTCALL MemDevice::WriteByte(uint32_t /*addr*/, uint32_t /*data*/)
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -255,7 +259,7 @@ void FASTCALL MemDevice::WriteByte(DWORD /*addr*/, DWORD /*data*/)
 //	ワード書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL MemDevice::WriteWord(DWORD addr, DWORD data)
+void FASTCALL MemDevice::WriteWord(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -263,8 +267,8 @@ void FASTCALL MemDevice::WriteWord(DWORD addr, DWORD data)
 	ASSERT_DIAG();
 
 	// 上位→下位の順でWrite
-	WriteByte(addr, (BYTE)(data >> 8));
-	WriteByte(addr + 1, (BYTE)data);
+	WriteByte(addr, (uint8_t)(data >> 8));
+	WriteByte(addr + 1, (uint8_t)data);
 }
 
 //---------------------------------------------------------------------------
@@ -272,7 +276,7 @@ void FASTCALL MemDevice::WriteWord(DWORD addr, DWORD data)
 //	読み込みのみ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MemDevice::ReadOnly(DWORD /*addr*/) const
+uint32_t FASTCALL MemDevice::ReadOnly(uint32_t /*addr*/) const
 {
 	ASSERT(this);
 	ASSERT_DIAG();

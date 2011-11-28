@@ -21,23 +21,23 @@
 class GVRAMHandler
 {
 public:
-	GVRAMHandler(Render *rend, BYTE *mem, CPU *p);
+	GVRAMHandler(Render *rend, uint8_t *mem, CPU *p);
 										// コンストラクタ
-	virtual DWORD FASTCALL ReadByte(DWORD addr) = 0;
+	virtual uint32_t FASTCALL ReadByte(uint32_t addr) = 0;
 										// バイト読み込み
-	virtual DWORD FASTCALL ReadWord(DWORD addr) = 0;
+	virtual uint32_t FASTCALL ReadWord(uint32_t addr) = 0;
 										// ワード読み込み
-	virtual void FASTCALL WriteByte(DWORD addr, DWORD data) = 0;
+	virtual void FASTCALL WriteByte(uint32_t addr, uint32_t data) = 0;
 										// バイト書き込み
-	virtual void FASTCALL WriteWord(DWORD addr, DWORD data) = 0;
+	virtual void FASTCALL WriteWord(uint32_t addr, uint32_t data) = 0;
 										// ワード書き込み
-	virtual DWORD FASTCALL ReadOnly(DWORD addr) const = 0;
+	virtual uint32_t FASTCALL ReadOnly(uint32_t addr) const = 0;
 										// 読み込みのみ
 
 protected:
 	Render *render;
 										// レンダラ
-	BYTE *gvram;
+	uint8_t *gvram;
 										// グラフィックVRAM
 	CPU *cpu;
 										// CPU
@@ -51,17 +51,17 @@ protected:
 class GVRAM1024 : public GVRAMHandler
 {
 public:
-	GVRAM1024(Render *render, BYTE *gvram, CPU *p);
+	GVRAM1024(Render *render, uint8_t *gvram, CPU *p);
 										// コンストラクタ
-	DWORD FASTCALL ReadByte(DWORD addr);
+	uint32_t FASTCALL ReadByte(uint32_t addr);
 										// バイト読み込み
-	DWORD FASTCALL ReadWord(DWORD addr);
+	uint32_t FASTCALL ReadWord(uint32_t addr);
 										// ワード読み込み
-	void FASTCALL WriteByte(DWORD addr, DWORD data);
+	void FASTCALL WriteByte(uint32_t addr, uint32_t data);
 										// バイト書き込み
-	void FASTCALL WriteWord(DWORD addr, DWORD data);
+	void FASTCALL WriteWord(uint32_t addr, uint32_t data);
 										// ワード書き込み
-	DWORD FASTCALL ReadOnly(DWORD addr) const;
+	uint32_t FASTCALL ReadOnly(uint32_t addr) const;
 										// 読み込みのみ
 };
 
@@ -73,17 +73,17 @@ public:
 class GVRAM16 : public GVRAMHandler
 {
 public:
-	GVRAM16(Render *render, BYTE *gvram, CPU *p);
+	GVRAM16(Render *render, uint8_t *gvram, CPU *p);
 										// コンストラクタ
-	DWORD FASTCALL ReadByte(DWORD addr);
+	uint32_t FASTCALL ReadByte(uint32_t addr);
 										// バイト読み込み
-	DWORD FASTCALL ReadWord(DWORD addr);
+	uint32_t FASTCALL ReadWord(uint32_t addr);
 										// ワード読み込み
-	void FASTCALL WriteByte(DWORD addr, DWORD data);
+	void FASTCALL WriteByte(uint32_t addr, uint32_t data);
 										// バイト書き込み
-	void FASTCALL WriteWord(DWORD addr, DWORD data);
+	void FASTCALL WriteWord(uint32_t addr, uint32_t data);
 										// ワード書き込み
-	DWORD FASTCALL ReadOnly(DWORD addr) const;
+	uint32_t FASTCALL ReadOnly(uint32_t addr) const;
 										// 読み込みのみ
 };
 
@@ -95,17 +95,17 @@ public:
 class GVRAM256 : public GVRAMHandler
 {
 public:
-	GVRAM256(Render *render, BYTE *gvram, CPU *p);
+	GVRAM256(Render *render, uint8_t *gvram, CPU *p);
 										// コンストラクタ
-	DWORD FASTCALL ReadByte(DWORD addr);
+	uint32_t FASTCALL ReadByte(uint32_t addr);
 										// バイト読み込み
-	DWORD FASTCALL ReadWord(DWORD addr);
+	uint32_t FASTCALL ReadWord(uint32_t addr);
 										// ワード読み込み
-	void FASTCALL WriteByte(DWORD addr, DWORD data);
+	void FASTCALL WriteByte(uint32_t addr, uint32_t data);
 										// バイト書き込み
-	void FASTCALL WriteWord(DWORD addr, DWORD data);
+	void FASTCALL WriteWord(uint32_t addr, uint32_t data);
 										// ワード書き込み
-	DWORD FASTCALL ReadOnly(DWORD addr) const;
+	uint32_t FASTCALL ReadOnly(uint32_t addr) const;
 										// 読み込みのみ
 };
 
@@ -117,17 +117,17 @@ public:
 class GVRAMNDef : public GVRAMHandler
 {
 public:
-	GVRAMNDef(Render *render, BYTE *gvram, CPU *p);
+	GVRAMNDef(Render *render, uint8_t *gvram, CPU *p);
 										// コンストラクタ
-	DWORD FASTCALL ReadByte(DWORD addr);
+	uint32_t FASTCALL ReadByte(uint32_t addr);
 										// バイト読み込み
-	DWORD FASTCALL ReadWord(DWORD addr);
+	uint32_t FASTCALL ReadWord(uint32_t addr);
 										// ワード読み込み
-	void FASTCALL WriteByte(DWORD addr, DWORD data);
+	void FASTCALL WriteByte(uint32_t addr, uint32_t data);
 										// バイト書き込み
-	void FASTCALL WriteWord(DWORD addr, DWORD data);
+	void FASTCALL WriteWord(uint32_t addr, uint32_t data);
 										// ワード書き込み
-	DWORD FASTCALL ReadOnly(DWORD addr) const;
+	uint32_t FASTCALL ReadOnly(uint32_t addr) const;
 										// 読み込みのみ
 };
 
@@ -139,17 +139,17 @@ public:
 class GVRAM64K : public GVRAMHandler
 {
 public:
-	GVRAM64K(Render *render, BYTE *gvram, CPU *p);
+	GVRAM64K(Render *render, uint8_t *gvram, CPU *p);
 										// コンストラクタ
-	DWORD FASTCALL ReadByte(DWORD addr);
+	uint32_t FASTCALL ReadByte(uint32_t addr);
 										// バイト読み込み
-	DWORD FASTCALL ReadWord(DWORD addr);
+	uint32_t FASTCALL ReadWord(uint32_t addr);
 										// ワード読み込み
-	void FASTCALL WriteByte(DWORD addr, DWORD data);
+	void FASTCALL WriteByte(uint32_t addr, uint32_t data);
 										// バイト書き込み
-	void FASTCALL WriteWord(DWORD addr, DWORD data);
+	void FASTCALL WriteWord(uint32_t addr, uint32_t data);
 										// ワード書き込み
-	DWORD FASTCALL ReadOnly(DWORD addr) const;
+	uint32_t FASTCALL ReadOnly(uint32_t addr) const;
 										// 読み込みのみ
 };
 
@@ -163,27 +163,27 @@ class GVRAM : public MemDevice
 public:
 	// 内部ワーク定義
 	typedef struct {
-		BOOL mem;						// 512KB単純メモリフラグ
-		DWORD siz;						// 1024×1024フラグ
-		DWORD col;						// 16, 256, 未定義, 65536
+		int mem;						// 512KB単純メモリフラグ
+		uint32_t siz;						// 1024×1024フラグ
+		uint32_t col;						// 16, 256, 未定義, 65536
 		int type;						// ハンドラタイプ(0～4)
-		DWORD mask[4];					// 高速クリア マスク
-		BOOL plane[4];					// 高速クリア プレーン
+		uint32_t mask[4];					// 高速クリア マスク
+		int plane[4];					// 高速クリア プレーン
 	} gvram_t;
 
 public:
 	// 基本ファンクション
 	GVRAM(VM *p);
 										// コンストラクタ
-	BOOL FASTCALL Init();
+	int FASTCALL Init();
 										// 初期化
 	void FASTCALL Cleanup();
 										// クリーンアップ
 	void FASTCALL Reset();
 										// リセット
-	BOOL FASTCALL Save(Fileio *fio, int ver);
+	int FASTCALL Save(Fileio *fio, int ver);
 										// セーブ
-	BOOL FASTCALL Load(Fileio *fio, int ver);
+	int FASTCALL Load(Fileio *fio, int ver);
 										// ロード
 	void FASTCALL ApplyCfg(const Config *config);
 										// 設定適用
@@ -193,25 +193,25 @@ public:
 #endif	// NDEBUG
 
 	// メモリデバイス
-	DWORD FASTCALL ReadByte(DWORD addr);
+	uint32_t FASTCALL ReadByte(uint32_t addr);
 										// バイト読み込み
-	DWORD FASTCALL ReadWord(DWORD addr);
+	uint32_t FASTCALL ReadWord(uint32_t addr);
 										// ワード読み込み
-	void FASTCALL WriteByte(DWORD addr, DWORD data);
+	void FASTCALL WriteByte(uint32_t addr, uint32_t data);
 										// バイト書き込み
-	void FASTCALL WriteWord(DWORD addr, DWORD data);
+	void FASTCALL WriteWord(uint32_t addr, uint32_t data);
 										// ワード書き込み
-	DWORD FASTCALL ReadOnly(DWORD addr) const;
+	uint32_t FASTCALL ReadOnly(uint32_t addr) const;
 										// 読み込みのみ
 
 	// 外部API
-	void FASTCALL SetType(DWORD type);
+	void FASTCALL SetType(uint32_t type);
 										// GVRAMタイプ設定
-	void FASTCALL FastSet(DWORD mask);
+	void FASTCALL FastSet(uint32_t mask);
 										// 高速クリア設定
 	void FASTCALL FastClr(const CRTC::crtc_t *p);
 										// 高速クリア
-	const BYTE* FASTCALL GetGVRAM() const;
+	const uint8_t* FASTCALL GetGVRAM() const;
 										// GVRAM取得
 
 private:
@@ -223,7 +223,7 @@ private:
 										// 高速クリア 512x512
 	Render *render;
 										// レンダラ
-	BYTE *gvram;
+	uint8_t *gvram;
 										// グラフィックVRAM
 	GVRAMHandler *handler;
 										// メモリハンドラ(カレント)
@@ -239,7 +239,7 @@ private:
 										// メモリハンドラ(64K色)
 	gvram_t gvdata;
 										// 内部ワーク
-	DWORD gvcount;
+	uint32_t gvcount;
 										// GVRAMアクセスカウント(version2.04以降)
 };
 

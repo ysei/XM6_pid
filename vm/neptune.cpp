@@ -43,7 +43,7 @@ Neptune::Neptune(VM *p) : MemDevice(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Neptune::Init()
+int FASTCALL Neptune::Init()
 {
 	ASSERT(this);
 
@@ -86,7 +86,7 @@ void FASTCALL Neptune::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Neptune::Save(Fileio* /*fio*/, int /*ver*/)
+int FASTCALL Neptune::Save(Fileio* /*fio*/, int /*ver*/)
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -101,7 +101,7 @@ BOOL FASTCALL Neptune::Save(Fileio* /*fio*/, int /*ver*/)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Neptune::Load(Fileio* /*fio*/, int /*ver*/)
+int FASTCALL Neptune::Load(Fileio* /*fio*/, int /*ver*/)
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -147,7 +147,7 @@ void FASTCALL Neptune::AssertDiag() const
 //	バイト読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL Neptune::ReadByte(DWORD addr)
+uint32_t FASTCALL Neptune::ReadByte(uint32_t addr)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -164,7 +164,7 @@ DWORD FASTCALL Neptune::ReadByte(DWORD addr)
 //	ワード読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL Neptune::ReadWord(DWORD addr)
+uint32_t FASTCALL Neptune::ReadWord(uint32_t addr)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -179,7 +179,7 @@ DWORD FASTCALL Neptune::ReadWord(DWORD addr)
 //	バイト書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL Neptune::WriteByte(DWORD addr, DWORD data)
+void FASTCALL Neptune::WriteByte(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -195,7 +195,7 @@ void FASTCALL Neptune::WriteByte(DWORD addr, DWORD data)
 //	ワード書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL Neptune::WriteWord(DWORD addr, DWORD data)
+void FASTCALL Neptune::WriteWord(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -203,7 +203,7 @@ void FASTCALL Neptune::WriteWord(DWORD addr, DWORD data)
 	ASSERT(data < 0x10000);
 	ASSERT_DIAG();
 
-	WriteByte(addr + 1, (BYTE)data);
+	WriteByte(addr + 1, (uint8_t)data);
 }
 
 //---------------------------------------------------------------------------
@@ -211,7 +211,7 @@ void FASTCALL Neptune::WriteWord(DWORD addr, DWORD data)
 //	読み込みのみ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL Neptune::ReadOnly(DWORD addr) const
+uint32_t FASTCALL Neptune::ReadOnly(uint32_t addr) const
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));

@@ -24,43 +24,43 @@ class OPMIF : public MemDevice
 public:
 	// 内部データ定義
 	typedef struct {
-		DWORD reg[0x100];				// レジスタ
-		DWORD key[8];					// キー情報
-		DWORD addr;						// セレクトアドレス
-		BOOL busy;						// BUSYフラグ
-		BOOL enable[2];					// タイマイネーブル
-		BOOL action[2];					// タイマ動作
-		BOOL interrupt[2];				// タイマ割り込み
-		DWORD time[2];					// タイマ時間
-		BOOL started;					// 開始フラグ
+		uint32_t reg[0x100];				// レジスタ
+		uint32_t key[8];					// キー情報
+		uint32_t addr;						// セレクトアドレス
+		int busy;						// BUSYフラグ
+		int enable[2];					// タイマイネーブル
+		int action[2];					// タイマ動作
+		int interrupt[2];				// タイマ割り込み
+		uint32_t time[2];					// タイマ時間
+		int started;					// 開始フラグ
 	} opm_t;
 
 	// バッファ管理定義
 	typedef struct {
-		DWORD max;						// 最大数
-		DWORD num;						// 有効データ数
-		DWORD read;						// 読み取りポイント
-		DWORD write;					// 書き込みポイント
-		DWORD samples;					// 合成サンプル数
-		DWORD rate;						// 合成レート
-		DWORD under;					// アンダーラン
-		DWORD over;						// オーバーラン
-		BOOL sound;						// FM有効
+		uint32_t max;						// 最大数
+		uint32_t num;						// 有効データ数
+		uint32_t read;						// 読み取りポイント
+		uint32_t write;					// 書き込みポイント
+		uint32_t samples;					// 合成サンプル数
+		uint32_t rate;						// 合成レート
+		uint32_t under;					// アンダーラン
+		uint32_t over;						// オーバーラン
+		int sound;						// FM有効
 	} opmbuf_t;
 
 public:
 	// 基本ファンクション
 	OPMIF(VM *p);
 										// コンストラクタ
-	BOOL FASTCALL Init();
+	int FASTCALL Init();
 										// 初期化
 	void FASTCALL Cleanup();
 										// クリーンアップ
 	void FASTCALL Reset();
 										// リセット
-	BOOL FASTCALL Save(Fileio *fio, int ver);
+	int FASTCALL Save(Fileio *fio, int ver);
 										// セーブ
-	BOOL FASTCALL Load(Fileio *fio, int ver);
+	int FASTCALL Load(Fileio *fio, int ver);
 										// ロード
 	void FASTCALL ApplyCfg(const Config *config);
 										// 設定適用
@@ -70,39 +70,39 @@ public:
 #endif	// NDEBUG
 
 	// メモリデバイス
-	DWORD FASTCALL ReadByte(DWORD addr);
+	uint32_t FASTCALL ReadByte(uint32_t addr);
 										// バイト読み込み
-	DWORD FASTCALL ReadWord(DWORD addr);
+	uint32_t FASTCALL ReadWord(uint32_t addr);
 										// ワード読み込み
-	void FASTCALL WriteByte(DWORD addr, DWORD data);
+	void FASTCALL WriteByte(uint32_t addr, uint32_t data);
 										// バイト書き込み
-	void FASTCALL WriteWord(DWORD addr, DWORD data);
+	void FASTCALL WriteWord(uint32_t addr, uint32_t data);
 										// ワード書き込み
-	DWORD FASTCALL ReadOnly(DWORD addr) const;
+	uint32_t FASTCALL ReadOnly(uint32_t addr) const;
 										// 読み込みのみ
 
 	// 外部API
 	void FASTCALL GetOPM(opm_t *buffer);
 										// 内部データ取得
-	BOOL FASTCALL Callback(Event *ev);
+	int FASTCALL Callback(Event *ev);
 										// イベントコールバック
-	void FASTCALL Output(DWORD addr, DWORD data);
+	void FASTCALL Output(uint32_t addr, uint32_t data);
 										// レジスタ出力
 	void FASTCALL SetEngine(FM::OPM *p);
 										// エンジン指定
-	void FASTCALL InitBuf(DWORD rate);
+	void FASTCALL InitBuf(uint32_t rate);
 										// バッファ初期化
-	DWORD FASTCALL ProcessBuf();
+	uint32_t FASTCALL ProcessBuf();
 										// バッファ処理
-	void FASTCALL GetBuf(DWORD *buf, int samples);
+	void FASTCALL GetBuf(uint32_t *buf, int samples);
 										// バッファより取得
 	void FASTCALL GetBufInfo(opmbuf_t *buffer);
 										// バッファ情報を得る
-	void FASTCALL EnableFM(BOOL flag)	{ bufinfo.sound = flag; }
+	void FASTCALL EnableFM(int flag)	{ bufinfo.sound = flag; }
 										// FM音源有効
 	void FASTCALL ClrStarted()			{ opm.started = FALSE; }
 										// スタートフラグを降ろす
-	BOOL FASTCALL IsStarted() const		{ return opm.started; }
+	int FASTCALL IsStarted() const		{ return opm.started; }
 										// スタートフラグ取得
 
 private:
@@ -110,9 +110,9 @@ private:
 										// タイマA算出
 	void FASTCALL CalcTimerB();
 										// タイマB算出
-	void FASTCALL CtrlTimer(DWORD data);
+	void FASTCALL CtrlTimer(uint32_t data);
 										// タイマ制御
-	void FASTCALL CtrlCT(DWORD data);
+	void FASTCALL CtrlCT(uint32_t data);
 										// CT制御
 	MFP *mfp;
 										// MFP
@@ -131,7 +131,7 @@ private:
 	enum {
 		BufMax = 0x10000				// バッファサイズ
 	};
-	DWORD *opmbuf;
+	uint32_t *opmbuf;
 										// 合成バッファ
 };
 

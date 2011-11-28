@@ -23,9 +23,9 @@ public:
 #pragma pack(push, 8)
 #endif	// _WIN32
 	typedef struct {
-		DWORD remain;					// +4  残り時間
-		DWORD time;						// +8  トータル時間
-		DWORD user;						// +12 ユーザ定義データ
+		uint32_t remain;					// +4  残り時間
+		uint32_t time;						// +8  トータル時間
+		uint32_t user;						// +12 ユーザ定義データ
 		Device *device;					// +16 親デバイス
 		Scheduler *scheduler;			// +20 スケジューラ
 		Event *next;					// +24 次のイベント
@@ -47,9 +47,9 @@ public:
 #endif	// NDEBUG
 
 	// ロード・セーブ
-	BOOL FASTCALL Save(Fileio *fio, int ver);
+	int FASTCALL Save(Fileio *fio, int ver);
 										// セーブ
-	BOOL FASTCALL Load(Fileio *fio, int ver);
+	int FASTCALL Load(Fileio *fio, int ver);
 										// ロード
 
 	// プロパティ
@@ -57,23 +57,25 @@ public:
 										// 親デバイス設定
 	Device* FASTCALL GetDevice() const	{ return ev.device; }
 										// 親デバイス取得
+#if defined(XM6_USE_EVENT_DESC)
 	void FASTCALL SetDesc(const char *desc);
 										// 名称設定
+#endif
 	const char* FASTCALL GetDesc() const;
 										// 名称取得
-	void FASTCALL SetUser(DWORD data)	{ ev.user = data; }
+	void FASTCALL SetUser(uint32_t data)	{ ev.user = data; }
 										// ユーザ定義データ設定
-	DWORD FASTCALL GetUser() const		{ return ev.user; }
+	uint32_t FASTCALL GetUser() const		{ return ev.user; }
 										// ユーザ定義データ取得
 
 	// 時間管理
-	void FASTCALL SetTime(DWORD hus);
+	void FASTCALL SetTime(uint32_t hus);
 										// 時間周期設定
-	DWORD FASTCALL GetTime() const		{ return ev.time; }
+	uint32_t FASTCALL GetTime() const		{ return ev.time; }
 										// 時間周期取得
-	DWORD FASTCALL GetRemain() const	{ return ev.remain; }
+	uint32_t FASTCALL GetRemain() const	{ return ev.remain; }
 										// 残り時間取得
-	void FASTCALL Exec(DWORD hus);
+	void FASTCALL Exec(uint32_t hus);
 										// 時間を進める
 
 	// リンク設定・削除
@@ -89,13 +91,13 @@ private:
 		Scheduler *scheduler;			// スケジューラ
 		Event *next;					// 次のイベント
 		char desc[0x20];				// 名称
-		DWORD user;						// ユーザ定義データ
-		BOOL enable;					// イネーブル時間
-		DWORD time;						// トータル時間
-		DWORD remain;					// 残り時間
+		uint32_t user;						// ユーザ定義データ
+		int enable;					// イネーブル時間
+		uint32_t time;						// トータル時間
+		uint32_t remain;					// 残り時間
 	} event201_t;
 
-	BOOL FASTCALL Load201(Fileio *fio);
+	int FASTCALL Load201(Fileio *fio);
 										// ロード(version 2.01以前)
 	event_t ev;
 										// 内部ワーク

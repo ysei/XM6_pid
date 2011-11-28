@@ -13,7 +13,7 @@
 #include "device.h"
 #include "schedule.h"
 #include "cpu.h"
-#include "memory.h"
+#include "memory_xm6.h"
 #include "sram.h"
 #include "sysport.h"
 #include "tvram.h"
@@ -45,13 +45,31 @@
 #include "filepath.h"
 #include "fileio.h"
 #include "vm.h"
-#include <stdio.h>
 
 //===========================================================================
 //
 //	仮想マシン
 //
 //===========================================================================
+static const int hex_to_int(const char* p) {
+	int ret = 0;
+	while(*p != 0) {
+		char c = *p++;
+		ret <<= 4;
+
+		if(c >= '0' && c <= '9') {
+			c -= '0';
+		} else if(c >= 'A' && c <= 'F') {
+			c -= 'A';
+		} else if(c >= 'a' && c <= 'f') {
+			c -= 'a';
+		} else {
+			c = 0;
+		}
+		ret += c;
+	}
+	return ret;
+}
 
 //---------------------------------------------------------------------------
 //
@@ -59,7 +77,12 @@
 //
 //---------------------------------------------------------------------------
 VM::VM()
+	: pCurrent(0)
+	, xm6_rtc_cb(0)
+//	, xm6_fios(0)
 {
+	pCurrent = new Filepath;
+
 	// ワーク初期化
 	status = FALSE;
 	first_device = NULL;
@@ -80,12 +103,15 @@ VM::VM()
 	Clear();
 }
 
+VM::~VM() {
+}
+
 //---------------------------------------------------------------------------
 //
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL VM::Init()
+int FASTCALL VM::Init()
 {
 	Device *device;
 
@@ -131,10 +157,11 @@ BOOL FASTCALL VM::Init()
 	sram = new SRAM(this);
 
 	// ログを初期化
+#if defined(XM6_USE_LOG)
 	if (!log.Init(this)) {
 		return FALSE;
 	}
-
+#endif
 	// デバイスポインタ初期化
 	device = first_device;
 
@@ -173,8 +200,10 @@ void FASTCALL VM::Cleanup()
 		first_device->Cleanup();
 	}
 
+#if defined(XM6_USE_LOG)
 	// ログをクリーンアップ
 	log.Cleanup();
+#endif
 }
 
 //---------------------------------------------------------------------------
@@ -188,9 +217,10 @@ void FASTCALL VM::Reset()
 
 	ASSERT(this);
 
+#if defined(XM6_USE_LOG)
 	// ログをリセット
 	log.Reset();
-
+#endif
 	// デバイスポインタ初期化
 	device = first_device;
 
@@ -209,14 +239,14 @@ void FASTCALL VM::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL VM::Save(const Filepath& path)
+uint32_t FASTCALL VM::Save(const Filepath& path)
 {
 	Fileio fio;
 	char header[0x10];
 	int ver;
 	Device *device;
-	DWORD id;
-	DWORD pos;
+	uint32_t id;
+	uint32_t pos;
 
 	ASSERT(this);
 
@@ -227,13 +257,30 @@ DWORD FASTCALL VM::Save(const Filepath& path)
 	ver = (int)((major_ver << 8) | minor_ver);
 
 	// ヘッダ作成
+#if 0
 	sprintf(header, "XM6 DATA %1X.%02X", major_ver, minor_ver);
+#else
+	static const char ht[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+	header[0x00] = 'X';
+	header[0x01] = 'M';
+	header[0x02] = '6';
+	header[0x03] = ' ';
+	header[0x04] = 'D';
+	header[0x05] = 'A';
+	header[0x06] = 'T';
+	header[0x07] = 'A';
+	header[0x08] = ' ';
+	header[0x09] = ht[major_ver & 15];
+	header[0x0a] = '.';
+	header[0x0b] = ht[(minor_ver / 16) & 15];
+	header[0x0c] = ht[minor_ver & 15];
+#endif
 	header[0x0d] = 0x0d;
 	header[0x0e] = 0x0a;
 	header[0x0f] = 0x1a;
 
 	// ファイル作成、ヘッダ書き込み
-	if (!fio.Open(path, Fileio::WriteOnly)) {
+	if (!fio.Open(path.GetPath(), Fileio::WriteOnly)) {
 		return 0;
 	}
 	if (!fio.Write(header, 0x10)) {
@@ -275,7 +322,7 @@ DWORD FASTCALL VM::Save(const Filepath& path)
 	fio.Close();
 
 	// カレントに設定
-	current = path;
+	*pCurrent = path;
 
 	// 成功
 	return pos;
@@ -286,23 +333,23 @@ DWORD FASTCALL VM::Save(const Filepath& path)
 //	ロード
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL VM::Load(const Filepath& path)
+uint32_t FASTCALL VM::Load(const Filepath& path)
 {
 	Fileio fio;
 	char buf[0x10];
 	int rec;
 	int ver;
 	Device *device;
-	DWORD id;
-	DWORD pos;
+	uint32_t id;
+	uint32_t pos;
 
 	ASSERT(this);
 
 	// カレントパスをクリア
-	current.Clear();
+	pCurrent->Clear();
 
 	// ファイルオープン、ヘッダ読み込み
-	if (!fio.Open(path, Fileio::ReadOnly)) {
+	if (!fio.Open(path.GetPath(), Fileio::ReadOnly)) {
 		return 0;
 	}
 	if (!fio.Read(buf, 0x10)) {
@@ -312,10 +359,12 @@ DWORD FASTCALL VM::Load(const Filepath& path)
 
 	// 記録バージョン取得
 	buf[0x0a] = '\0';
-	rec = ::strtoul(&buf[0x09], NULL, 16);
+//	rec = ::strtoul(&buf[0x09], NULL, 16);
+	rec = hex_to_int(&buf[0x09]);
 	rec <<= 8;
 	buf[0x0d] = '\0';
-	rec |= ::strtoul(&buf[0x0b], NULL, 16);
+//	rec |= ::strtoul(&buf[0x0b], NULL, 16);
+	rec |= hex_to_int(&buf[0x0b]);
 
 	// 現行バージョン作成
 	ver = (int)((major_ver << 8) | minor_ver);
@@ -370,7 +419,7 @@ DWORD FASTCALL VM::Load(const Filepath& path)
 	fio.Close();
 
 	// カレントに設定
-	current = path;
+	*pCurrent = path;
 
 	// 成功
 	return pos;
@@ -385,8 +434,9 @@ void FASTCALL VM::GetPath(Filepath& path) const
 {
 	ASSERT(this);
 
-	path = current;
+	path = *pCurrent;
 }
+
 
 //---------------------------------------------------------------------------
 //
@@ -397,7 +447,7 @@ void FASTCALL VM::Clear()
 {
 	ASSERT(this);
 
-	current.Clear();
+	pCurrent->Clear();
 }
 
 //---------------------------------------------------------------------------
@@ -496,7 +546,7 @@ void FASTCALL VM::DelDevice(const Device *device)
 //	※見つからなければNULLを返す
 //
 //---------------------------------------------------------------------------
-Device* FASTCALL VM::SearchDevice(DWORD id) const
+Device* FASTCALL VM::SearchDevice(uint32_t id) const
 {
 	Device *dev;
 
@@ -525,9 +575,9 @@ Device* FASTCALL VM::SearchDevice(DWORD id) const
 //	実行
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL VM::Exec(DWORD hus)
+int FASTCALL VM::Exec(uint32_t hus)
 {
-	DWORD ret;
+	uint32_t ret;
 
 	ASSERT(this);
 	ASSERT(scheduler);
@@ -580,7 +630,7 @@ void FASTCALL VM::Trace()
 //	電源スイッチ制御
 //
 //---------------------------------------------------------------------------
-void FASTCALL VM::PowerSW(BOOL sw)
+void FASTCALL VM::PowerSW(int sw)
 {
 	ASSERT(this);
 
@@ -612,7 +662,7 @@ void FASTCALL VM::PowerSW(BOOL sw)
 //	電源の状態を設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL VM::SetPower(BOOL flag)
+void FASTCALL VM::SetPower(int flag)
 {
 	ASSERT(this);
 
@@ -637,7 +687,7 @@ void FASTCALL VM::SetPower(BOOL flag)
 //	バージョン設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL VM::SetVersion(DWORD major, DWORD minor)
+void FASTCALL VM::SetVersion(uint32_t major, uint32_t minor)
 {
 	ASSERT(this);
 	ASSERT(major < 0x100);
@@ -652,7 +702,7 @@ void FASTCALL VM::SetVersion(DWORD major, DWORD minor)
 //	バージョン取得
 //
 //---------------------------------------------------------------------------
-void FASTCALL VM::GetVersion(DWORD& major, DWORD& minor)
+void FASTCALL VM::GetVersion(uint32_t& major, uint32_t& minor)
 {
 	ASSERT(this);
 	ASSERT(major_ver < 0x100);
@@ -661,3 +711,32 @@ void FASTCALL VM::GetVersion(DWORD& major, DWORD& minor)
 	major = major_ver;
 	minor = minor_ver;
 }
+
+//---------------------------------------------------------------------------
+//
+//
+//
+//---------------------------------------------------------------------------
+void FASTCALL VM::SetHostRtcCallback(XM6_RTC_CALLBACK cb) {
+	ASSERT(this);
+	xm6_rtc_cb = cb;
+}
+
+int FASTCALL VM::GetHostRtc(XM6_RTC* xm6_rtc) {
+	ASSERT(this);
+	int ret = 0;
+	if(xm6_rtc_cb) {
+		ret = xm6_rtc_cb(xm6_rtc);
+	}
+	return ret;
+}
+/*
+void FASTCALL VM::SetHostFileSystem(XM6_FILEIO_SYSTEM* fios) {
+	ASSERT(this);
+	xm6_fios = fios;
+}
+
+XM6_FILEIO_SYSTEM* FASTCALL VM::GetHostFileSystem() {
+	return xm6_fios;
+}
+*/

@@ -42,7 +42,7 @@ Mouse::Mouse(VM *p) : Device(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Mouse::Init()
+int FASTCALL Mouse::Init()
 {
 	Scheduler *scheduler;
 
@@ -63,7 +63,9 @@ BOOL FASTCALL Mouse::Init()
 
 	// イベント設定
 	event.SetDevice(this);
+#if defined(XM6_USE_EVENT_DESC)
 	event.SetDesc("Latency 725us");
+#endif
 	event.SetUser(0);
 	event.SetTime(0);
 	scheduler->AddEvent(&event);
@@ -111,7 +113,7 @@ void FASTCALL Mouse::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Mouse::Save(Fileio *fio, int ver)
+int FASTCALL Mouse::Save(Fileio *fio, int ver)
 {
 	size_t sz;
 
@@ -140,7 +142,7 @@ BOOL FASTCALL Mouse::Save(Fileio *fio, int ver)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Mouse::Load(Fileio *fio, int ver)
+int FASTCALL Mouse::Load(Fileio *fio, int ver)
 {
 	size_t sz;
 
@@ -215,9 +217,9 @@ void FASTCALL Mouse::GetMouse(mouse_t *buffer)
 //	イベントコールバック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Mouse::Callback(Event* /*ev*/)
+int FASTCALL Mouse::Callback(Event* /*ev*/)
 {
-	DWORD status;
+	uint32_t status;
 	int dx;
 	int dy;
 
@@ -330,7 +332,7 @@ BOOL FASTCALL Mouse::Callback(Event* /*ev*/)
 //	MSCTRL制御
 //
 //---------------------------------------------------------------------------
-void FASTCALL Mouse::MSCtrl(BOOL flag, int port)
+void FASTCALL Mouse::MSCtrl(int flag, int port)
 {
 	ASSERT(this);
 	ASSERT((port == 1) || (port == 2));
@@ -372,7 +374,7 @@ void FASTCALL Mouse::MSCtrl(BOOL flag, int port)
 //	マウスデータ設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL Mouse::SetMouse(int x, int y, BOOL left, BOOL right)
+void FASTCALL Mouse::SetMouse(int x, int y, int left, int right)
 {
 	ASSERT(this);
 

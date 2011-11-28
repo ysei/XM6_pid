@@ -50,7 +50,7 @@ Printer::Printer(VM *p) : MemDevice(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Printer::Init()
+int FASTCALL Printer::Init()
 {
 	ASSERT(this);
 
@@ -131,7 +131,7 @@ void FASTCALL Printer::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Printer::Save(Fileio *fio, int /* ver */)
+int FASTCALL Printer::Save(Fileio *fio, int /* ver */)
 {
 	size_t sz;
 
@@ -158,7 +158,7 @@ BOOL FASTCALL Printer::Save(Fileio *fio, int /* ver */)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Printer::Load(Fileio *fio, int /* ver */)
+int FASTCALL Printer::Load(Fileio *fio, int /* ver */)
 {
 	size_t sz;
 
@@ -200,7 +200,7 @@ void FASTCALL Printer::ApplyCfg(const Config* /*config*/)
 //	バイト読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL Printer::ReadByte(DWORD /*addr*/)
+uint32_t FASTCALL Printer::ReadByte(uint32_t /*addr*/)
 {
 	ASSERT(this);
 
@@ -213,7 +213,7 @@ DWORD FASTCALL Printer::ReadByte(DWORD /*addr*/)
 //	ワード読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL Printer::ReadWord(DWORD /*addr*/)
+uint32_t FASTCALL Printer::ReadWord(uint32_t /*addr*/)
 {
 	ASSERT(this);
 
@@ -226,7 +226,7 @@ DWORD FASTCALL Printer::ReadWord(DWORD /*addr*/)
 //	バイト書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL Printer::WriteByte(DWORD addr, DWORD data)
+void FASTCALL Printer::WriteByte(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -242,7 +242,7 @@ void FASTCALL Printer::WriteByte(DWORD addr, DWORD data)
 	switch (addr) {
 		// $E8C001 出力データ
 		case 1:
-			printer.data = (BYTE)data;
+			printer.data = (uint8_t)data;
 			break;
 
 		// $E8C003 ストローブ
@@ -305,13 +305,13 @@ void FASTCALL Printer::WriteByte(DWORD addr, DWORD data)
 //	ワード書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL Printer::WriteWord(DWORD addr, DWORD data)
+void FASTCALL Printer::WriteWord(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
 	ASSERT((addr & 1) == 0);
 
-	WriteByte(addr + 1, (BYTE)data);
+	WriteByte(addr + 1, (uint8_t)data);
 }
 
 //---------------------------------------------------------------------------
@@ -319,7 +319,7 @@ void FASTCALL Printer::WriteWord(DWORD addr, DWORD data)
 //	読み込みのみ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL Printer::ReadOnly(DWORD /*addr*/) const
+uint32_t FASTCALL Printer::ReadOnly(uint32_t /*addr*/) const
 {
 	ASSERT(this);
 
@@ -385,7 +385,7 @@ void FASTCALL Printer::GetPrinter(printer_t *buffer) const
 //	接続
 //
 //---------------------------------------------------------------------------
-void FASTCALL Printer::Connect(BOOL flag)
+void FASTCALL Printer::Connect(int flag)
 {
 	ASSERT(this);
 	ASSERT(printer.num <= BufMax);
@@ -428,7 +428,7 @@ void FASTCALL Printer::Connect(BOOL flag)
 //	先頭データ取得
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Printer::GetData(BYTE *ptr)
+int FASTCALL Printer::GetData(uint8_t *ptr)
 {
 	ASSERT(this);
 	ASSERT(ptr);

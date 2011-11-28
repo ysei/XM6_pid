@@ -23,23 +23,23 @@ extern "C" {
 //---------------------------------------------------------------------------
 void MemInitDecode(Memory *mem, MemDevice* list[]);
 										// メモリデコーダ初期化
-void ReadByteC(DWORD addr);
+void ReadByteC(uint32_t addr);
 										// バイト読み込み
-void ReadWordC(DWORD addr);
+void ReadWordC(uint32_t addr);
 										// ワード読み込み
-void WriteByteC(DWORD addr, DWORD data);
+void WriteByteC(uint32_t addr, uint32_t data);
 										// バイト書き込み
-void WriteWordC(DWORD addr, DWORD data);
+void WriteWordC(uint32_t addr, uint32_t data);
 										// ワード書き込み
-void ReadErrC(DWORD addr);
+void ReadErrC(uint32_t addr);
 										// バスエラー読み込み
-void WriteErrC(DWORD addr, DWORD data);
+void WriteErrC(uint32_t addr, uint32_t data);
 										// バスエラー書き込み
 void NotifyEvent(Event *first);
 										// イベント群 指定
-DWORD GetMinEvent(DWORD hus);
+uint32_t GetMinEvent(uint32_t hus);
 										// イベント群 最小のものを探す
-BOOL SubExecEvent(DWORD hus);
+int SubExecEvent(uint32_t hus);
 										// イベント群 減算＆実行
 extern unsigned int MemDecodeTable[];
 										// メモリデコードテーブル

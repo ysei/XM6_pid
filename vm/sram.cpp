@@ -16,7 +16,7 @@
 #include "fileio.h"
 #include "cpu.h"
 #include "schedule.h"
-#include "memory.h"
+#include "memory_xm6.h"
 #include "config.h"
 #include "sram.h"
 
@@ -54,11 +54,11 @@ SRAM::SRAM(VM *p) : MemDevice(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SRAM::Init()
+int FASTCALL SRAM::Init()
 {
 	Fileio fio;
 	int i;
-	BYTE data;
+	uint8_t data;
 
 	ASSERT(this);
 
@@ -72,6 +72,7 @@ BOOL FASTCALL SRAM::Init()
 
 	// パス作成、読み込み
 	sram_path.SysFile(Filepath::SRAM);
+//	sram_path = getSystemFilepath(XM6_SYSTEM_FILEPATH_SRAM);
 	fio.Load(sram_path, sram, sizeof(sram));
 
 	// エンディアン反転
@@ -96,7 +97,7 @@ void FASTCALL SRAM::Cleanup()
 {
 	Fileio fio;
 	int i;
-	BYTE data;
+	uint8_t data;
 
 	ASSERT(this);
 
@@ -138,7 +139,7 @@ void FASTCALL SRAM::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SRAM::Save(Fileio *fio, int /*ver*/)
+int FASTCALL SRAM::Save(Fileio *fio, int /*ver*/)
 {
 	ASSERT(this);
 	ASSERT(fio);
@@ -174,9 +175,9 @@ BOOL FASTCALL SRAM::Save(Fileio *fio, int /*ver*/)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SRAM::Load(Fileio *fio, int /*ver*/)
+int FASTCALL SRAM::Load(Fileio *fio, int /*ver*/)
 {
-	BYTE *buf;
+	uint8_t *buf;
 
 	ASSERT(this);
 	ASSERT(fio);
@@ -186,7 +187,7 @@ BOOL FASTCALL SRAM::Load(Fileio *fio, int /*ver*/)
 
 	// バッファ確保
 	try {
-		buf = new BYTE[sizeof(sram)];
+		buf = new uint8_t[sizeof(sram)];
 	}
 	catch (...) {
 		buf = NULL;
@@ -285,9 +286,9 @@ void FASTCALL SRAM::AssertDiag() const
 //	バイト読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SRAM::ReadByte(DWORD addr)
+uint32_t FASTCALL SRAM::ReadByte(uint32_t addr)
 {
-	DWORD size;
+	uint32_t size;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -295,7 +296,7 @@ DWORD FASTCALL SRAM::ReadByte(DWORD addr)
 
 	// オフセット算出
 	addr -= memdev.first;
-	size = (DWORD)(sram_size << 10);
+	size = (uint32_t)(sram_size << 10);
 
 	// 未実装チェック
 	if (size <= addr) {
@@ -308,7 +309,7 @@ DWORD FASTCALL SRAM::ReadByte(DWORD addr)
 	scheduler->Wait(1);
 
 	// 読み込み(エンディアンを反転させる)
-	return (DWORD)sram[addr ^ 1];
+	return (uint32_t)sram[addr ^ 1];
 }
 
 //---------------------------------------------------------------------------
@@ -316,9 +317,9 @@ DWORD FASTCALL SRAM::ReadByte(DWORD addr)
 //	ワード読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SRAM::ReadWord(DWORD addr)
+uint32_t FASTCALL SRAM::ReadWord(uint32_t addr)
 {
-	DWORD size;
+	uint32_t size;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -327,7 +328,7 @@ DWORD FASTCALL SRAM::ReadWord(DWORD addr)
 
 	// オフセット算出
 	addr -= memdev.first;
-	size = (DWORD)(sram_size << 10);
+	size = (uint32_t)(sram_size << 10);
 
 	// 未実装チェック
 	if (size <= addr) {
@@ -340,7 +341,7 @@ DWORD FASTCALL SRAM::ReadWord(DWORD addr)
 	scheduler->Wait(1);
 
 	// 読み込み(エンディアンに注意)
-	return (DWORD)(*(WORD *)&sram[addr]);
+	return (uint32_t)(*(uint16_t *)&sram[addr]);
 }
 
 //---------------------------------------------------------------------------
@@ -348,9 +349,9 @@ DWORD FASTCALL SRAM::ReadWord(DWORD addr)
 //	バイト書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SRAM::WriteByte(DWORD addr, DWORD data)
+void FASTCALL SRAM::WriteByte(uint32_t addr, uint32_t data)
 {
-	DWORD size;
+	uint32_t size;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -359,7 +360,7 @@ void FASTCALL SRAM::WriteByte(DWORD addr, DWORD data)
 
 	// オフセット算出
 	addr -= memdev.first;
-	size = (DWORD)(sram_size << 10);
+	size = (uint32_t)(sram_size << 10);
 
 	// 未実装チェック
 	if (size <= addr) {
@@ -392,8 +393,8 @@ void FASTCALL SRAM::WriteByte(DWORD addr, DWORD data)
 	if (addr < 0x100) {
 		LOG2(Log::Detail, "メモリスイッチ変更 $%06X <- $%02X", memdev.first + addr, data);
 	}
-	if (sram[addr ^ 1] != (BYTE)data) {
-		sram[addr ^ 1] = (BYTE)data;
+	if (sram[addr ^ 1] != (uint8_t)data) {
+		sram[addr ^ 1] = (uint8_t)data;
 		changed = TRUE;
 	}
 }
@@ -403,9 +404,9 @@ void FASTCALL SRAM::WriteByte(DWORD addr, DWORD data)
 //	ワード書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SRAM::WriteWord(DWORD addr, DWORD data)
+void FASTCALL SRAM::WriteWord(uint32_t addr, uint32_t data)
 {
-	DWORD size;
+	uint32_t size;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -415,7 +416,7 @@ void FASTCALL SRAM::WriteWord(DWORD addr, DWORD data)
 
 	// オフセット算出
 	addr -= memdev.first;
-	size = (DWORD)(sram_size << 10);
+	size = (uint32_t)(sram_size << 10);
 
 	// 未実装チェック
 	if (size <= addr) {
@@ -437,8 +438,8 @@ void FASTCALL SRAM::WriteWord(DWORD addr, DWORD data)
 	if (addr < 0x100) {
 		LOG2(Log::Detail, "メモリスイッチ変更 $%06X <- $%04X", memdev.first + addr, data);
 	}
-	if (*(WORD *)&sram[addr] != (WORD)data) {
-		*(WORD *)&sram[addr] = (WORD)data;
+	if (*(uint16_t *)&sram[addr] != (uint16_t)data) {
+		*(uint16_t *)&sram[addr] = (uint16_t)data;
 		changed = TRUE;
 	}
 }
@@ -448,9 +449,9 @@ void FASTCALL SRAM::WriteWord(DWORD addr, DWORD data)
 //	読み込みのみ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SRAM::ReadOnly(DWORD addr) const
+uint32_t FASTCALL SRAM::ReadOnly(uint32_t addr) const
 {
-	DWORD size;
+	uint32_t size;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -458,7 +459,7 @@ DWORD FASTCALL SRAM::ReadOnly(DWORD addr) const
 
 	// オフセット算出
 	addr -= memdev.first;
-	size = (DWORD)(sram_size << 10);
+	size = (uint32_t)(sram_size << 10);
 
 	// 未実装チェック
 	if (size <= addr) {
@@ -466,7 +467,7 @@ DWORD FASTCALL SRAM::ReadOnly(DWORD addr) const
 	}
 
 	// 読み込み(エンディアンを反転させる)
-	return (DWORD)sram[addr ^ 1];
+	return (uint32_t)sram[addr ^ 1];
 }
 
 //---------------------------------------------------------------------------
@@ -474,7 +475,7 @@ DWORD FASTCALL SRAM::ReadOnly(DWORD addr) const
 //	SRAMアドレス取得
 //
 //---------------------------------------------------------------------------
-const BYTE* FASTCALL SRAM::GetSRAM() const
+const uint8_t* FASTCALL SRAM::GetSRAM() const
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -500,7 +501,7 @@ int FASTCALL SRAM::GetSize() const
 //	書き込み許可
 //
 //---------------------------------------------------------------------------
-void FASTCALL SRAM::WriteEnable(BOOL enable)
+void FASTCALL SRAM::WriteEnable(int enable)
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -520,7 +521,7 @@ void FASTCALL SRAM::WriteEnable(BOOL enable)
 //	メモリスイッチ設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL SRAM::SetMemSw(DWORD offset, DWORD data)
+void FASTCALL SRAM::SetMemSw(uint32_t offset, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(offset < 0x100);
@@ -528,8 +529,8 @@ void FASTCALL SRAM::SetMemSw(DWORD offset, DWORD data)
 	ASSERT_DIAG();
 
 	LOG2(Log::Detail, "メモリスイッチ設定 $%06X <- $%02X", memdev.first + offset, data);
-	if (sram[offset ^ 1] != (BYTE)data) {
-		sram[offset ^ 1] = (BYTE)data;
+	if (sram[offset ^ 1] != (uint8_t)data) {
+		sram[offset ^ 1] = (uint8_t)data;
 		changed = TRUE;
 	}
 }
@@ -539,13 +540,13 @@ void FASTCALL SRAM::SetMemSw(DWORD offset, DWORD data)
 //	メモリスイッチ取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SRAM::GetMemSw(DWORD offset) const
+uint32_t FASTCALL SRAM::GetMemSw(uint32_t offset) const
 {
 	ASSERT(this);
 	ASSERT(offset < 0x100);
 	ASSERT_DIAG();
 
-	return (DWORD)sram[offset ^ 1];
+	return (uint32_t)sram[offset ^ 1];
 }
 
 //---------------------------------------------------------------------------
@@ -555,7 +556,7 @@ DWORD FASTCALL SRAM::GetMemSw(DWORD offset) const
 //---------------------------------------------------------------------------
 void FASTCALL SRAM::UpdateBoot()
 {
-	WORD *ptr;
+	uint16_t *ptr;
 
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -564,7 +565,7 @@ void FASTCALL SRAM::UpdateBoot()
 	changed = TRUE;
 
 	// ポインタ設定($ED0044)
-	ptr = (WORD *)&sram[0x0044];
+	ptr = (uint16_t *)&sram[0x0044];
 
 	// インクリメント(Low)
 	if (ptr[1] != 0xffff) {

@@ -13,6 +13,7 @@
 #include "device.h"
 #include "event.h"
 #include "disk.h"
+class Filepath;
 
 //===========================================================================
 //
@@ -55,44 +56,44 @@ public:
 		int ilevel;						// 割り込みレベル
 
 		// 信号
-		BOOL bsy;						// Busy信号
-		BOOL sel;						// Select信号
-		BOOL atn;						// Attention信号
-		BOOL msg;						// Message信号
-		BOOL cd;						// Command/Data信号
-		BOOL io;						// Input/Output信号
-		BOOL req;						// Request信号
-		BOOL ack;						// Ack信号
-		BOOL rst;						// Reset信号
+		int bsy;						// Busy信号
+		int sel;						// Select信号
+		int atn;						// Attention信号
+		int msg;						// Message信号
+		int cd;						// Command/Data信号
+		int io;						// Input/Output信号
+		int req;						// Request信号
+		int ack;						// Ack信号
+		int rst;						// Reset信号
 
 		// レジスタ
-		DWORD bdid;						// BDIDレジスタ(ビット表示)
-		DWORD sctl;						// SCTLレジスタ
-		DWORD scmd;						// SCMDレジスタ
-		DWORD ints;						// INTSレジスタ
-		DWORD sdgc;						// SDGCレジスタ
-		DWORD pctl;						// PCTLレジスタ
-		DWORD mbc;						// MBCレジスタ
-		DWORD temp;						// TEMPレジスタ
-		DWORD tc;						// TCH,TCM,TCLレジスタ
+		uint32_t bdid;						// BDIDレジスタ(ビット表示)
+		uint32_t sctl;						// SCTLレジスタ
+		uint32_t scmd;						// SCMDレジスタ
+		uint32_t ints;						// INTSレジスタ
+		uint32_t sdgc;						// SDGCレジスタ
+		uint32_t pctl;						// PCTLレジスタ
+		uint32_t mbc;						// MBCレジスタ
+		uint32_t temp;						// TEMPレジスタ
+		uint32_t tc;						// TCH,TCM,TCLレジスタ
 
 		// コマンド
-		DWORD cmd[10];					// コマンドデータ
-		DWORD status;					// ステータスデータ
-		DWORD message;					// メッセージデータ
+		uint32_t cmd[10];					// コマンドデータ
+		uint32_t status;					// ステータスデータ
+		uint32_t message;					// メッセージデータ
 
 		// 転送
-		BOOL trans;						// 転送フラグ
-		BYTE buffer[0x800];				// 転送バッファ
-		DWORD blocks;					// 転送ブロック数
-		DWORD next;						// 次のレコード
-		DWORD offset;					// 転送オフセット
-		DWORD length;					// 転送残り長さ
+		int trans;						// 転送フラグ
+		uint8_t buffer[0x800];				// 転送バッファ
+		uint32_t blocks;					// 転送ブロック数
+		uint32_t next;						// 次のレコード
+		uint32_t offset;					// 転送オフセット
+		uint32_t length;					// 転送残り長さ
 
 		// コンフィグ
 		int scsi_drives;				// SCSIドライブ数
-		BOOL memsw;						// メモリスイッチ更新
-		BOOL mo_first;					// MO優先フラグ(SxSI)
+		int memsw;						// メモリスイッチ更新
+		int mo_first;					// MO優先フラグ(SxSI)
 
 		// ディスク
 		Disk *disk[DeviceMax];			// デバイス
@@ -105,15 +106,15 @@ public:
 	// 基本ファンクション
 	SCSI(VM *p);
 										// コンストラクタ
-	BOOL FASTCALL Init();
+	int FASTCALL Init();
 										// 初期化
 	void FASTCALL Cleanup();
 										// クリーンアップ
 	void FASTCALL Reset();
 										// リセット
-	BOOL FASTCALL Save(Fileio *fio, int ver);
+	int FASTCALL Save(Fileio *fio, int ver);
 										// セーブ
-	BOOL FASTCALL Load(Fileio *fio, int ver);
+	int FASTCALL Load(Fileio *fio, int ver);
 										// ロード
 	void FASTCALL ApplyCfg(const Config *config);
 										// 設定適用
@@ -123,53 +124,53 @@ public:
 #endif	// NDEBUG
 
 	// メモリデバイス
-	DWORD FASTCALL ReadByte(DWORD addr);
+	uint32_t FASTCALL ReadByte(uint32_t addr);
 										// バイト読み込み
-	DWORD FASTCALL ReadWord(DWORD addr);
+	uint32_t FASTCALL ReadWord(uint32_t addr);
 										// ワード読み込み
-	void FASTCALL WriteByte(DWORD addr, DWORD data);
+	void FASTCALL WriteByte(uint32_t addr, uint32_t data);
 										// バイト書き込み
-	void FASTCALL WriteWord(DWORD addr, DWORD data);
+	void FASTCALL WriteWord(uint32_t addr, uint32_t data);
 										// ワード書き込み
-	DWORD FASTCALL ReadOnly(DWORD addr) const;
+	uint32_t FASTCALL ReadOnly(uint32_t addr) const;
 										// 読み込みのみ
 
 	// 外部API
 	void FASTCALL GetSCSI(scsi_t *buffer) const;
 										// 内部データ取得
-	BOOL FASTCALL Callback(Event *ev);
+	int FASTCALL Callback(Event *ev);
 										// イベントコールバック
 	void FASTCALL IntAck(int level);
 										// 割り込みACK
 	int FASTCALL GetSCSIID() const;
 										// SCSI-ID取得
-	BOOL FASTCALL IsBusy() const;
+	int FASTCALL IsBusy() const;
 										// BUSYか
-	DWORD FASTCALL GetBusyDevice() const;
+	uint32_t FASTCALL GetBusyDevice() const;
 										// BUSYデバイス取得
 
 	// MO/CDアクセス
-	BOOL FASTCALL Open(const Filepath& path, BOOL mo = TRUE);
+	int FASTCALL Open(const Filepath& path, int mo = TRUE);
 										// MO/CD オープン
-	void FASTCALL Eject(BOOL force, BOOL mo = TRUE);
+	void FASTCALL Eject(int force, int mo = TRUE);
 										// MO/CD イジェクト
-	void FASTCALL WriteP(BOOL writep);
+	void FASTCALL WriteP(int writep);
 										// MO 書き込み禁止
-	BOOL FASTCALL IsWriteP() const;
+	int FASTCALL IsWriteP() const;
 										// MO 書き込み禁止チェック
-	BOOL FASTCALL IsReadOnly() const;
+	int FASTCALL IsReadOnly() const;
 										// MO ReadOnlyチェック
-	BOOL FASTCALL IsLocked(BOOL mo = TRUE) const;
+	int FASTCALL IsLocked(int mo = TRUE) const;
 										// MO/CD Lockチェック
-	BOOL FASTCALL IsReady(BOOL mo = TRUE) const;
+	int FASTCALL IsReady(int mo = TRUE) const;
 										// MO/CD Readyチェック
-	BOOL FASTCALL IsValid(BOOL mo = TRUE) const;
+	int FASTCALL IsValid(int mo = TRUE) const;
 										// MO/CD 有効チェック
-	void FASTCALL GetPath(Filepath &path, BOOL mo = TRUE) const;
+	void FASTCALL GetPath(Filepath &path, int mo = TRUE) const;
 										// MO/CD パス取得
 
 	// CD-DA
-	void FASTCALL GetBuf(DWORD *buffer, int samples, DWORD rate);
+	void FASTCALL GetBuf(uint32_t *buffer, int samples, uint32_t rate);
 										// CD-DAバッファ取得
 
 private:
@@ -178,37 +179,37 @@ private:
 										// レジスタリセット
 	void FASTCALL ResetCtrl();
 										// 転送リセット
-	void FASTCALL ResetBus(BOOL reset);
+	void FASTCALL ResetBus(int reset);
 										// バスリセット
-	void FASTCALL SetBDID(DWORD data);
+	void FASTCALL SetBDID(uint32_t data);
 										// BDID設定
-	void FASTCALL SetSCTL(DWORD data);
+	void FASTCALL SetSCTL(uint32_t data);
 										// SCTL設定
-	void FASTCALL SetSCMD(DWORD data);
+	void FASTCALL SetSCMD(uint32_t data);
 										// SCMD設定
-	void FASTCALL SetINTS(DWORD data);
+	void FASTCALL SetINTS(uint32_t data);
 										// INTS設定
-	DWORD FASTCALL GetPSNS() const;
+	uint32_t FASTCALL GetPSNS() const;
 										// PSNS取得
-	void FASTCALL SetSDGC(DWORD data);
+	void FASTCALL SetSDGC(uint32_t data);
 										// SDGC設定
-	DWORD FASTCALL GetSSTS() const;
+	uint32_t FASTCALL GetSSTS() const;
 										// SSTS取得
-	DWORD FASTCALL GetSERR() const;
+	uint32_t FASTCALL GetSERR() const;
 										// SERR取得
-	void FASTCALL SetPCTL(DWORD data);
+	void FASTCALL SetPCTL(uint32_t data);
 										// PCTL設定
-	DWORD FASTCALL GetDREG();
+	uint32_t FASTCALL GetDREG();
 										// DREG取得
-	void FASTCALL SetDREG(DWORD data);
+	void FASTCALL SetDREG(uint32_t data);
 										// DREG設定
-	void FASTCALL SetTEMP(DWORD data);
+	void FASTCALL SetTEMP(uint32_t data);
 										// TEMP設定
-	void FASTCALL SetTCH(DWORD data);
+	void FASTCALL SetTCH(uint32_t data);
 										// TCH設定
-	void FASTCALL SetTCM(DWORD data);
+	void FASTCALL SetTCM(uint32_t data);
 										// TCM設定
-	void FASTCALL SetTCL(DWORD data);
+	void FASTCALL SetTCL(uint32_t data);
 										// TCL設定
 
 	// SPCコマンド
@@ -232,15 +233,15 @@ private:
 										// ACK/REQライン=1
 
 	// データ転送
-	void FASTCALL Xfer(DWORD *reg);
+	void FASTCALL Xfer(uint32_t *reg);
 										// データ転送
 	void FASTCALL XferNext();
 										// データ転送継続
-	BOOL FASTCALL XferIn();
+	int FASTCALL XferIn();
 										// データ転送IN
-	BOOL FASTCALL XferOut(BOOL cont);
+	int FASTCALL XferOut(int cont);
 										// データ転送OUT
-	BOOL FASTCALL XferMsg(DWORD msg);
+	int FASTCALL XferMsg(uint32_t msg);
 										// データ転送MSG
 
 	// フェーズ
@@ -268,7 +269,7 @@ private:
 										// ステータスフェーズ
 
 	// 割り込み
-	void FASTCALL Interrupt(int type, BOOL flag);
+	void FASTCALL Interrupt(int type, int flag);
 										// 割り込み要求
 	void FASTCALL IntCheck();
 										// 割り込みチェック
@@ -332,13 +333,16 @@ private:
 	// ドライブ・ファイルパス
 	void FASTCALL Construct();
 										// ドライブ構築
-	Filepath scsihd[DeviceMax];
+//	Filepath* scsihd[DeviceMax];
+//	Filepath scsihd[DeviceMax];
+//										// SCSI-HDファイルパス
+	Filepath* scsihd;
 										// SCSI-HDファイルパス
 
 	// その他
 	scsi_t scsi;
 										// 内部データ
-	BYTE verifybuf[0x800];
+	uint8_t verifybuf[0x800];
 										// ベリファイバッファ
 	Event event;
 										// イベント

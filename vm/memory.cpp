@@ -21,7 +21,7 @@
 #include "sram.h"
 #include "config.h"
 #include "core_asm.h"
-#include "memory.h"
+#include "memory_xm6.h"
 
 //---------------------------------------------------------------------------
 //
@@ -42,7 +42,7 @@ extern "C" {
 //	読み込みバスエラー
 //
 //---------------------------------------------------------------------------
-void ReadBusErr(DWORD addr)
+void ReadBusErr(uint32_t addr)
 {
 	pCPU->BusErr(addr, TRUE);
 }
@@ -52,7 +52,7 @@ void ReadBusErr(DWORD addr)
 //	書き込みバスエラー
 //
 //---------------------------------------------------------------------------
-void WriteBusErr(DWORD addr)
+void WriteBusErr(uint32_t addr)
 {
 	pCPU->BusErr(addr, FALSE);
 }
@@ -111,7 +111,7 @@ Memory::Memory(VM *p) : MemDevice(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Memory::Init()
+int FASTCALL Memory::Init()
 {
 	ASSERT(this);
 
@@ -123,7 +123,7 @@ BOOL FASTCALL Memory::Init()
 	// メインメモリ
 	mem.length = mem.size * 0x100000;
 	try {
-		mem.ram = new BYTE[ mem.length ];
+		mem.ram = new uint8_t[ mem.length ];
 	}
 	catch (...) {
 		return FALSE;
@@ -137,7 +137,7 @@ BOOL FASTCALL Memory::Init()
 
 	// IPL ROM
 	try {
-		mem.ipl = new BYTE[ 0x20000 ];
+		mem.ipl = new uint8_t[ 0x20000 ];
 	}
 	catch (...) {
 		return FALSE;
@@ -148,7 +148,7 @@ BOOL FASTCALL Memory::Init()
 
 	// CG ROM
 	try {
-		mem.cg = new BYTE[ 0xc0000 ];
+		mem.cg = new uint8_t[ 0xc0000 ];
 	}
 	catch (...) {
 		return FALSE;
@@ -159,7 +159,7 @@ BOOL FASTCALL Memory::Init()
 
 	// SCSI ROM
 	try {
-		mem.scsi = new BYTE[ 0x20000 ];
+		mem.scsi = new uint8_t[ 0x20000 ];
 	}
 	catch (...) {
 		return FALSE;
@@ -217,14 +217,14 @@ BOOL FASTCALL Memory::Init()
 //	ROMロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Memory::LoadROM(memtype target)
+int FASTCALL Memory::LoadROM(memtype target)
 {
 	Filepath path;
 	Fileio fio;
 	int i;
-	BYTE data;
-	BYTE *ptr;
-	BOOL scsi_req;
+	uint8_t data;
+	uint8_t *ptr;
+	int scsi_req;
 	int scsi_size;
 
 	ASSERT(this);
@@ -372,8 +372,8 @@ void FASTCALL Memory::InitTable()
 #endif	// _WIN32
 
 	MemDevice *mdev;
-	BYTE *table;
-	DWORD ptr;
+	uint8_t *table;
+	uint32_t ptr;
 	int i;
 
 	ASSERT(this);
@@ -395,10 +395,10 @@ void FASTCALL Memory::InitTable()
 	MemInitDecode(this, devarray);
 
 	// アセンブラルーチンで出来たテーブルを逆に戻す(アラインメントに注意)
-	table = (BYTE*) MemDecodeTable;
+	table = (uint8_t*) MemDecodeTable;
 	for (i=0; i<0x180; i++) {
-		// 4バイトごとにDWORD値を取り込み、ポインタにキャスト
-		ptr = *(DWORD*)table;
+		// 4バイトごとにuint32_t値を取り込み、ポインタにキャスト
+		ptr = *(uint32_t*)table;
 		mem.table[i] = (MemDevice*)ptr;
 
 		// 次へ
@@ -489,21 +489,21 @@ void FASTCALL Memory::Reset()
 	mem.ram = NULL;
 	mem.length = mem.size * 0x100000;
 	try {
-		mem.ram = new BYTE[ mem.length ];
+		mem.ram = new uint8_t[ mem.length ];
 	}
 	catch (...) {
 		// メモリ不足の場合は2MBに固定
 		mem.config = 0;
 		mem.size = 2;
 		mem.length = mem.size * 0x100000;
-		mem.ram = new BYTE[ mem.length ];
+		mem.ram = new uint8_t[ mem.length ];
 	}
 	if (!mem.ram) {
 		// メモリ不足の場合は2MBに固定
 		mem.config = 0;
 		mem.size = 2;
 		mem.length = mem.size * 0x100000;
-		mem.ram = new BYTE[ mem.length ];
+		mem.ram = new uint8_t[ mem.length ];
 	}
 
 	// メモリが確保できている場合のみ
@@ -530,7 +530,7 @@ void FASTCALL Memory::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Memory::Save(Fileio *fio, int /*ver*/)
+int FASTCALL Memory::Save(Fileio *fio, int /*ver*/)
 {
 	ASSERT(this);
 	LOG0(Log::Normal, "セーブ");
@@ -565,10 +565,10 @@ BOOL FASTCALL Memory::Save(Fileio *fio, int /*ver*/)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Memory::Load(Fileio *fio, int /*ver*/)
+int FASTCALL Memory::Load(Fileio *fio, int /*ver*/)
 {
 	int size;
-	BOOL context;
+	int context;
 
 	ASSERT(this);
 	LOG0(Log::Normal, "ロード");
@@ -617,7 +617,7 @@ BOOL FASTCALL Memory::Load(Fileio *fio, int /*ver*/)
 		mem.ram = NULL;
 		mem.length = mem.size * 0x100000;
 		try {
-			mem.ram = new BYTE[ mem.length ];
+			mem.ram = new uint8_t[ mem.length ];
 		}
 		catch (...) {
 			mem.ram = NULL;
@@ -627,7 +627,7 @@ BOOL FASTCALL Memory::Load(Fileio *fio, int /*ver*/)
 			mem.config = 0;
 			mem.size = 2;
 			mem.length = mem.size * 0x100000;
-			mem.ram = new BYTE[ mem.length ];
+			mem.ram = new uint8_t[ mem.length ];
 
 			// ロード失敗
 			return FALSE;
@@ -677,9 +677,9 @@ void FASTCALL Memory::ApplyCfg(const Config *config)
 //	バイト読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL Memory::ReadByte(DWORD addr)
+uint32_t FASTCALL Memory::ReadByte(uint32_t addr)
 {
-	DWORD index;
+	uint32_t index;
 
 	ASSERT(this);
 	ASSERT(addr <= 0xffffff);
@@ -687,14 +687,14 @@ DWORD FASTCALL Memory::ReadByte(DWORD addr)
 
 	// メインRAM
 	if (addr < mem.length) {
-		return (DWORD)mem.ram[addr ^ 1];
+		return (uint32_t)mem.ram[addr ^ 1];
 	}
 
 	// IPL
 	if (addr >= 0xfe0000) {
 		addr &= 0x1ffff;
 		addr ^= 1;
-		return (DWORD)mem.ipl[addr];
+		return (uint32_t)mem.ipl[addr];
 	}
 
 	// IPLイメージ or SCSI内蔵
@@ -704,21 +704,21 @@ DWORD FASTCALL Memory::ReadByte(DWORD addr)
 			// IPLイメージ
 			addr &= 0x1ffff;
 			addr ^= 1;
-			return (DWORD)mem.ipl[addr];
+			return (uint32_t)mem.ipl[addr];
 		}
 		// SCSI内蔵か(範囲チェック)
 		if (addr < 0xfc2000) {
 			// SCSI内蔵
 			addr &= 0x1fff;
 			addr ^= 1;
-			return (DWORD)mem.scsi[addr];
+			return (uint32_t)mem.scsi[addr];
 		}
 		// X68030 IPL前半か
 		if (mem.now == X68030) {
 			// X68030 IPL前半
 			addr &= 0x1ffff;
 			addr ^= 1;
-			return (DWORD)mem.scsi[addr];
+			return (uint32_t)mem.scsi[addr];
 		}
 		// SCSI内蔵モデルで、ROM範囲外
 		return 0xff;
@@ -728,7 +728,7 @@ DWORD FASTCALL Memory::ReadByte(DWORD addr)
 	if (addr >= 0xf00000) {
 		addr &= 0xfffff;
 		addr ^= 1;
-		return (DWORD)mem.cg[addr];
+		return (uint32_t)mem.cg[addr];
 	}
 
 	// SCSI外付
@@ -736,7 +736,7 @@ DWORD FASTCALL Memory::ReadByte(DWORD addr)
 		if ((addr >= 0xea0020) && (addr <= 0xea1fff)) {
 			addr &= 0x1fff;
 			addr ^= 1;
-			return (DWORD)mem.scsi[addr];
+			return (uint32_t)mem.scsi[addr];
 		}
 	}
 
@@ -760,11 +760,11 @@ DWORD FASTCALL Memory::ReadByte(DWORD addr)
 //	ワード読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL Memory::ReadWord(DWORD addr)
+uint32_t FASTCALL Memory::ReadWord(uint32_t addr)
 {
-	DWORD data;
-	DWORD index;
-	WORD *ptr;
+	uint32_t data;
+	uint32_t index;
+uint16_t *ptr;
 
 	ASSERT(this);
 	ASSERT(addr <= 0xffffff);
@@ -779,16 +779,16 @@ DWORD FASTCALL Memory::ReadWord(DWORD addr)
 
 	// メインRAM
 	if (addr < mem.length) {
-		ptr = (WORD*)(&mem.ram[addr]);
-		data = (DWORD)*ptr;
+		ptr = (uint16_t*)(&mem.ram[addr]);
+		data = (uint32_t)*ptr;
 		return data;
 	}
 
 	// IPL
 	if (addr >= 0xfe0000) {
 		addr &= 0x1ffff;
-		ptr = (WORD*)(&mem.ipl[addr]);
-		data = (DWORD)*ptr;
+		ptr = (uint16_t*)(&mem.ipl[addr]);
+		data = (uint32_t)*ptr;
 		return data;
 	}
 
@@ -798,24 +798,24 @@ DWORD FASTCALL Memory::ReadWord(DWORD addr)
 		if ((mem.now == SASI) || (mem.now == SCSIExt)) {
 			// IPLイメージ
 			addr &= 0x1ffff;
-			ptr = (WORD*)(&mem.ipl[addr]);
-			data = (DWORD)*ptr;
+			ptr = (uint16_t*)(&mem.ipl[addr]);
+			data = (uint32_t)*ptr;
 			return data;
 		}
 		// SCSI内蔵か(範囲チェック)
 		if (addr < 0xfc2000) {
 			// SCSI内蔵
 			addr &= 0x1fff;
-			ptr = (WORD*)(&mem.scsi[addr]);
-			data = (DWORD)*ptr;
+			ptr = (uint16_t*)(&mem.scsi[addr]);
+			data = (uint32_t)*ptr;
 			return data;
 		}
 		// X68030 IPL前半か
 		if (mem.now == X68030) {
 			// X68030 IPL前半
 			addr &= 0x1ffff;
-			ptr = (WORD*)(&mem.scsi[addr]);
-			data = (DWORD)*ptr;
+			ptr = (uint16_t*)(&mem.scsi[addr]);
+			data = (uint32_t)*ptr;
 			return data;
 		}
 		// SCSI内蔵モデルで、ROM範囲外
@@ -825,8 +825,8 @@ DWORD FASTCALL Memory::ReadWord(DWORD addr)
 	// CG
 	if (addr >= 0xf00000) {
 		addr &= 0xfffff;
-		ptr = (WORD*)(&mem.cg[addr]);
-		data = (DWORD)*ptr;
+		ptr = (uint16_t*)(&mem.cg[addr]);
+		data = (uint32_t)*ptr;
 		return data;
 	}
 
@@ -834,8 +834,8 @@ DWORD FASTCALL Memory::ReadWord(DWORD addr)
 	if (mem.now == SCSIExt) {
 		if ((addr >= 0xea0020) && (addr <= 0xea1fff)) {
 			addr &= 0x1fff;
-			ptr = (WORD*)(&mem.scsi[addr]);
-			data = (DWORD)*ptr;
+			ptr = (uint16_t*)(&mem.scsi[addr]);
+			data = (uint32_t)*ptr;
 			return data;
 		}
 	}
@@ -861,9 +861,9 @@ DWORD FASTCALL Memory::ReadWord(DWORD addr)
 //	バイト書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL Memory::WriteByte(DWORD addr, DWORD data)
+void FASTCALL Memory::WriteByte(uint32_t addr, uint32_t data)
 {
-	DWORD index;
+	uint32_t index;
 
 	ASSERT(this);
 	ASSERT(addr <= 0xffffff);
@@ -872,7 +872,7 @@ void FASTCALL Memory::WriteByte(DWORD addr, DWORD data)
 
 	// メインRAM
 	if (addr < mem.length) {
-		mem.ram[addr ^ 1] = (BYTE)data;
+		mem.ram[addr ^ 1] = (uint8_t)data;
 		return;
 	}
 
@@ -902,10 +902,10 @@ void FASTCALL Memory::WriteByte(DWORD addr, DWORD data)
 //	ワード書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL Memory::WriteWord(DWORD addr, DWORD data)
+void FASTCALL Memory::WriteWord(uint32_t addr, uint32_t data)
 {
-	WORD *ptr;
-	DWORD index;
+uint16_t *ptr;
+	uint32_t index;
 
 	ASSERT(this);
 	ASSERT(addr <= 0xffffff);
@@ -921,8 +921,8 @@ void FASTCALL Memory::WriteWord(DWORD addr, DWORD data)
 
 	// メインRAM
 	if (addr < mem.length) {
-		ptr = (WORD*)(&mem.ram[addr]);
-		*ptr = (WORD)data;
+		ptr = (uint16_t*)(&mem.ram[addr]);
+		*ptr = (uint16_t)data;
 		return;
 	}
 
@@ -952,9 +952,9 @@ void FASTCALL Memory::WriteWord(DWORD addr, DWORD data)
 //	読み込みのみ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL Memory::ReadOnly(DWORD addr) const
+uint32_t FASTCALL Memory::ReadOnly(uint32_t addr) const
 {
-	DWORD index;
+	uint32_t index;
 
 	ASSERT(this);
 	ASSERT(addr <= 0xffffff);
@@ -962,14 +962,14 @@ DWORD FASTCALL Memory::ReadOnly(DWORD addr) const
 
 	// メインRAM
 	if (addr < mem.length) {
-		return (DWORD)mem.ram[addr ^ 1];
+		return (uint32_t)mem.ram[addr ^ 1];
 	}
 
 	// IPL
 	if (addr >= 0xfe0000) {
 		addr &= 0x1ffff;
 		addr ^= 1;
-		return (DWORD)mem.ipl[addr];
+		return (uint32_t)mem.ipl[addr];
 	}
 
 	// IPLイメージ or SCSI内蔵
@@ -979,21 +979,21 @@ DWORD FASTCALL Memory::ReadOnly(DWORD addr) const
 			// IPLイメージ
 			addr &= 0x1ffff;
 			addr ^= 1;
-			return (DWORD)mem.ipl[addr];
+			return (uint32_t)mem.ipl[addr];
 		}
 		// SCSI内蔵か(範囲チェック)
 		if (addr < 0xfc2000) {
 			// SCSI内蔵
 			addr &= 0x1fff;
 			addr ^= 1;
-			return (DWORD)mem.scsi[addr];
+			return (uint32_t)mem.scsi[addr];
 		}
 		// X68030 IPL前半か
 		if (mem.now == X68030) {
 			// X68030 IPL前半
 			addr &= 0x1ffff;
 			addr ^= 1;
-			return (DWORD)mem.scsi[addr];
+			return (uint32_t)mem.scsi[addr];
 		}
 		// SCSI内蔵モデルで、ROM範囲外
 		return 0xff;
@@ -1003,7 +1003,7 @@ DWORD FASTCALL Memory::ReadOnly(DWORD addr) const
 	if (addr >= 0xf00000) {
 		addr &= 0xfffff;
 		addr ^= 1;
-		return (DWORD)mem.cg[addr];
+		return (uint32_t)mem.cg[addr];
 	}
 
 	// SCSI外付
@@ -1011,7 +1011,7 @@ DWORD FASTCALL Memory::ReadOnly(DWORD addr) const
 		if ((addr >= 0xea0020) && (addr <= 0xea1fff)) {
 			addr &= 0x1fff;
 			addr ^= 1;
-			return (DWORD)mem.scsi[addr];
+			return (uint32_t)mem.scsi[addr];
 		}
 	}
 
@@ -1034,7 +1034,7 @@ DWORD FASTCALL Memory::ReadOnly(DWORD addr) const
 //	コンテキスト作成
 //
 //---------------------------------------------------------------------------
-void FASTCALL Memory::MakeContext(BOOL reset)
+void FASTCALL Memory::MakeContext(int reset)
 {
 	ASSERT(this);
 
@@ -1046,11 +1046,11 @@ void FASTCALL Memory::MakeContext(BOOL reset)
 
 		// リセット専用コンテキスト($FF00000～が、$0000000～に見える)
 		pCPU->BeginProgramRegion(TRUE);
-		pCPU->AddProgramRegion(0x0000, 0xffff, ((DWORD)mem.ipl) + 0x10000);
+		pCPU->AddProgramRegion(0x0000, 0xffff, ((uint32_t)mem.ipl) + 0x10000);
 		pCPU->EndProgramRegion();
 
 		pCPU->BeginProgramRegion(FALSE);
-		pCPU->AddProgramRegion(0x0000, 0xffff, ((DWORD)mem.ipl) + 0x10000);
+		pCPU->AddProgramRegion(0x0000, 0xffff, ((uint32_t)mem.ipl) + 0x10000);
 		pCPU->EndProgramRegion();
 
 		// データは全て無し
@@ -1150,7 +1150,7 @@ void FASTCALL Memory::MakeContext(BOOL reset)
 		{
 			// 通常コンテキスト - 読み出し(Super)
 			for(int isWord = 0; isWord < 2; ++isWord) {
-				pCPU->BeginDataRegion(TRUE, FALSE, (BOOL) isWord);		// Super, Read, {Byte|Word}
+				pCPU->BeginDataRegion(TRUE, FALSE, (int) isWord);		// Super, Read, {Byte|Word}
 				pCPU->AddDataRegion(0, mem.length - 1, NULL, (void*)mem.ram);
 				pCPU->AddDataRegion(0xf00000, 0xfbffff, NULL, (void*)mem.cg);			// CG
 				pCPU->AddDataRegion(0xfe0000, 0xffffff, NULL, (void*)mem.ipl);			// IPL
@@ -1187,7 +1187,7 @@ void FASTCALL Memory::MakeContext(BOOL reset)
 		{
 			// 通常コンテキスト - 書き込み(Super)
 			for(int isWord = 0; isWord < 2; ++isWord) {
-				pCPU->BeginDataRegion(TRUE, TRUE, (BOOL) isWord);		// Super, Write, {Byte|Word}
+				pCPU->BeginDataRegion(TRUE, TRUE, (int) isWord);		// Super, Write, {Byte|Word}
 
 				pCPU->AddDataRegion(0, mem.length - 1, NULL, (void*)mem.ram);
 
@@ -1212,7 +1212,7 @@ void FASTCALL Memory::MakeContext(BOOL reset)
 //	※IPLがversion1.00(87/05/07)であるか否かをチェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Memory::CheckIPL() const
+int FASTCALL Memory::CheckIPL() const
 {
 	ASSERT(this);
 	ASSERT(mem.now != None);
@@ -1247,11 +1247,11 @@ BOOL FASTCALL Memory::CheckIPL() const
 //	※8x8ドットフォント(全機種共通)のSum,Xorでチェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Memory::CheckCG() const
+int FASTCALL Memory::CheckCG() const
 {
-	BYTE add;
-	BYTE eor;
-	BYTE *ptr;
+	uint8_t add;
+	uint8_t eor;
+	uint8_t *ptr;
 	int i;
 
 	ASSERT(this);
@@ -1269,7 +1269,7 @@ BOOL FASTCALL Memory::CheckCG() const
 
 	// ADD, XORループ
 	for (i=0; i<0x1000; i++) {
-		add = (BYTE)(add + *ptr);
+		add = (uint8_t)(add + *ptr);
 		eor ^= *ptr;
 		ptr++;
 	}
@@ -1287,7 +1287,7 @@ BOOL FASTCALL Memory::CheckCG() const
 //	CG取得
 //
 //---------------------------------------------------------------------------
-const BYTE* FASTCALL Memory::GetCG() const
+const uint8_t* FASTCALL Memory::GetCG() const
 {
 	ASSERT(this);
 	ASSERT(mem.cg);
@@ -1300,7 +1300,7 @@ const BYTE* FASTCALL Memory::GetCG() const
 //	SCSI取得
 //
 //---------------------------------------------------------------------------
-const BYTE* FASTCALL Memory::GetSCSI() const
+const uint8_t* FASTCALL Memory::GetSCSI() const
 {
 	ASSERT(this);
 	ASSERT(mem.scsi);
@@ -1313,7 +1313,7 @@ const BYTE* FASTCALL Memory::GetSCSI() const
 //	IPL取得
 //
 //---------------------------------------------------------------------------
-const BYTE* FASTCALL Memory::GetIPL() const
+const uint8_t* FASTCALL Memory::GetIPL() const
 {
 	ASSERT(this);
 	ASSERT(mem.ipl);
@@ -1356,7 +1356,7 @@ extern "C" unsigned int EventNum = 0;
 ; 24	SRAM
 ;
 */
-extern "C" DWORD MemDecodeData[] = {
+extern "C" uint32_t MemDecodeData[] = {
 // $C00000 (GVRAM)
 			1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 			1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
@@ -1422,12 +1422,12 @@ extern "C" void MemInitDecode(Memory *mem, MemDevice* list[]) {
 
 
 // バイト読み込み
-//	; EAX	DWORD戻り値
+//	; EAX	uint32_t戻り値
 //	; ECX	this
 //	; EDX	アドレス
 
 #pragma runtime_checks("scu", off)
-extern "C" __declspec(naked) void ReadByteC(DWORD addr) {
+extern "C" __declspec(naked) void ReadByteC(uint32_t addr) {
 	static unsigned int k = 0;
 	__asm {
 		mov k, edx
@@ -1445,10 +1445,10 @@ extern "C" __declspec(naked) void ReadByteC(DWORD addr) {
 }
 
 // ワード読み込み
-//	; EAX	DWORD戻り値
+//	; EAX	uint32_t戻り値
 //	; ECX	this
 //	; EDX	アドレス
-extern "C" __declspec(naked) void ReadWordC(DWORD addr) {
+extern "C" __declspec(naked) void ReadWordC(uint32_t addr) {
 	static unsigned int k = 0;
 	__asm {
 		mov k, edx
@@ -1470,7 +1470,7 @@ extern "C" __declspec(naked) void ReadWordC(DWORD addr) {
 //	; EBX	データ
 //	; ECX	this
 //	; EDX	アドレス
-extern "C" __declspec(naked) void WriteByteC(DWORD addr, DWORD data) {
+extern "C" __declspec(naked) void WriteByteC(uint32_t addr, uint32_t data) {
 	static unsigned int k = 0;
 	static unsigned int j = 0;
 	__asm {
@@ -1494,7 +1494,7 @@ extern "C" __declspec(naked) void WriteByteC(DWORD addr, DWORD data) {
 //	; EBX	データ
 //	; ECX	this
 //	; EDX	アドレス
-extern "C" __declspec(naked) void WriteWordC(DWORD addr, DWORD data) {
+extern "C" __declspec(naked) void WriteWordC(uint32_t addr, uint32_t data) {
 	static unsigned int k = 0;
 	static unsigned int j = 0;
 	__asm {
@@ -1515,7 +1515,7 @@ extern "C" __declspec(naked) void WriteWordC(DWORD addr, DWORD data) {
 
 //	バスエラー読み込み
 //	; EDX	アドレス
-extern "C" __declspec(naked) void ReadErrC(DWORD addr) {
+extern "C" __declspec(naked) void ReadErrC(uint32_t addr) {
 	static unsigned int k = 0;
 	__asm {
 		mov k, edx
@@ -1531,7 +1531,7 @@ extern "C" __declspec(naked) void ReadErrC(DWORD addr) {
 // バスエラー書き込み
 //	; EBX	データ
 //	; EDX	アドレス
-extern "C" __declspec(naked) void WriteErrC(DWORD addr, DWORD data) {
+extern "C" __declspec(naked) void WriteErrC(uint32_t addr, uint32_t data) {
 	static unsigned int k = 0;
 	__asm {
 		mov k, edx
@@ -1563,7 +1563,7 @@ extern "C" void NotifyEvent(Event *first) {
 }
 
 // イベント群 最小のものを探す
-extern "C" DWORD GetMinEvent(DWORD hus) {
+extern "C" uint32_t GetMinEvent(uint32_t hus) {
 	unsigned int eax = hus;
 
 	const unsigned int* esi = &EventTable[0];
@@ -1583,7 +1583,7 @@ extern "C" DWORD GetMinEvent(DWORD hus) {
 }
 
 // イベント群 減算＆実行
-extern "C" BOOL SubExecEvent(DWORD hus) {
+extern "C" int SubExecEvent(uint32_t hus) {
 	unsigned int edi = hus;
 	const unsigned int* esi = &EventTable[0];
 

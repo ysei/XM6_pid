@@ -9,6 +9,7 @@
 
 #if !defined(fileio_h)
 #define fileio_h
+#include "filepath.h"
 
 //===========================================================================
 //
@@ -30,30 +31,30 @@ public:
 										// コンストラクタ
 	virtual ~Fileio();
 										// デストラクタ
-	BOOL FASTCALL Load(const Filepath& path, void *buffer, int size);
+	int FASTCALL Load(const Filepath& path, void *buffer, int size);
 										// ROM,RAMロード
-	BOOL FASTCALL Save(const Filepath& path, void *buffer, int size);
+	int FASTCALL Save(const Filepath& path, void *buffer, int size);
 										// RAMセーブ
 
 #if defined(_WIN32)
-	BOOL FASTCALL Open(LPCTSTR fname, OpenMode mode);
+	int FASTCALL Open(LPCTSTR fname, OpenMode mode);
 										// オープン
 #endif	// _WIN32
-	BOOL FASTCALL Open(const Filepath& path, OpenMode mode);
+	int FASTCALL Open(const Filepath& path, OpenMode mode);
 										// オープン
-	BOOL FASTCALL Seek(long offset);
+	int FASTCALL Seek(long offset);
 										// シーク
-	BOOL FASTCALL Read(void *buffer, int size);
+	int FASTCALL Read(void *buffer, int size);
 										// 読み込み
-	BOOL FASTCALL Write(const void *buffer, int size);
+	int FASTCALL Write(const void *buffer, int size);
 										// 書き込み
-	DWORD FASTCALL GetFileSize() const;
+	uint32_t FASTCALL GetFileSize() const;
 										// ファイルサイズ取得
-	DWORD FASTCALL GetFilePos() const;
+	uint32_t FASTCALL GetFilePos() const;
 										// ファイル位置取得
 	void FASTCALL Close();
 										// クローズ
-	BOOL FASTCALL IsValid() const		{ return (BOOL)(handle != -1); }
+	int FASTCALL IsValid() const		{ return (int)(handle != -1); }
 										// 有効チェック
 	int FASTCALL GetHandle() const		{ return handle; }
 										// ハンドル取得

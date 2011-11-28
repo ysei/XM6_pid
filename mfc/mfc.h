@@ -17,56 +17,9 @@
 
 //---------------------------------------------------------------------------
 //
-//	#include
-//
-//---------------------------------------------------------------------------
-#define WINVER					0x500	// Windows98,Me,2000,XP以降
-//VC2010//	#define _WIN32_WINNT			0x410	// Windows98,Me,2000,XP以降
-#define _WIN32_WINNT			0x501	//VC2010//
-#define _CRT_SECURE_NO_WARNINGS			//VC2010//
-#define VC_EXTRALEAN
-
-// MFC
-#if defined(_AFXDLL)
-#include <afxwin.h>
-#include <afxext.h>
-#include <afxdlgs.h>
-#include <afxcmn.h>
-#include <afxmt.h>
-#include <afxconv.h>
-#else
-#include <assert.h>
-#endif
-
-// Win32API
-#include <windows.h>
-#include <imm.h>
-#include <mmsystem.h>
-#include <shlobj.h>
-
-// DirectX
-#define DIRECTSOUND_VERSION		0x500	// DirectX5を指定
-#include <dsound.h>
-//VC2010//#define DIRECTINPUT_VERSION		0x500	// DirectX5を指定
-#define DIRECTINPUT_VERSION		0x0800	//VC2010//	// DirectX8を指定
-#include <dinput.h>
-
-// C Runtime
-#include <stdio.h>
-#include <math.h>
-#include <io.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-
-//---------------------------------------------------------------------------
-//
 //	#define
 //
 //---------------------------------------------------------------------------
-//#if defined(_DEBUG)
-//#define new		DEBUG_NEW
-//#endif	// _DEBUG
-
 #if defined(_MSC_VER) && defined(_M_IX86)
 #define FASTCALL	__fastcall
 #else
@@ -81,9 +34,6 @@
 class VM;								// 仮想マシン
 class CApp;								// アプリケーション
 class CFrmWnd;							// フレームウィンドウ
-
-//void FASTCALL LockVM(void);																			// 仮想マシンをロック
-//void FASTCALL UnlockVM(void);																		// 仮想マシンをアンロック
 
 #endif	// mfc_h
 #endif	// _WIN32

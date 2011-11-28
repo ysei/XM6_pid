@@ -10,6 +10,8 @@
 #if !defined(filepath_h)
 #define filepath_h
 
+class Filepath;
+
 #if defined(_WIN32)
 
 //---------------------------------------------------------------------------
@@ -17,7 +19,68 @@
 //	定数定義
 //
 //---------------------------------------------------------------------------
+#ifndef _MAX_PATH
+#define	_MAX_PATH			260
+#define	_MAX_DRIVE			3
+#define	_MAX_EXT			256
+#define	_MAX_FNAME			256
+#define	_MAX_DIR			256
+#endif
 #define FILEPATH_MAX		_MAX_PATH
+
+typedef char CHAR;
+typedef const CHAR* LPCSTR;
+
+#if defined(UNICODE)
+typedef wchar_t WCHAR;
+typedef WCHAR TCHAR;
+typedef LPCWSTR LPCTSTR;
+#else
+typedef char TCHAR;
+typedef LPCSTR LPCTSTR;
+#endif
+
+typedef struct _FILETIME FILETIME;
+
+/*
+class TCharBuf {
+public:
+	TCharBuf() : buf(0) {
+	}
+
+	TCharBuf(int n) : buf(0) {
+		buf = new TCHAR [n];
+	}
+
+	~TCharBuf() {
+		if(buf) {
+			delete [] buf;
+			buf = 0;
+		}
+	}
+
+	operator const char*() const {
+		return &buf[0];
+	}
+
+	operator const char*() {
+		return &buf[0];
+	}
+
+	const char& operator[](const int i) const {
+		return buf[i];
+	}
+
+	char& operator[](const int i) {
+		return buf[i];
+	}
+
+protected:
+	TCHAR* buf;
+};
+*/
+
+
 
 //===========================================================================
 //
@@ -61,15 +124,15 @@ public:
 	void FASTCALL SetBaseFile();
 										// ベースディレクトリ＋ファイル名設定
 
-	BOOL FASTCALL IsClear() const;
+	int FASTCALL IsClear() const;
 										// クリアされているか
-	LPCTSTR FASTCALL GetPath() const	{ return m_szPath; }
+	LPCTSTR FASTCALL GetPath() const;
 										// パス名取得
 	const char* FASTCALL GetShort() const;
 										// ショート名取得(const char*)
 	LPCTSTR FASTCALL GetFileExt() const;
 										// ショート名取得(LPCTSTR)
-	BOOL FASTCALL CmpPath(const Filepath& path) const;
+	int FASTCALL CmpPath(const Filepath& path) const;
 										// パス比較
 
 	static void FASTCALL ClearDefaultDir();
@@ -79,9 +142,9 @@ public:
 	static LPCTSTR FASTCALL GetDefaultDir();
 										// デフォルトディレクトリ取得
 
-	BOOL FASTCALL Save(Fileio *fio, int ver);
+	int FASTCALL Save(Fileio *fio, int ver);
 										// セーブ
-	BOOL FASTCALL Load(Fileio *fio, int ver);
+	int FASTCALL Load(Fileio *fio, int ver);
 										// ロード
 
 private:
@@ -91,35 +154,15 @@ private:
 										// パス合成
 	void FASTCALL SetCurDir();
 										// カレントディレクトリ設定
-	BOOL FASTCALL IsUpdate() const;
+	int FASTCALL IsUpdate() const;
 										// セーブ後の更新ありか
 	void FASTCALL GetUpdateTime(FILETIME *pSaved, FILETIME *pCurrent ) const;
 										// セーブ後の時間情報を取得
-	TCHAR m_szPath[_MAX_PATH];
-										// ファイルパス
-	TCHAR m_szDrive[_MAX_DRIVE];
-										// ドライブ
-	TCHAR m_szDir[_MAX_DIR];
-										// ディレクトリ
-	TCHAR m_szFile[_MAX_FNAME];
-										// ファイル
-	TCHAR m_szExt[_MAX_EXT];
-										// 拡張子
-	BOOL m_bUpdate;
-										// セーブ後の更新あり
-	FILETIME m_SavedTime;
-										// セーブ時の日付
-	FILETIME m_CurrentTime;
-										// 現在の日付
-	static LPCTSTR SystemFile[];
-										// システムファイル
-	static char ShortName[_MAX_FNAME + _MAX_DIR];
-										// ショート名(char)
-	static TCHAR FileExt[_MAX_FNAME + _MAX_DIR];
-										// ショート名(TCHAR)
-	static TCHAR DefaultDir[_MAX_PATH];
-										// デフォルトディレクトリ
+
+	struct FilepathBuf;
+	FilepathBuf* pfb;
 };
+
 
 #endif	// _WIN32
 #endif	// filepath_h

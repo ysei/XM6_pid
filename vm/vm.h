@@ -26,7 +26,8 @@ public:
 	// 基本ファンクション
 	VM();
 										// コンストラクタ
-	BOOL FASTCALL Init();
+	~VM();
+	int FASTCALL Init();
 										// 初期化
 	void FASTCALL Cleanup();
 										// クリーンアップ
@@ -36,9 +37,9 @@ public:
 										// 設定適用
 
 	// ステート保存
-	DWORD FASTCALL Save(const Filepath& path);
+	uint32_t FASTCALL Save(const Filepath& path);
 										// セーブ
-	DWORD FASTCALL Load(const Filepath& path);
+	uint32_t FASTCALL Load(const Filepath& path);
 										// ロード
 	void FASTCALL GetPath(Filepath& path) const;
 										// パス取得
@@ -52,11 +53,11 @@ public:
 										// デバイス削除(子から呼ばれる)
 	Device* FASTCALL GetFirstDevice() const	{ return first_device; }
 										// 最初のデバイスを取得
-	Device* FASTCALL SearchDevice(DWORD id) const;
+	Device* FASTCALL SearchDevice(uint32_t id) const;
 										// 任意IDのデバイスを取得
 
 	// 実行
-	BOOL FASTCALL Exec(DWORD hus);
+	int FASTCALL Exec(uint32_t hus);
 										// 実行
 	void FASTCALL Trace();
 										// トレース
@@ -64,27 +65,33 @@ public:
 										// 実行中止
 
 	// バージョン
-	void FASTCALL SetVersion(DWORD major, DWORD minor);
+	void FASTCALL SetVersion(uint32_t major, uint32_t minor);
 										// バージョン設定
-	void FASTCALL GetVersion(DWORD& major, DWORD& minor);
+	void FASTCALL GetVersion(uint32_t& major, uint32_t& minor);
 										// バージョン取得
 
 	// システム制御
-	void FASTCALL PowerSW(BOOL sw);
+	void FASTCALL PowerSW(int sw);
 										// 電源スイッチ制御
-	BOOL FASTCALL IsPowerSW() const		{ return power_sw; }
+	int FASTCALL IsPowerSW() const		{ return power_sw; }
 										// 電源スイッチ状態取得
-	void FASTCALL SetPower(BOOL flag);
+	void FASTCALL SetPower(int flag);
 										// 電源制御
-	BOOL FASTCALL IsPower() const		{ return power; }
+	int FASTCALL IsPower() const		{ return power; }
 										// 電源状態取得
 	void FASTCALL Interrupt() const		{ cpu->Interrupt(7, -1); }
 										// NMI割り込み
+#if defined(XM6_USE_LOG)
 	Log log;
 										// ログ
+#endif
+	void FASTCALL SetHostRtcCallback(XM6_RTC_CALLBACK cb);
+	int FASTCALL GetHostRtc(XM6_RTC* xm6_rtc);	// take a current time from host
+//	void FASTCALL SetHostFileSystem(XM6_FILEIO_SYSTEM* fios);
+//	XM6_FILEIO_SYSTEM* FASTCALL GetHostFileSystem();
 
 private:
-	BOOL status;
+	int status;
 										// 初期化ステータス
 	Device *first_device;
 										// 最初のデバイス
@@ -98,16 +105,21 @@ private:
 										// RTC
 	SRAM *sram;
 										// SRAM
-	BOOL power_sw;
+	int power_sw;
 										// 電源スイッチ
-	BOOL power;
+	int power;
 										// 電源
-	DWORD major_ver;
+	uint32_t major_ver;
 										// メジャーバージョン
-	DWORD minor_ver;
+	uint32_t minor_ver;
 										// マイナーバージョン
-	Filepath current;
+//	Filepath current;
 										// カレントデータ
+	Filepath* pCurrent;
+										// カレントデータ
+
+	XM6_RTC_CALLBACK	xm6_rtc_cb;
+//	XM6_FILEIO_SYSTEM*	xm6_fios;
 };
 
 #endif	// vm_h

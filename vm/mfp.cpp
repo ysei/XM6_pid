@@ -51,11 +51,9 @@ MFP::MFP(VM *p) : MemDevice(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL MFP::Init()
+int FASTCALL MFP::Init()
 {
 	int i;
-	char buf[0x20];
-
 	ASSERT(this);
 
 	// 基本クラス
@@ -69,8 +67,13 @@ BOOL FASTCALL MFP::Init()
 	// タイマイベント初期化
 	for (i=0; i<4; i++) {
 		timer[i].SetDevice(this);
-		sprintf(buf, "Timer-%c", 'A' + i);
-		timer[i].SetDesc(buf);
+#if defined(XM6_USE_EVENT_DESC)
+		{
+			char buf[0x20];
+			sprintf(buf, "Timer-%c", 'A' + i);
+			timer[i].SetDesc(buf);
+		}
+#endif
 		timer[i].SetUser(i);
 		timer[i].SetTime(0);
 
@@ -87,7 +90,9 @@ BOOL FASTCALL MFP::Init()
 	// 1(us)x13(回)x(デューティ50%)x16(分周)x10(bit)で約2400bps
 	usart.SetDevice(this);
 	usart.SetUser(4);
+#if defined(XM6_USE_EVENT_DESC)
 	usart.SetDesc("USART 2400bps");
+#endif
 	usart.SetTime(8320);
 	scheduler->AddEvent(&usart);
 
@@ -173,7 +178,7 @@ void FASTCALL MFP::Reset()
 	mfp.gpdr = 0;
 	mfp.aer = 0;
 	mfp.ddr = 0;
-	mfp.ber = (DWORD)~mfp.aer;
+	mfp.ber = (uint32_t)~mfp.aer;
 	mfp.ber ^= mfp.gpdr;
 	SetGPIP(5, 1);
 
@@ -181,7 +186,7 @@ void FASTCALL MFP::Reset()
 	mfp.scr = 0;
 	mfp.ucr = 0;
 	mfp.rsr = 0;
-	mfp.tsr = (DWORD)(mfp.tsr & ~0x01);
+	mfp.tsr = (uint32_t)(mfp.tsr & ~0x01);
 	mfp.tur = 0;
 
 	// GPIP初期化(電源関連)
@@ -199,7 +204,7 @@ void FASTCALL MFP::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL MFP::Save(Fileio *fio, int ver)
+int FASTCALL MFP::Save(Fileio *fio, int ver)
 {
 	size_t sz;
 	int i;
@@ -236,7 +241,7 @@ BOOL FASTCALL MFP::Save(Fileio *fio, int ver)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL MFP::Load(Fileio *fio, int ver)
+int FASTCALL MFP::Load(Fileio *fio, int ver)
 {
 	int i;
 	size_t sz;
@@ -287,9 +292,9 @@ void FASTCALL MFP::ApplyCfg(const Config* /*config*/)
 //	バイト読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MFP::ReadByte(DWORD addr)
+uint32_t FASTCALL MFP::ReadByte(uint32_t addr)
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -398,7 +403,7 @@ DWORD FASTCALL MFP::ReadByte(DWORD addr)
 			// トランスミッタステータス
 			case 0x16:
 				// TEビットはクリアされる
-				mfp.tsr = (DWORD)(mfp.tsr & ~0x40);
+				mfp.tsr = (uint32_t)(mfp.tsr & ~0x40);
 				return mfp.tsr;
 
 			// USARTデータ
@@ -421,7 +426,7 @@ DWORD FASTCALL MFP::ReadByte(DWORD addr)
 //	ワード読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MFP::ReadWord(DWORD addr)
+uint32_t FASTCALL MFP::ReadWord(uint32_t addr)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -435,7 +440,7 @@ DWORD FASTCALL MFP::ReadWord(DWORD addr)
 //	バイト書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL MFP::WriteByte(DWORD addr, DWORD data)
+void FASTCALL MFP::WriteByte(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -464,7 +469,7 @@ void FASTCALL MFP::WriteByte(DWORD addr, DWORD data)
 		// AER
 		case 0x01:
 			mfp.aer = data;
-			mfp.ber = (DWORD)(~data);
+			mfp.ber = (uint32_t)(~data);
 			mfp.ber ^= mfp.gpdr;
 			IntGPIP();
 			return;
@@ -534,8 +539,8 @@ void FASTCALL MFP::WriteByte(DWORD addr, DWORD data)
 
 		// タイマC&Dコントロール
 		case 0x0e:
-			SetTCR(2, (DWORD)(data >> 4));
-			SetTCR(3, (DWORD)(data & 0x0f));
+			SetTCR(2, (uint32_t)(data >> 4));
+			SetTCR(3, (uint32_t)(data & 0x0f));
 			return;
 
 		// タイマAデータ
@@ -596,14 +601,14 @@ void FASTCALL MFP::WriteByte(DWORD addr, DWORD data)
 //	ワード書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL MFP::WriteWord(DWORD addr, DWORD data)
+void FASTCALL MFP::WriteWord(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
 	ASSERT((addr & 1) == 0);
 	ASSERT(data < 0x10000);
 
-	WriteByte(addr + 1, (BYTE)data);
+	WriteByte(addr + 1, (uint8_t)data);
 }
 
 //---------------------------------------------------------------------------
@@ -611,9 +616,9 @@ void FASTCALL MFP::WriteWord(DWORD addr, DWORD data)
 //	読み込みのみ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MFP::ReadOnly(DWORD addr) const
+uint32_t FASTCALL MFP::ReadOnly(uint32_t addr) const
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -750,7 +755,7 @@ void FASTCALL MFP::GetMFP(mfp_t *buffer) const
 //	割り込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL MFP::Interrupt(int level, BOOL enable)
+void FASTCALL MFP::Interrupt(int level, int enable)
 {
 	int index;
 
@@ -918,7 +923,7 @@ void FASTCALL MFP::IntAck()
 //	IER設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MFP::SetIER(int offset, DWORD data)
+void FASTCALL MFP::SetIER(int offset, uint32_t data)
 {
 	int i;
 #if defined(MFP_LOG)
@@ -955,10 +960,10 @@ void FASTCALL MFP::SetIER(int offset, DWORD data)
 //	IER取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MFP::GetIER(int offset) const
+uint32_t FASTCALL MFP::GetIER(int offset) const
 {
 	int i;
-	DWORD bit;
+	uint32_t bit;
 
 	ASSERT(this);
 	ASSERT((offset == 0) || (offset == 1));
@@ -983,7 +988,7 @@ DWORD FASTCALL MFP::GetIER(int offset) const
 //	IPR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MFP::SetIPR(int offset, DWORD data)
+void FASTCALL MFP::SetIPR(int offset, uint32_t data)
 {
 	int i;
 #if defined(MFP_LOG)
@@ -1015,10 +1020,10 @@ void FASTCALL MFP::SetIPR(int offset, DWORD data)
 //	IPR取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MFP::GetIPR(int offset) const
+uint32_t FASTCALL MFP::GetIPR(int offset) const
 {
 	int i;
-	DWORD bit;
+	uint32_t bit;
 
 	ASSERT(this);
 	ASSERT((offset == 0) || (offset == 1));
@@ -1043,7 +1048,7 @@ DWORD FASTCALL MFP::GetIPR(int offset) const
 //	ISR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MFP::SetISR(int offset, DWORD data)
+void FASTCALL MFP::SetISR(int offset, uint32_t data)
 {
 	int i;
 #if defined(MFP_LOG)
@@ -1075,10 +1080,10 @@ void FASTCALL MFP::SetISR(int offset, DWORD data)
 //	ISR取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MFP::GetISR(int offset) const
+uint32_t FASTCALL MFP::GetISR(int offset) const
 {
 	int i;
-	DWORD bit;
+	uint32_t bit;
 
 	ASSERT(this);
 	ASSERT((offset == 0) || (offset == 1));
@@ -1103,7 +1108,7 @@ DWORD FASTCALL MFP::GetISR(int offset) const
 //	IMR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MFP::SetIMR(int offset, DWORD data)
+void FASTCALL MFP::SetIMR(int offset, uint32_t data)
 {
 	int i;
 #if defined(MFP_LOG)
@@ -1138,10 +1143,10 @@ void FASTCALL MFP::SetIMR(int offset, DWORD data)
 //	IMR取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MFP::GetIMR(int offset) const
+uint32_t FASTCALL MFP::GetIMR(int offset) const
 {
 	int i;
-	DWORD bit;
+	uint32_t bit;
 
 	ASSERT(this);
 	ASSERT((offset == 0) || (offset == 1));
@@ -1166,7 +1171,7 @@ DWORD FASTCALL MFP::GetIMR(int offset) const
 //	VR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MFP::SetVR(DWORD data)
+void FASTCALL MFP::SetVR(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1186,7 +1191,7 @@ void FASTCALL MFP::SetVR(DWORD data)
 //	VR取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MFP::GetVR() const
+uint32_t FASTCALL MFP::GetVR() const
 {
 	ASSERT(this);
 	return mfp.vr;
@@ -1221,10 +1226,10 @@ const char* MFP::IntDesc[0x10] = {
 //	イベントコールバック(ディレイモードで使用)
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL MFP::Callback(Event *ev)
+int FASTCALL MFP::Callback(Event *ev)
 {
 	int channel;
-	DWORD low;
+	uint32_t low;
 
 	ASSERT(this);
 	ASSERT(ev);
@@ -1269,8 +1274,8 @@ BOOL FASTCALL MFP::Callback(Event *ev)
 //---------------------------------------------------------------------------
 void FASTCALL MFP::EventCount(int channel, int value)
 {
-	DWORD edge;
-	BOOL flag;
+	uint32_t edge;
+	int flag;
 
 	ASSERT(this);
 	ASSERT((channel >= 0) && (channel <= 1));
@@ -1311,7 +1316,7 @@ void FASTCALL MFP::EventCount(int channel, int value)
 	}
 
 	// TBRを更新
-	mfp.tbr[channel] = (DWORD)value;
+	mfp.tbr[channel] = (uint32_t)value;
 }
 
 //---------------------------------------------------------------------------
@@ -1319,11 +1324,11 @@ void FASTCALL MFP::EventCount(int channel, int value)
 //	TCR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MFP::SetTCR(int channel, DWORD data)
+void FASTCALL MFP::SetTCR(int channel, uint32_t data)
 {
-	DWORD prev;
-	DWORD now;
-	DWORD speed;
+	uint32_t prev;
+	uint32_t now;
+	uint32_t speed;
 
 	ASSERT(this);
 	ASSERT((channel >= 0) && (channel <= 3));
@@ -1443,7 +1448,7 @@ void FASTCALL MFP::SetTCR(int channel, DWORD data)
 //	TCR取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MFP::GetTCR(int channel) const
+uint32_t FASTCALL MFP::GetTCR(int channel) const
 {
 	ASSERT(this);
 	ASSERT((channel >= 0) && (channel <= 3));
@@ -1456,7 +1461,7 @@ DWORD FASTCALL MFP::GetTCR(int channel) const
 //	TDR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MFP::SetTDR(int channel, DWORD data)
+void FASTCALL MFP::SetTDR(int channel, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((channel >= 0) && (channel <= 3));
@@ -1477,7 +1482,7 @@ void FASTCALL MFP::SetTDR(int channel, DWORD data)
 //	TIR取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL MFP::GetTIR(int channel) const
+uint32_t FASTCALL MFP::GetTIR(int channel) const
 {
 	ASSERT(this);
 	ASSERT((channel >= 0) && (channel <= 3));
@@ -1486,7 +1491,7 @@ DWORD FASTCALL MFP::GetTIR(int channel) const
 	if (channel == 1) {
 		// (源平討魔伝)
 		LOG0(Log::Warning, "タイマB データレジスタ読み出し");
-		return (DWORD)((scheduler->GetTotalTime() % 13) + 1);
+		return (uint32_t)((scheduler->GetTotalTime() % 13) + 1);
 	}
 
 	return mfp.tir[channel];
@@ -1549,7 +1554,7 @@ const int MFP::TimerInt[4] = {
 //	タイマ時間テーブル
 //
 //---------------------------------------------------------------------------
-const DWORD MFP::TimerHus[8] = {
+const uint32_t MFP::TimerHus[8] = {
 	0,									// タイマストップ
 	2,									// 1.0us
 	5,									// 2.5us
@@ -1565,17 +1570,17 @@ const DWORD MFP::TimerHus[8] = {
 //	GPDR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MFP::SetGPDR(DWORD data)
+void FASTCALL MFP::SetGPDR(uint32_t data)
 {
 	int i;
-	DWORD bit;
+	uint32_t bit;
 
 	ASSERT(this);
 	ASSERT(data < 0x100);
 
 	// DDRが1のビットのみ有効
 	for (i=0; i<8; i++) {
-		bit = (DWORD)(1 << i);
+		bit = (uint32_t)(1 << i);
 		if (mfp.ddr & bit) {
 			if (data & bit) {
 				SetGPIP(i, 1);
@@ -1594,7 +1599,7 @@ void FASTCALL MFP::SetGPDR(DWORD data)
 //---------------------------------------------------------------------------
 void FASTCALL MFP::SetGPIP(int num, int value)
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((num >= 0) && (num < 8));
@@ -1604,9 +1609,9 @@ void FASTCALL MFP::SetGPIP(int num, int value)
 	data = mfp.gpdr;
 
 	// ビット作成
-	mfp.gpdr &= (DWORD)(~(1 << num));
+	mfp.gpdr &= (uint32_t)(~(1 << num));
 	if (value == 1) {
-		mfp.gpdr |= (DWORD)(1 << num);
+		mfp.gpdr |= (uint32_t)(1 << num);
 	}
 
 	// 違っていれば割り込みチェック
@@ -1622,7 +1627,7 @@ void FASTCALL MFP::SetGPIP(int num, int value)
 //---------------------------------------------------------------------------
 void FASTCALL MFP::IntGPIP()
 {
-	DWORD data;
+	uint32_t data;
 	int i;
 
 	ASSERT(this);
@@ -1632,8 +1637,8 @@ void FASTCALL MFP::IntGPIP()
 	// AER1 0->1で割り込み
 
 	// ~AERとGPDRをXOR
-	data = (DWORD)(~mfp.aer);
-	data ^= (DWORD)mfp.gpdr;
+	data = (uint32_t)(~mfp.aer);
+	data ^= (uint32_t)mfp.gpdr;
 
 	// BERを見て、1→0に変化するとき割り込み発生
 	// (ただしパルス幅測定タイマがあればGPIP4,GPIP3は割り込み処理しない)
@@ -1668,7 +1673,7 @@ void FASTCALL MFP::IntGPIP()
 	}
 
 	// BERを作成
-	mfp.ber = (DWORD)(~mfp.aer);
+	mfp.ber = (uint32_t)(~mfp.aer);
 	mfp.ber ^= mfp.gpdr;
 }
 
@@ -1693,7 +1698,7 @@ const int MFP::GPIPInt[8] = {
 //	レシーバステータス設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MFP::SetRSR(DWORD data)
+void FASTCALL MFP::SetRSR(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1702,7 +1707,7 @@ void FASTCALL MFP::SetRSR(DWORD data)
 	data &= 0x01;
 
 	mfp.rsr &= ~0x01;
-	mfp.rsr |= (DWORD)(mfp.rsr | data);
+	mfp.rsr |= (uint32_t)(mfp.rsr | data);
 }
 
 //---------------------------------------------------------------------------
@@ -1738,7 +1743,7 @@ void FASTCALL MFP::Receive()
 	}
 
 	// データ引き取り。BF、OEを0に設定
-	mfp.rsr &= (DWORD)~0xc0;
+	mfp.rsr &= (uint32_t)~0xc0;
 }
 
 //---------------------------------------------------------------------------
@@ -1746,19 +1751,19 @@ void FASTCALL MFP::Receive()
 //	トランスミッタステータス設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL MFP::SetTSR(DWORD data)
+void FASTCALL MFP::SetTSR(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
 
 	// BE,UE,ENDは直接クリアできない
-	mfp.tsr = (DWORD)(mfp.tsr & 0xd0);
-	data &= (DWORD)~0xd0;
-	mfp.tsr = (DWORD)(mfp.tsr | data);
+	mfp.tsr = (uint32_t)(mfp.tsr & 0xd0);
+	data &= (uint32_t)~0xd0;
+	mfp.tsr = (uint32_t)(mfp.tsr | data);
 
 	// TE=1で、UE,ENDをクリア
 	if (mfp.tsr & 0x01) {
-		mfp.tsr = (DWORD)(mfp.tsr & ~0x50);
+		mfp.tsr = (uint32_t)(mfp.tsr & ~0x50);
 	}
 }
 
@@ -1767,7 +1772,7 @@ void FASTCALL MFP::SetTSR(DWORD data)
 //	CPU→MFP 送信
 //
 //---------------------------------------------------------------------------
-void FASTCALL MFP::Transmit(DWORD data)
+void FASTCALL MFP::Transmit(uint32_t data)
 {
 	ASSERT(this);
 
@@ -1790,10 +1795,10 @@ void FASTCALL MFP::Transmit(DWORD data)
 	}
 
 	// ステータス及びデータをセット
-	mfp.tsr = (DWORD)(mfp.tsr & ~0x80);
+	mfp.tsr = (uint32_t)(mfp.tsr & ~0x80);
 	mfp.tur = data;
 #if defined(MFP_LOG)
-	LOG1(Log::Normal, "USART送信データ受付 %02X", (BYTE)data);
+	LOG1(Log::Normal, "USART送信データ受付 %02X", (uint8_t)data);
 #endif	// MFP_LOG
 	return;
 }
@@ -1828,18 +1833,18 @@ void FASTCALL MFP::USART()
 	if (!(mfp.tsr & 0x80)) {
 		// ここでトランスミッタディセーブルなら、ENDが発生
 		if (!(mfp.tsr & 0x01)) {
-			mfp.tsr = (DWORD)(mfp.tsr & ~0x80);
-			mfp.tsr = (DWORD)(mfp.tsr | 0x10);
+			mfp.tsr = (uint32_t)(mfp.tsr & ~0x80);
+			mfp.tsr = (uint32_t)(mfp.tsr | 0x10);
 			LOG0(Log::Warning, "USART 送信終了エラー");
 			Interrupt(9, TRUE);
 			return;
 		}
 
 		// バッファエンプティ、オートターンアラウンド
-		mfp.tsr = (DWORD)(mfp.tsr | 0x80);
+		mfp.tsr = (uint32_t)(mfp.tsr | 0x80);
 		if (mfp.tsr & 0x20) {
-			mfp.tsr = (DWORD)(mfp.tsr & ~0x20);
-			SetRSR((DWORD)(mfp.rsr | 0x01));
+			mfp.tsr = (uint32_t)(mfp.tsr & ~0x20);
+			SetRSR((uint32_t)(mfp.rsr | 0x01));
 		}
 
 		// キーボードへデータ送出、送信バッファエンプティ割り込み
@@ -1851,7 +1856,7 @@ void FASTCALL MFP::USART()
 	}
 	else {
 		if (!(mfp.tsr & 0x40)) {
-			mfp.tsr = (DWORD)(mfp.tsr | 0x40);
+			mfp.tsr = (uint32_t)(mfp.tsr | 0x40);
 			Interrupt(9, TRUE);
 #if defined(MFP_LOG)
 			LOG0(Log::Normal, "USART アンダーランエラー");
@@ -1903,7 +1908,7 @@ void FASTCALL MFP::USART()
 //	キーデータ受信
 //
 //---------------------------------------------------------------------------
-void FASTCALL MFP::KeyData(DWORD data)
+void FASTCALL MFP::KeyData(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((mfp.readpoint >= 0) && (mfp.readpoint < 0x10));

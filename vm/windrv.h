@@ -22,13 +22,13 @@ public:
 	Windrv(VM *p);										// コンストラクタ
 
 private:
-	BOOL FASTCALL Init();								// 初期化
+	int FASTCALL Init();								// 初期化
 	void FASTCALL Cleanup();							// クリーンアップ
 	void FASTCALL Reset();								// リセット
 
 	// メモリデバイス
-	DWORD FASTCALL ReadByte(DWORD addr);				// バイト読み込み
-	void FASTCALL WriteByte(DWORD addr, DWORD data);	// バイト書き込み
-	DWORD FASTCALL ReadOnly(DWORD addr) const;			// 読み込みのみ
+	uint32_t FASTCALL ReadByte(uint32_t addr);				// バイト読み込み
+	void FASTCALL WriteByte(uint32_t addr, uint32_t data);	// バイト書き込み
+	uint32_t FASTCALL ReadOnly(uint32_t addr) const;			// 読み込みのみ
 };
 #endif // windrv_h

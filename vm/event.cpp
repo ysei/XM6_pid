@@ -60,7 +60,7 @@ void FASTCALL Event::AssertDiag() const
 	ASSERT(ev.device);
 	ASSERT(ev.scheduler);
 	ASSERT(ev.scheduler->GetID() == MAKEID('S', 'C', 'H', 'E'));
-	ASSERT(ev.desc[0] != '\0');
+//	ASSERT(ev.desc[0] != '\0');
 }
 #endif	// NDEBUG
 
@@ -69,7 +69,7 @@ void FASTCALL Event::AssertDiag() const
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Event::Save(Fileio *fio, int /*ver*/)
+int FASTCALL Event::Save(Fileio *fio, int /*ver*/)
 {
 	size_t sz;
 
@@ -96,7 +96,7 @@ BOOL FASTCALL Event::Save(Fileio *fio, int /*ver*/)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Event::Load(Fileio *fio, int ver)
+int FASTCALL Event::Load(Fileio *fio, int ver)
 {
 	size_t sz;
 	event_t lev;
@@ -138,7 +138,7 @@ BOOL FASTCALL Event::Load(Fileio *fio, int ver)
 //	ロード(version 2.01)
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Event::Load201(Fileio *fio)
+int FASTCALL Event::Load201(Fileio *fio)
 {
 	size_t sz;
 	event201_t ev201;
@@ -202,6 +202,7 @@ void FASTCALL Event::SetDevice(Device *p)
 //	名称設定
 //
 //---------------------------------------------------------------------------
+#if defined(XM6_USE_EVENT_DESC)
 void FASTCALL Event::SetDesc(const char *desc)
 {
 	ASSERT(this);
@@ -210,6 +211,7 @@ void FASTCALL Event::SetDesc(const char *desc)
 
 	strcpy(ev.desc, desc);
 }
+#endif
 
 //---------------------------------------------------------------------------
 //
@@ -229,7 +231,7 @@ const char* FASTCALL Event::GetDesc() const
 //	時間周期設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL Event::SetTime(DWORD hus)
+void FASTCALL Event::SetTime(uint32_t hus)
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -250,7 +252,7 @@ void FASTCALL Event::SetTime(DWORD hus)
 //	時間を進める
 //
 //---------------------------------------------------------------------------
-void FASTCALL Event::Exec(DWORD hus)
+void FASTCALL Event::Exec(uint32_t hus)
 {
 	ASSERT(this);
 	ASSERT_DIAG();

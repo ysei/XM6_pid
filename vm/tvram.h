@@ -20,29 +20,29 @@
 class TVRAMHandler
 {
 public:
-	TVRAMHandler(Render *rend, BYTE *mem);
+	TVRAMHandler(Render *rend, uint8_t *mem);
 										// コンストラクタ
-	virtual void FASTCALL WriteByte(DWORD addr, DWORD data) = 0;
+	virtual void FASTCALL WriteByte(uint32_t addr, uint32_t data) = 0;
 										// バイト書き込み
-	virtual void FASTCALL WriteWord(DWORD addr, DWORD data) = 0;
+	virtual void FASTCALL WriteWord(uint32_t addr, uint32_t data) = 0;
 										// ワード書き込み
 
 	// TVRAMワークのコピー
-	DWORD multi;
+	uint32_t multi;
 										// 同時アクセス(bit0-bit3)
-	DWORD mask;
+	uint32_t mask;
 										// アクセスマスク(1で変更なし)
-	DWORD rev;
+	uint32_t rev;
 										// アクセスマスク反転
-	DWORD maskh;
+	uint32_t maskh;
 										// アクセスマスク上位バイト
-	DWORD revh;
+	uint32_t revh;
 										// アクセスマスク上位反転
 
 protected:
 	Render *render;
 										// レンダラ
-	BYTE *tvram;
+	uint8_t *tvram;
 										// テキストVRAM
 };
 
@@ -54,11 +54,11 @@ protected:
 class TVRAMNormal : public TVRAMHandler
 {
 public:
-	TVRAMNormal(Render *rend, BYTE *mem);
+	TVRAMNormal(Render *rend, uint8_t *mem);
 										// コンストラクタ
-	void FASTCALL WriteByte(DWORD addr, DWORD data);
+	void FASTCALL WriteByte(uint32_t addr, uint32_t data);
 										// バイト書き込み
-	void FASTCALL WriteWord(DWORD addr, DWORD data);
+	void FASTCALL WriteWord(uint32_t addr, uint32_t data);
 										// ワード書き込み
 };
 
@@ -70,11 +70,11 @@ public:
 class TVRAMMask : public TVRAMHandler
 {
 public:
-	TVRAMMask(Render *rend, BYTE *mem);
+	TVRAMMask(Render *rend, uint8_t *mem);
 										// コンストラクタ
-	void FASTCALL WriteByte(DWORD addr, DWORD data);
+	void FASTCALL WriteByte(uint32_t addr, uint32_t data);
 										// バイト書き込み
-	void FASTCALL WriteWord(DWORD addr, DWORD data);
+	void FASTCALL WriteWord(uint32_t addr, uint32_t data);
 										// ワード書き込み
 };
 
@@ -86,11 +86,11 @@ public:
 class TVRAMMulti : public TVRAMHandler
 {
 public:
-	TVRAMMulti(Render *rend, BYTE *mem);
+	TVRAMMulti(Render *rend, uint8_t *mem);
 										// コンストラクタ
-	void FASTCALL WriteByte(DWORD addr, DWORD data);
+	void FASTCALL WriteByte(uint32_t addr, uint32_t data);
 										// バイト書き込み
-	void FASTCALL WriteWord(DWORD addr, DWORD data);
+	void FASTCALL WriteWord(uint32_t addr, uint32_t data);
 										// ワード書き込み
 };
 
@@ -102,11 +102,11 @@ public:
 class TVRAMBoth : public TVRAMHandler
 {
 public:
-	TVRAMBoth(Render *rend, BYTE *mem);
+	TVRAMBoth(Render *rend, uint8_t *mem);
 										// コンストラクタ
-	void FASTCALL WriteByte(DWORD addr, DWORD data);
+	void FASTCALL WriteByte(uint32_t addr, uint32_t data);
 										// バイト書き込み
-	void FASTCALL WriteWord(DWORD addr, DWORD data);
+	void FASTCALL WriteWord(uint32_t addr, uint32_t data);
 										// ワード書き込み
 };
 
@@ -120,29 +120,29 @@ class TVRAM : public MemDevice
 public:
 	// 内部データ定義
 	typedef struct {
-		DWORD multi;					// 同時アクセス(bit0-bit3)
-		DWORD mask;						// アクセスマスク(1で変更なし)
-		DWORD rev;						// アクセスマスク反転
-		DWORD maskh;					// アクセスマスク上位バイト
-		DWORD revh;						// アクセスマスク上位反転
-		DWORD src;						// ラスタコピー 元ラスタ
-		DWORD dst;						// ラスタコピー 先ラスタ
-		DWORD plane;					// ラスタコピー 対象プレーン
+		uint32_t multi;					// 同時アクセス(bit0-bit3)
+		uint32_t mask;						// アクセスマスク(1で変更なし)
+		uint32_t rev;						// アクセスマスク反転
+		uint32_t maskh;					// アクセスマスク上位バイト
+		uint32_t revh;						// アクセスマスク上位反転
+		uint32_t src;						// ラスタコピー 元ラスタ
+		uint32_t dst;						// ラスタコピー 先ラスタ
+		uint32_t plane;					// ラスタコピー 対象プレーン
 	} tvram_t;
 
 public:
 	// 基本ファンクション
 	TVRAM(VM *p);
 										// コンストラクタ
-	BOOL FASTCALL Init();
+	int FASTCALL Init();
 										// 初期化
 	void FASTCALL Cleanup();
 										// クリーンアップ
 	void FASTCALL Reset();
 										// リセット
-	BOOL FASTCALL Save(Fileio *fio, int ver);
+	int FASTCALL Save(Fileio *fio, int ver);
 										// セーブ
-	BOOL FASTCALL Load(Fileio *fio, int ver);
+	int FASTCALL Load(Fileio *fio, int ver);
 										// ロード
 	void FASTCALL ApplyCfg(const Config *config);
 										// 設定適用
@@ -152,25 +152,25 @@ public:
 #endif	// NDEBUG
 
 	// メモリデバイス
-	DWORD FASTCALL ReadByte(DWORD addr);
+	uint32_t FASTCALL ReadByte(uint32_t addr);
 										// バイト読み込み
-	DWORD FASTCALL ReadWord(DWORD addr);
+	uint32_t FASTCALL ReadWord(uint32_t addr);
 										// ワード読み込み
-	void FASTCALL WriteByte(DWORD addr, DWORD data);
+	void FASTCALL WriteByte(uint32_t addr, uint32_t data);
 										// バイト書き込み
-	void FASTCALL WriteWord(DWORD addr, DWORD data);
+	void FASTCALL WriteWord(uint32_t addr, uint32_t data);
 										// ワード書き込み
-	DWORD FASTCALL ReadOnly(DWORD addr) const;
+	uint32_t FASTCALL ReadOnly(uint32_t addr) const;
 										// 読み込みのみ
 
 	// 外部API
-	const BYTE* FASTCALL GetTVRAM() const;
+	const uint8_t* FASTCALL GetTVRAM() const;
 										// TVRAM取得
-	void FASTCALL SetMulti(DWORD data);
+	void FASTCALL SetMulti(uint32_t data);
 										// 同時書き込み設定
-	void FASTCALL SetMask(DWORD data);
+	void FASTCALL SetMask(uint32_t data);
 										// アクセスマスク設定
-	void FASTCALL SetCopyRaster(DWORD src, DWORD dst, DWORD plane);
+	void FASTCALL SetCopyRaster(uint32_t src, uint32_t dst, uint32_t plane);
 										// コピーラスタ指定
 	void FASTCALL RasterCopy();
 										// ラスタコピー動作
@@ -190,11 +190,11 @@ private:
 										// ハンドラ(現在選択中)
 	Render *render;
 										// レンダラ
-	BYTE *tvram;
+	uint8_t *tvram;
 										// テキストVRAM (512KB)
 	tvram_t tvdata;
 										// 内部データ
-	DWORD tvcount;
+	uint32_t tvcount;
 										// TVRAMアクセスカウント(version2.04以降)
 };
 

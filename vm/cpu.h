@@ -23,47 +23,47 @@ class CPU : public Device
 public:
 	// 内部データ定義
 	typedef struct {
-		DWORD dreg[8];					// データレジスタ
-		DWORD areg[8];					// アドレスレジスタ
-		DWORD sp;						// スタック予備(USP or SSP)
-		DWORD pc;						// プログラムカウンタ
-		DWORD intr[8];					// 割り込み情報
-		DWORD sr;						// ステータスレジスタ
-		DWORD intreq[8];				// 割り込み要求回数
-		DWORD intack[8];				// 割り込み受理回数
-		DWORD odd;						// 実行カウンタ
+		uint32_t dreg[8];					// データレジスタ
+		uint32_t areg[8];					// アドレスレジスタ
+		uint32_t sp;						// スタック予備(USP or SSP)
+		uint32_t pc;						// プログラムカウンタ
+		uint32_t intr[8];					// 割り込み情報
+		uint32_t sr;						// ステータスレジスタ
+		uint32_t intreq[8];				// 割り込み要求回数
+		uint32_t intack[8];				// 割り込み受理回数
+		uint32_t odd;						// 実行カウンタ
 	} cpu_t;
 
 	typedef struct {
-		DWORD erraddr;					// エラーアドレス
-		DWORD errtime;					// エラー時の仮想時間
-		DWORD intreq[8];				// 割り込み要求回数
-		DWORD intack[8];				// 割り込み受理回数
+		uint32_t erraddr;					// エラーアドレス
+		uint32_t errtime;					// エラー時の仮想時間
+		uint32_t intreq[8];				// 割り込み要求回数
+		uint32_t intack[8];				// 割り込み受理回数
 	} cpusub_t;
 
 public:
 	// 基本ファンクション
 	CPU(VM *p);
 										// コンストラクタ
-	BOOL FASTCALL Init();
+	int FASTCALL Init();
 										// 初期化
 	void FASTCALL Cleanup();
 										// クリーンアップ
 	void FASTCALL Reset();
 										// リセット
-	BOOL FASTCALL Save(Fileio *fio, int ver);
+	int FASTCALL Save(Fileio *fio, int ver);
 										// セーブ
-	BOOL FASTCALL Load(Fileio *fio, int ver);
+	int FASTCALL Load(Fileio *fio, int ver);
 										// ロード
 	void FASTCALL ApplyCfg(const Config *config);
 										// 設定適用
 
 public:
-	void BeginProgramRegion(BOOL isSuper);
+	void BeginProgramRegion(int isSuper);
 	int  AddProgramRegion(unsigned int lowaddr, unsigned int highaddr, unsigned int offset);
 	void EndProgramRegion();
 
-	void BeginDataRegion(BOOL isSuper, BOOL isWrite, BOOL isWord);
+	void BeginDataRegion(int isSuper, int isWrite, int isWord);
 	int  AddDataRegion(unsigned int lowaddr, unsigned int highaddr, void* memorycall, void* userdata);
 	void EndDataRegion();
 
@@ -72,33 +72,33 @@ public:
 										// CPUレジスタ取得
 	void FASTCALL SetCPU(const cpu_t *buffer);
 										// CPUレジスタ設定
-	DWORD FASTCALL Exec(int cycle);
+	uint32_t FASTCALL Exec(int cycle);
 										// 実行
-	BOOL FASTCALL Interrupt(int level, int vector);
+	int FASTCALL Interrupt(int level, int vector);
 										// 割り込み
 	void FASTCALL IntAck(int level);
 										// 割り込みACK
 	void FASTCALL IntCancel(int level);
 										// 割り込みキャンセル
-	DWORD FASTCALL GetCycle() const;
+	uint32_t FASTCALL GetCycle() const;
 										// サイクル数取得
-	DWORD FASTCALL GetPC() const;
+	uint32_t FASTCALL GetPC() const;
 										// プログラムカウンタ取得
 	void FASTCALL ResetInst();
 										// RESET命令
-	DWORD FASTCALL GetIOCycle()	const;	// dma.cpp
+	uint32_t FASTCALL GetIOCycle()	const;	// dma.cpp
 										// I/Oサイクル取得
 	void FASTCALL Release();
 										// CPU実行を現命令で強制終了
-	void FASTCALL BusErr(DWORD addr, BOOL read);
+	void FASTCALL BusErr(uint32_t addr, int read);
 										// バスエラー
-	void FASTCALL AddrErr(DWORD addr, BOOL read);
+	void FASTCALL AddrErr(uint32_t addr, int read);
 										// アドレスエラー
-	void FASTCALL BusErrLog(DWORD addr, DWORD stat);
+	void FASTCALL BusErrLog(uint32_t addr, uint32_t stat);
 										// バスエラー記録
-	void FASTCALL AddrErrLog(DWORD addr, DWORD stat);
+	void FASTCALL AddrErrLog(uint32_t addr, uint32_t stat);
 										// アドレスエラー記録
-	void FASTCALL Wait(DWORD cycle);
+	void FASTCALL Wait(uint32_t cycle);
 										// CPUウェイト
 private:
 	cpusub_t sub;

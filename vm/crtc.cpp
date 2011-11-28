@@ -59,7 +59,7 @@ CRTC::CRTC(VM *p) : MemDevice(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL CRTC::Init()
+int FASTCALL CRTC::Init()
 {
 	ASSERT(this);
 
@@ -94,7 +94,9 @@ BOOL FASTCALL CRTC::Init()
 
 	// イベント初期化
 	event.SetDevice(this);
+#if defined(XM6_USE_EVENT_DESC)
 	event.SetDesc("H-Sync");
+#endif
 	event.SetTime(0);
 	scheduler->AddEvent(&event);
 
@@ -208,7 +210,7 @@ void FASTCALL CRTC::Reset()
 //	CRTCリセットデータ
 //
 //---------------------------------------------------------------------------
-const BYTE CRTC::ResetTable[] = {
+const uint8_t CRTC::ResetTable[] = {
 	0x00, 0x89, 0x00, 0x0e, 0x00, 0x1c, 0x00, 0x7c,
 	0x02, 0x37, 0x00, 0x05, 0x00, 0x28, 0x02, 0x28,
 	0x00, 0x1b,
@@ -220,7 +222,7 @@ const BYTE CRTC::ResetTable[] = {
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL CRTC::Save(Fileio *fio, int ver)
+int FASTCALL CRTC::Save(Fileio *fio, int ver)
 {
 	size_t sz;
 
@@ -252,7 +254,7 @@ BOOL FASTCALL CRTC::Save(Fileio *fio, int ver)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL CRTC::Load(Fileio *fio, int ver)
+int FASTCALL CRTC::Load(Fileio *fio, int ver)
 {
 	size_t sz;
 
@@ -306,9 +308,9 @@ void FASTCALL CRTC::ApplyCfg(const Config *config)
 //	バイト読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL CRTC::ReadByte(DWORD addr)
+uint32_t FASTCALL CRTC::ReadByte(uint32_t addr)
 {
-	BYTE data;
+	uint8_t data;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -363,7 +365,7 @@ DWORD FASTCALL CRTC::ReadByte(DWORD addr)
 //	バイト書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL CRTC::WriteByte(DWORD addr, DWORD data)
+void FASTCALL CRTC::WriteByte(uint32_t addr, uint32_t data)
 {
 	int reg;
 
@@ -388,7 +390,7 @@ void FASTCALL CRTC::WriteByte(DWORD addr, DWORD data)
 		if (crtc.reg[addr] == data) {
 			return;
 		}
-		crtc.reg[addr] = (BYTE)data;
+		crtc.reg[addr] = (uint8_t)data;
 
 		// GVRAMアドレス構成
 		if (addr == 0x29) {
@@ -518,9 +520,9 @@ void FASTCALL CRTC::WriteByte(DWORD addr, DWORD data)
 //	読み込みのみ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL CRTC::ReadOnly(DWORD addr) const
+uint32_t FASTCALL CRTC::ReadOnly(uint32_t addr) const
 {
-	BYTE data;
+	uint8_t data;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -579,7 +581,7 @@ void FASTCALL CRTC::GetCRTC(crtc_t *buffer) const
 //	イベントコールバック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL CRTC::Callback(Event* /*ev*/)
+int FASTCALL CRTC::Callback(Event* /*ev*/)
 {
 	ASSERT(this);
 
@@ -758,7 +760,7 @@ void FASTCALL CRTC::ReCalc()
 {
 	int dc;
 	int over;
-	WORD *p;
+uint16_t *p;
 
 	ASSERT(this);
 	ASSERT(crtc.changed);
@@ -779,7 +781,7 @@ void FASTCALL CRTC::ReCalc()
 		crtc.h_front = (crtc.reg[0x0] + 1 - crtc.reg[0x06] - 5) * dc / 100;
 
 		// 垂直(すべてH-Sync単位)
-		p = (WORD *)crtc.reg;
+		p = (uint16_t *)crtc.reg;
 		crtc.v_sync = ((p[4] & 0x3ff) + 1);
 		crtc.v_pulse = ((p[5] & 0x3ff) + 1);
 		crtc.v_back = ((p[6] & 0x3ff) + 1) - crtc.v_pulse;
@@ -915,7 +917,7 @@ void FASTCALL CRTC::VBlank()
 		LOG1(Log::Normal, "グラフィック高速クリア開始 data=%02X", crtc.reg[42]);
 #endif	// CRTC_LOG
 		crtc.fast_clr = 2;
-		gvram->FastSet((DWORD)crtc.reg[42]);
+		gvram->FastSet((uint32_t)crtc.reg[42]);
 		gvram->FastClr(&crtc);
 	}
 
@@ -930,10 +932,10 @@ void FASTCALL CRTC::VBlank()
 //	表示周波数取得
 //
 //---------------------------------------------------------------------------
-void FASTCALL CRTC::GetHVHz(DWORD *h, DWORD *v) const
+void FASTCALL CRTC::GetHVHz(uint32_t *h, uint32_t *v) const
 {
-	DWORD d;
-	DWORD t;
+	uint32_t d;
+	uint32_t t;
 
 	// assert
 	ASSERT(h);
@@ -1007,7 +1009,7 @@ const int CRTC::DotClockTable[16] = {
 //	HRL設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL CRTC::SetHRL(BOOL flag)
+void FASTCALL CRTC::SetHRL(int flag)
 {
 	if (crtc.hrl != flag) {
 		// 次の周期で再計算
@@ -1021,7 +1023,7 @@ void FASTCALL CRTC::SetHRL(BOOL flag)
 //	HRL取得
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL CRTC::GetHRL() const
+int FASTCALL CRTC::GetHRL() const
 {
 	return crtc.hrl;
 }
@@ -1058,12 +1060,12 @@ void FASTCALL CRTC::CheckRaster()
 //---------------------------------------------------------------------------
 void FASTCALL CRTC::TextVRAM()
 {
-	DWORD b;
-	DWORD w;
+	uint32_t b;
+	uint32_t w;
 
 	// 同時アクセス
 	if (crtc.reg[43] & 1) {
-		b = (DWORD)crtc.reg[42];
+		b = (uint32_t)crtc.reg[42];
 		b >>= 4;
 
 		// b4はマルチフラグ
@@ -1076,9 +1078,9 @@ void FASTCALL CRTC::TextVRAM()
 
 	// アクセスマスク
 	if (crtc.reg[43] & 2) {
-		w = (DWORD)crtc.reg[47];
+		w = (uint32_t)crtc.reg[47];
 		w <<= 8;
-		w |= (DWORD)crtc.reg[46];
+		w |= (uint32_t)crtc.reg[46];
 		tvram->SetMask(w);
 	}
 	else {
@@ -1086,6 +1088,6 @@ void FASTCALL CRTC::TextVRAM()
 	}
 
 	// ラスタコピー
-	tvram->SetCopyRaster((DWORD)crtc.reg[45], (DWORD)crtc.reg[44],
-						(DWORD)(crtc.reg[42] & 0x0f));
+	tvram->SetCopyRaster((uint32_t)crtc.reg[45], (uint32_t)crtc.reg[44],
+						(uint32_t)(crtc.reg[42] & 0x0f));
 }

@@ -10,11 +10,6 @@
 #if !defined(cisc_h)
 #define cisc_h
 
-#include <assert.h>
-#include <stdlib.h>
-#include <math.h>
-#include <string.h>
-
 #if defined(__BORLANDC__)
 #pragma warn -8004					// ‘ã“ü‚µ‚½’l‚Íg‚í‚ê‚Ä‚¢‚È‚¢
 #pragma warn -8012					// •„†‚Â‚«‚Æ•„†‚È‚µ‚Ì”äŠr

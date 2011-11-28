@@ -214,7 +214,7 @@
     <ClInclude Include="..\vm\iosc.h" />
     <ClInclude Include="..\vm\keyboard.h" />
     <ClInclude Include="..\vm\log.h" />
-    <ClInclude Include="..\vm\memory.h" />
+    <ClInclude Include="..\vm\memory_xm6.h" />
     <ClInclude Include="..\vm\mercury.h" />
     <ClInclude Include="..\vm\mfp.h" />
     <ClInclude Include="..\vm\midi.h" />

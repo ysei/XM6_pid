@@ -11,7 +11,7 @@
 #include "os.h"
 #include "xm6.h"
 #include "cpu.h"
-#include "memory.h"
+#include "memory_xm6.h"
 #include "vm.h"
 #include "log.h"
 #include "schedule.h"
@@ -51,7 +51,7 @@ DMAC::DMAC(VM *p) : MemDevice(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL DMAC::Init()
+int FASTCALL DMAC::Init()
 {
 	int ch;
 
@@ -122,7 +122,7 @@ void FASTCALL DMAC::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL DMAC::Save(Fileio *fio, int /*ver*/)
+int FASTCALL DMAC::Save(Fileio *fio, int /*ver*/)
 {
 	size_t sz;
 	int i;
@@ -159,7 +159,7 @@ BOOL FASTCALL DMAC::Save(Fileio *fio, int /*ver*/)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL DMAC::Load(Fileio *fio, int /*ver*/)
+int FASTCALL DMAC::Load(Fileio *fio, int /*ver*/)
 {
 	int i;
 	size_t sz;
@@ -216,7 +216,7 @@ void FASTCALL DMAC::ApplyCfg(const Config* /*config*/)
 //	バイト読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL DMAC::ReadByte(DWORD addr)
+uint32_t FASTCALL DMAC::ReadByte(uint32_t addr)
 {
 	int ch;
 
@@ -240,7 +240,7 @@ DWORD FASTCALL DMAC::ReadByte(DWORD addr)
 //	ワード読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL DMAC::ReadWord(DWORD addr)
+uint32_t FASTCALL DMAC::ReadWord(uint32_t addr)
 {
 	int ch;
 
@@ -265,7 +265,7 @@ DWORD FASTCALL DMAC::ReadWord(DWORD addr)
 //	バイト書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL DMAC::WriteByte(DWORD addr, DWORD data)
+void FASTCALL DMAC::WriteByte(uint32_t addr, uint32_t data)
 {
 	int ch;
 
@@ -290,7 +290,7 @@ void FASTCALL DMAC::WriteByte(DWORD addr, DWORD data)
 //	ワード書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL DMAC::WriteWord(DWORD addr, DWORD data)
+void FASTCALL DMAC::WriteWord(uint32_t addr, uint32_t data)
 {
 	int ch;
 
@@ -308,8 +308,8 @@ void FASTCALL DMAC::WriteWord(DWORD addr, DWORD data)
 	addr &= 0x3f;
 
 	// チャネル単位で行う
-	WriteDMA(ch, addr, (BYTE)(data >> 8));
-	WriteDMA(ch, addr + 1, (BYTE)data);
+	WriteDMA(ch, addr, (uint8_t)(data >> 8));
+	WriteDMA(ch, addr + 1, (uint8_t)data);
 }
 
 //---------------------------------------------------------------------------
@@ -317,7 +317,7 @@ void FASTCALL DMAC::WriteWord(DWORD addr, DWORD data)
 //	読み込みのみ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL DMAC::ReadOnly(DWORD addr) const
+uint32_t FASTCALL DMAC::ReadOnly(uint32_t addr) const
 {
 	int ch;
 
@@ -339,9 +339,9 @@ DWORD FASTCALL DMAC::ReadOnly(DWORD addr) const
 //	※上位ゼロ保証
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL DMAC::ReadDMA(int ch, DWORD addr) const
+uint32_t FASTCALL DMAC::ReadDMA(int ch, uint32_t addr) const
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((ch >= 0) && (ch <= 3));
@@ -374,45 +374,45 @@ DWORD FASTCALL DMAC::ReadDMA(int ch, DWORD addr) const
 
 		// MTC
 		case 0x0a:
-			return (BYTE)(dma[ch].mtc >> 8);
+			return (uint8_t)(dma[ch].mtc >> 8);
 		case 0x0b:
-			return (BYTE)dma[ch].mtc;
+			return (uint8_t)dma[ch].mtc;
 
 		// MAR
 		case 0x0c:
 			return 0;
 		case 0x0d:
-			return (BYTE)(dma[ch].mar >> 16);
+			return (uint8_t)(dma[ch].mar >> 16);
 		case 0x0e:
-			return (BYTE)(dma[ch].mar >> 8);
+			return (uint8_t)(dma[ch].mar >> 8);
 		case 0x0f:
-			return (BYTE)dma[ch].mar;
+			return (uint8_t)dma[ch].mar;
 
 		// DAR
 		case 0x14:
 			return 0;
 		case 0x15:
-			return (BYTE)(dma[ch].dar >> 16);
+			return (uint8_t)(dma[ch].dar >> 16);
 		case 0x16:
-			return (BYTE)(dma[ch].dar >> 8);
+			return (uint8_t)(dma[ch].dar >> 8);
 		case 0x17:
-			return (BYTE)dma[ch].dar;
+			return (uint8_t)dma[ch].dar;
 
 		// BTC
 		case 0x1a:
-			return (BYTE)(dma[ch].btc >> 8);
+			return (uint8_t)(dma[ch].btc >> 8);
 		case 0x1b:
-			return (BYTE)dma[ch].btc;
+			return (uint8_t)dma[ch].btc;
 
 		// BAR
 		case 0x1c:
 			return 0;
 		case 0x1d:
-			return (BYTE)(dma[ch].bar >> 16);
+			return (uint8_t)(dma[ch].bar >> 16);
 		case 0x1e:
-			return (BYTE)(dma[ch].bar >> 8);
+			return (uint8_t)(dma[ch].bar >> 8);
 		case 0x1f:
-			return (BYTE)dma[ch].bar;
+			return (uint8_t)dma[ch].bar;
 
 		// NIV
 		case 0x25:
@@ -462,7 +462,7 @@ DWORD FASTCALL DMAC::ReadDMA(int ch, DWORD addr) const
 //	※上位ゼロ保証を要求
 //
 //---------------------------------------------------------------------------
-void FASTCALL DMAC::WriteDMA(int ch, DWORD addr, DWORD data)
+void FASTCALL DMAC::WriteDMA(int ch, uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((ch >= 0) && (ch <= 3));
@@ -612,7 +612,7 @@ void FASTCALL DMAC::WriteDMA(int ch, DWORD addr, DWORD data)
 //	DCRセット
 //
 //---------------------------------------------------------------------------
-void FASTCALL DMAC::SetDCR(int ch, DWORD data)
+void FASTCALL DMAC::SetDCR(int ch, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((ch >= 0) && (ch <= 3));
@@ -653,9 +653,9 @@ void FASTCALL DMAC::SetDCR(int ch, DWORD data)
 //	DCR取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL DMAC::GetDCR(int ch) const
+uint32_t FASTCALL DMAC::GetDCR(int ch) const
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((ch >= 0) && (ch <= 3));
@@ -682,7 +682,7 @@ DWORD FASTCALL DMAC::GetDCR(int ch) const
 //	OCRセット
 //
 //---------------------------------------------------------------------------
-void FASTCALL DMAC::SetOCR(int ch, DWORD data)
+void FASTCALL DMAC::SetOCR(int ch, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((ch >= 0) && (ch <= 3));
@@ -728,9 +728,9 @@ void FASTCALL DMAC::SetOCR(int ch, DWORD data)
 //	OCR取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL DMAC::GetOCR(int ch) const
+uint32_t FASTCALL DMAC::GetOCR(int ch) const
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((ch >= 0) && (ch <= 3));
@@ -761,7 +761,7 @@ DWORD FASTCALL DMAC::GetOCR(int ch) const
 //	SCRセット
 //
 //---------------------------------------------------------------------------
-void FASTCALL DMAC::SetSCR(int ch, DWORD data)
+void FASTCALL DMAC::SetSCR(int ch, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((ch >= 0) && (ch <= 3));
@@ -785,9 +785,9 @@ void FASTCALL DMAC::SetSCR(int ch, DWORD data)
 //	SCR取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL DMAC::GetSCR(int ch) const
+uint32_t FASTCALL DMAC::GetSCR(int ch) const
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((ch >= 0) && (ch <= 3));
@@ -807,7 +807,7 @@ DWORD FASTCALL DMAC::GetSCR(int ch) const
 //	CCRセット
 //
 //---------------------------------------------------------------------------
-void FASTCALL DMAC::SetCCR(int ch, DWORD data)
+void FASTCALL DMAC::SetCCR(int ch, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((ch >= 0) && (ch <= 3));
@@ -853,9 +853,9 @@ void FASTCALL DMAC::SetCCR(int ch, DWORD data)
 //	CCR取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL DMAC::GetCCR(int ch) const
+uint32_t FASTCALL DMAC::GetCCR(int ch) const
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((ch >= 0) && (ch <= 3));
@@ -883,7 +883,7 @@ DWORD FASTCALL DMAC::GetCCR(int ch) const
 //	CSRセット
 //
 //---------------------------------------------------------------------------
-void FASTCALL DMAC::SetCSR(int ch, DWORD data)
+void FASTCALL DMAC::SetCSR(int ch, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((ch >= 0) && (ch <= 3));
@@ -918,9 +918,9 @@ void FASTCALL DMAC::SetCSR(int ch, DWORD data)
 //	CSR取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL DMAC::GetCSR(int ch) const
+uint32_t FASTCALL DMAC::GetCSR(int ch) const
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((ch >= 0) && (ch <= 3));
@@ -960,11 +960,11 @@ DWORD FASTCALL DMAC::GetCSR(int ch) const
 //	GCR設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL DMAC::SetGCR(DWORD data)
+void FASTCALL DMAC::SetGCR(uint32_t data)
 {
 	int ch;
-	DWORD bt;
-	DWORD br;
+	uint32_t bt;
+	uint32_t br;
 
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1263,7 +1263,7 @@ void FASTCALL DMAC::AbortDMA(int ch)
 //---------------------------------------------------------------------------
 void FASTCALL DMAC::LoadDMA(int ch)
 {
-	DWORD base;
+	uint32_t base;
 
 	ASSERT(this);
 	ASSERT((ch >= 0) && (ch <= 3));
@@ -1331,7 +1331,7 @@ void FASTCALL DMAC::LoadDMA(int ch)
 //	DMAエラー
 //
 //---------------------------------------------------------------------------
-void FASTCALL DMAC::ErrorDMA(int ch, DWORD code)
+void FASTCALL DMAC::ErrorDMA(int ch, uint32_t code)
 {
 	ASSERT(this);
 	ASSERT((ch >= 0) && (ch <= 3));
@@ -1364,7 +1364,7 @@ void FASTCALL DMAC::ErrorDMA(int ch, DWORD code)
 //---------------------------------------------------------------------------
 void FASTCALL DMAC::Interrupt()
 {
-	DWORD cp;
+	uint32_t cp;
 	int ch;
 
 	ASSERT(this);
@@ -1392,7 +1392,7 @@ void FASTCALL DMAC::Interrupt()
 #if defined(DMAC_LOG)
 					LOG1(Log::Normal, "チャネル%d エラー割り込み", ch);
 #endif	// DMAC_LOG
-					cpu->Interrupt(3, (BYTE)dma[ch].eiv);
+					cpu->Interrupt(3, (uint8_t)dma[ch].eiv);
 					dmactrl.vector = (int)dma[ch].eiv;
 				}
 				return;
@@ -1408,7 +1408,7 @@ void FASTCALL DMAC::Interrupt()
 #if defined(DMAC_LOG)
 					LOG1(Log::Normal, "チャネル%d 通常割り込み", ch);
 #endif	// DMAC_LOG
-					cpu->Interrupt(3, (BYTE)dma[ch].niv);
+					cpu->Interrupt(3, (uint8_t)dma[ch].niv);
 					dmactrl.vector = (int)dma[ch].niv;
 				}
 				return;
@@ -1423,7 +1423,7 @@ void FASTCALL DMAC::Interrupt()
 #if defined(DMAC_LOG)
 					LOG1(Log::Normal, "チャネル%d PCL割り込み", ch);
 #endif	// DMAC_LOG
-					cpu->Interrupt(3, (BYTE)dma[ch].niv);
+					cpu->Interrupt(3, (uint8_t)dma[ch].niv);
 					dmactrl.vector = (int)dma[ch].niv;
 				}
 				return;
@@ -1499,7 +1499,7 @@ void FASTCALL DMAC::GetDMACtrl(dmactrl_t *buffer) const
 //	DMA転送中か
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL DMAC::IsDMA() const
+int FASTCALL DMAC::IsDMA() const
 {
 	ASSERT(this);
 
@@ -1517,7 +1517,7 @@ BOOL FASTCALL DMAC::IsDMA() const
 //	DMA転送可能か
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL DMAC::IsAct(int ch) const
+int FASTCALL DMAC::IsAct(int ch) const
 {
 	ASSERT(this);
 	ASSERT((ch >= 0) && (ch <= 3));
@@ -1536,7 +1536,7 @@ BOOL FASTCALL DMAC::IsAct(int ch) const
 //	DMAバスエラー
 //
 //---------------------------------------------------------------------------
-void FASTCALL DMAC::BusErr(DWORD addr, BOOL read)
+void FASTCALL DMAC::BusErr(uint32_t addr, int read)
 {
 	ASSERT(this);
 	ASSERT(addr <= 0xffffff);
@@ -1566,7 +1566,7 @@ void FASTCALL DMAC::BusErr(DWORD addr, BOOL read)
 //	DMAアドレスエラー
 //
 //---------------------------------------------------------------------------
-void FASTCALL DMAC::AddrErr(DWORD addr, BOOL read)
+void FASTCALL DMAC::AddrErr(uint32_t addr, int read)
 {
 	ASSERT(this);
 	ASSERT(addr <= 0xffffff);
@@ -1596,7 +1596,7 @@ void FASTCALL DMAC::AddrErr(DWORD addr, BOOL read)
 //	ベクタ取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL DMAC::GetVector(int type) const
+uint32_t FASTCALL DMAC::GetVector(int type) const
 {
 	ASSERT(this);
 	ASSERT((type >= 0) && (type < 8));
@@ -1617,7 +1617,7 @@ DWORD FASTCALL DMAC::GetVector(int type) const
 //	DMA外部リクエスト
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL DMAC::ReqDMA(int ch)
+int FASTCALL DMAC::ReqDMA(int ch)
 {
 	ASSERT(this);
 	ASSERT((ch >= 0) && (ch <= 3));
@@ -1640,15 +1640,15 @@ BOOL FASTCALL DMAC::ReqDMA(int ch)
 //	オートリクエスト
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL DMAC::AutoDMA(DWORD cycle)
+uint32_t FASTCALL DMAC::AutoDMA(uint32_t cycle)
 {
 	int i;
 	int ch;
 	int mul;
 	int remain;
 	int used;
-	DWORD backup;
-	BOOL flag;
+	uint32_t backup;
+	int flag;
 
 	ASSERT(this);
 
@@ -1807,9 +1807,9 @@ DWORD FASTCALL DMAC::AutoDMA(DWORD cycle)
 //	DMA1回転送
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL DMAC::TransDMA(int ch)
+int FASTCALL DMAC::TransDMA(int ch)
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((ch >= 0) && (ch <= 3));
@@ -1828,11 +1828,11 @@ BOOL FASTCALL DMAC::TransDMA(int ch)
 		case 7:
 			// SCSIディスク ベンチマーク(dskbench.x)より
 			if (dma[ch].dir) {
-				memory->WriteByte(dma[ch].mar, (BYTE)(memory->ReadByte(dma[ch].dar)));
+				memory->WriteByte(dma[ch].mar, (uint8_t)(memory->ReadByte(dma[ch].dar)));
 				scheduler->Wait(11);
 			}
 			else {
-				memory->WriteByte(dma[ch].dar, (BYTE)(memory->ReadByte(dma[ch].mar)));
+				memory->WriteByte(dma[ch].dar, (uint8_t)(memory->ReadByte(dma[ch].mar)));
 				scheduler->Wait(11);
 			}
 			break;
@@ -1841,11 +1841,11 @@ BOOL FASTCALL DMAC::TransDMA(int ch)
 		// Wait12:パロディウスだ!、Wait?:Moon Fighter
 		case 4:
 			if (dma[ch].dir) {
-				memory->WriteByte(dma[ch].mar, (BYTE)(memory->ReadByte(dma[ch].dar)));
+				memory->WriteByte(dma[ch].mar, (uint8_t)(memory->ReadByte(dma[ch].dar)));
 				scheduler->Wait(10);
 			}
 			else {
-				memory->WriteByte(dma[ch].dar, (BYTE)(memory->ReadByte(dma[ch].mar)));
+				memory->WriteByte(dma[ch].dar, (uint8_t)(memory->ReadByte(dma[ch].mar)));
 				scheduler->Wait(10);
 			}
 			break;
@@ -1853,16 +1853,16 @@ BOOL FASTCALL DMAC::TransDMA(int ch)
 		// 8bit, ワード
 		case 1:
 			if (dma[ch].dir) {
-				data = (BYTE)(memory->ReadByte(dma[ch].dar));
+				data = (uint8_t)(memory->ReadByte(dma[ch].dar));
 				data <<= 8;
-				data |= (BYTE)(memory->ReadByte(dma[ch].dar + 2));
+				data |= (uint8_t)(memory->ReadByte(dma[ch].dar + 2));
 				memory->WriteWord(dma[ch].mar, data);
 				scheduler->Wait(19);
 			}
 			else {
 				data = memory->ReadWord(dma[ch].mar);
-				memory->WriteByte(dma[ch].dar, (BYTE)(data >> 8));
-				memory->WriteByte(dma[ch].dar + 2, (BYTE)data);
+				memory->WriteByte(dma[ch].dar, (uint8_t)(data >> 8));
+				memory->WriteByte(dma[ch].dar + 2, (uint8_t)data);
 				scheduler->Wait(19);
 			}
 			break;
@@ -1870,25 +1870,25 @@ BOOL FASTCALL DMAC::TransDMA(int ch)
 		// 8bit, ロングワード
 		case 2:
 			if (dma[ch].dir) {
-				data = (BYTE)(memory->ReadByte(dma[ch].dar));
+				data = (uint8_t)(memory->ReadByte(dma[ch].dar));
 				data <<= 8;
-				data |= (BYTE)(memory->ReadByte(dma[ch].dar + 2));
+				data |= (uint8_t)(memory->ReadByte(dma[ch].dar + 2));
 				data <<= 8;
-				data |= (BYTE)(memory->ReadByte(dma[ch].dar + 4));
+				data |= (uint8_t)(memory->ReadByte(dma[ch].dar + 4));
 				data <<= 8;
-				data |= (BYTE)(memory->ReadByte(dma[ch].dar + 6));
-				memory->WriteWord(dma[ch].mar, (WORD)(data >> 16));
-				memory->WriteWord(dma[ch].mar + 2, (WORD)data);
+				data |= (uint8_t)(memory->ReadByte(dma[ch].dar + 6));
+				memory->WriteWord(dma[ch].mar, (uint16_t)(data >> 16));
+				memory->WriteWord(dma[ch].mar + 2, (uint16_t)data);
 				scheduler->Wait(38);
 			}
 			else {
 				data = memory->ReadWord(dma[ch].mar);
 				data <<= 16;
-				data |= (WORD)(memory->ReadWord(dma[ch].mar + 2));
-				memory->WriteByte(dma[ch].dar, (BYTE)(data >> 24));
-				memory->WriteByte(dma[ch].dar + 2, (BYTE)(data >> 16));
-				memory->WriteByte(dma[ch].dar + 4, (BYTE)(data >> 8));
-				memory->WriteByte(dma[ch].dar + 6, (BYTE)data);
+				data |= (uint16_t)(memory->ReadWord(dma[ch].mar + 2));
+				memory->WriteByte(dma[ch].dar, (uint8_t)(data >> 24));
+				memory->WriteByte(dma[ch].dar + 2, (uint8_t)(data >> 16));
+				memory->WriteByte(dma[ch].dar + 4, (uint8_t)(data >> 8));
+				memory->WriteByte(dma[ch].dar + 6, (uint8_t)data);
 				scheduler->Wait(38);
 			}
 			break;
@@ -1898,12 +1898,12 @@ BOOL FASTCALL DMAC::TransDMA(int ch)
 			// あまり遅くするとFM音源割り込みがひきずられる(グラディウスII)
 			if (dma[ch].dir) {
 				data = memory->ReadWord(dma[ch].dar);
-				memory->WriteWord(dma[ch].mar, (WORD)data);
+				memory->WriteWord(dma[ch].mar, (uint16_t)data);
 				scheduler->Wait(10);
 			}
 			else {
 				data = memory->ReadWord(dma[ch].mar);
-				memory->WriteWord(dma[ch].dar, (WORD)data);
+				memory->WriteWord(dma[ch].dar, (uint16_t)data);
 				scheduler->Wait(10);
 			}
 			break;
@@ -1913,17 +1913,17 @@ BOOL FASTCALL DMAC::TransDMA(int ch)
 			if (dma[ch].dir) {
 				data = memory->ReadWord(dma[ch].dar);
 				data <<= 16;
-				data |= (WORD)(memory->ReadWord(dma[ch].dar + 2));
-				memory->WriteWord(dma[ch].mar, (WORD)(data >> 16));
-				memory->WriteWord(dma[ch].mar + 2, (WORD)data);
+				data |= (uint16_t)(memory->ReadWord(dma[ch].dar + 2));
+				memory->WriteWord(dma[ch].mar, (uint16_t)(data >> 16));
+				memory->WriteWord(dma[ch].mar + 2, (uint16_t)data);
 				scheduler->Wait(20);
 			}
 			else {
 				data = memory->ReadWord(dma[ch].mar);
 				data <<= 16;
-				data |= (WORD)memory->ReadWord(dma[ch].mar + 2);
-				memory->WriteWord(dma[ch].dar, (WORD)(data >> 16));
-				memory->WriteWord(dma[ch].dar + 2, (WORD)data);
+				data |= (uint16_t)memory->ReadWord(dma[ch].mar + 2);
+				memory->WriteWord(dma[ch].dar, (uint16_t)(data >> 16));
+				memory->WriteWord(dma[ch].dar + 2, (uint16_t)data);
 				scheduler->Wait(20);
 			}
 			break;

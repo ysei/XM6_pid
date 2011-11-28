@@ -22,76 +22,76 @@ class Sprite : public MemDevice
 public:
 	// 内部データ定義
 	typedef struct {
-		BOOL connect;					// アクセス可能フラグ
-		BOOL disp;						// 表示(ウェイト)フラグ
-		BYTE *mem;						// スプライトメモリ
-		BYTE *pcg;						// スプライトPCGエリア
+		int connect;					// アクセス可能フラグ
+		int disp;						// 表示(ウェイト)フラグ
+		uint8_t *mem;						// スプライトメモリ
+		uint8_t *pcg;						// スプライトPCGエリア
 
-		BOOL bg_on[2];					// BG表示ON
-		DWORD bg_area[2];				// BGデータエリア
-		DWORD bg_scrlx[2];				// BGスクロールX
-		DWORD bg_scrly[2];				// BGスクロールY
-		BOOL bg_size;					// BGサイズ
+		int bg_on[2];					// BG表示ON
+		uint32_t bg_area[2];				// BGデータエリア
+		uint32_t bg_scrlx[2];				// BGスクロールX
+		uint32_t bg_scrly[2];				// BGスクロールY
+		int bg_size;					// BGサイズ
 
-		DWORD h_total;					// 水平トータル期間
-		DWORD h_disp;					// 水平表示期間
-		DWORD v_disp;					// 垂直表示期間
-		BOOL lowres;					// 15kHzモード
-		DWORD h_res;					// 水平解像度
-		DWORD v_res;					// 垂直解像度
+		uint32_t h_total;					// 水平トータル期間
+		uint32_t h_disp;					// 水平表示期間
+		uint32_t v_disp;					// 垂直表示期間
+		int lowres;					// 15kHzモード
+		uint32_t h_res;					// 水平解像度
+		uint32_t v_res;					// 垂直解像度
 	} sprite_t;
 
 public:
 	// 基本ファンクション
 	Sprite(VM *p);
 										// コンストラクタ
-	BOOL FASTCALL Init();
+	int FASTCALL Init();
 										// 初期化
 	void FASTCALL Cleanup();
 										// クリーンアップ
 	void FASTCALL Reset();
 										// リセット
-	BOOL FASTCALL Save(Fileio *fio, int ver);
+	int FASTCALL Save(Fileio *fio, int ver);
 										// セーブ
-	BOOL FASTCALL Load(Fileio *fio, int ver);
+	int FASTCALL Load(Fileio *fio, int ver);
 										// ロード
 	void FASTCALL ApplyCfg(const Config *config);
 										// 設定適用
 
 	// メモリデバイス
-	DWORD FASTCALL ReadByte(DWORD addr);
+	uint32_t FASTCALL ReadByte(uint32_t addr);
 										// バイト読み込み
-	DWORD FASTCALL ReadWord(DWORD addr);
+	uint32_t FASTCALL ReadWord(uint32_t addr);
 										// ワード読み込み
-	void FASTCALL WriteByte(DWORD addr, DWORD data);
+	void FASTCALL WriteByte(uint32_t addr, uint32_t data);
 										// バイト書き込み
-	void FASTCALL WriteWord(DWORD addr, DWORD data);
+	void FASTCALL WriteWord(uint32_t addr, uint32_t data);
 										// ワード書き込み
-	DWORD FASTCALL ReadOnly(DWORD addr) const;
+	uint32_t FASTCALL ReadOnly(uint32_t addr) const;
 										// 読み込みのみ
 
 	// 外部API
-	void FASTCALL Connect(BOOL con)		{ spr.connect = con; }
+	void FASTCALL Connect(int con)		{ spr.connect = con; }
 										// 接続
-	BOOL FASTCALL IsConnect() const		{ return spr.connect; }
+	int FASTCALL IsConnect() const		{ return spr.connect; }
 										// 接続状況取得
-	BOOL FASTCALL IsDisplay() const		{ return spr.disp; }
+	int FASTCALL IsDisplay() const		{ return spr.disp; }
 										// 表示状況取得
 	void FASTCALL GetSprite(sprite_t *buffer) const;
 										// 内部データ取得
-	const BYTE* FASTCALL GetMem() const;
+	const uint8_t* FASTCALL GetMem() const;
 										// メモリエリア取得
-	const BYTE* FASTCALL GetPCG() const;
+	const uint8_t* FASTCALL GetPCG() const;
 										// PCGエリア取得 
 
 private:
-	void FASTCALL Control(DWORD addr, DWORD ctrl);
+	void FASTCALL Control(uint32_t addr, uint32_t ctrl);
 										// コントロール
 	sprite_t spr;
 										// 内部データ
 	Render *render;
 										// レンダラ
-	BYTE *sprite;
+	uint8_t *sprite;
 										// スプライトRAM(64KB)
 };
 

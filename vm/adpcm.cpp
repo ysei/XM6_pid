@@ -56,7 +56,7 @@ ADPCM::ADPCM(VM *p) : MemDevice(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL ADPCM::Init()
+int FASTCALL ADPCM::Init()
 {
 	ASSERT(this);
 
@@ -72,7 +72,7 @@ BOOL FASTCALL ADPCM::Init()
 
 	// バッファ確保
 	try {
-		adpcmbuf = new DWORD[ BufMax * 2 ];
+		adpcmbuf = new uint32_t[ BufMax * 2 ];
 	}
 	catch (...) {
 		return FALSE;
@@ -80,11 +80,13 @@ BOOL FASTCALL ADPCM::Init()
 	if (!adpcmbuf) {
 		return FALSE;
 	}
-	memset(adpcmbuf, 0, sizeof(DWORD) * (BufMax * 2));
+	memset(adpcmbuf, 0, sizeof(uint32_t) * (BufMax * 2));
 
 	// イベント作成
 	event.SetDevice(this);
+#if defined(XM6_USE_EVENT_DESC)
 	event.SetDesc("Sampling");
+#endif
 	event.SetUser(0);
 	event.SetTime(0);
 	scheduler->AddEvent(&event);
@@ -162,7 +164,9 @@ void FASTCALL ADPCM::Reset()
 	// イベントを止める
 	event.SetUser(0);
 	event.SetTime(0);
+#if defined(XM6_USE_EVENT_DESC)
 	event.SetDesc("Sampling");
+#endif
 }
 
 //---------------------------------------------------------------------------
@@ -170,7 +174,7 @@ void FASTCALL ADPCM::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL ADPCM::Save(Fileio *fio, int ver)
+int FASTCALL ADPCM::Save(Fileio *fio, int ver)
 {
 	size_t sz;
 
@@ -204,7 +208,7 @@ BOOL FASTCALL ADPCM::Save(Fileio *fio, int ver)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL ADPCM::Load(Fileio *fio, int ver)
+int FASTCALL ADPCM::Load(Fileio *fio, int ver)
 {
 	size_t sz;
 
@@ -296,7 +300,7 @@ void FASTCALL ADPCM::AssertDiag() const
 //	バイト読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL ADPCM::ReadByte(DWORD addr)
+uint32_t FASTCALL ADPCM::ReadByte(uint32_t addr)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -340,7 +344,7 @@ DWORD FASTCALL ADPCM::ReadByte(DWORD addr)
 //	ワード読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL ADPCM::ReadWord(DWORD addr)
+uint32_t FASTCALL ADPCM::ReadWord(uint32_t addr)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -355,7 +359,7 @@ DWORD FASTCALL ADPCM::ReadWord(DWORD addr)
 //	バイト書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL ADPCM::WriteByte(DWORD addr, DWORD data)
+void FASTCALL ADPCM::WriteByte(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -409,7 +413,7 @@ void FASTCALL ADPCM::WriteByte(DWORD addr, DWORD data)
 //	ワード書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL ADPCM::WriteWord(DWORD addr, DWORD data)
+void FASTCALL ADPCM::WriteWord(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -417,7 +421,7 @@ void FASTCALL ADPCM::WriteWord(DWORD addr, DWORD data)
 	ASSERT(data < 0x10000);
 	ASSERT_DIAG();
 
-	WriteByte(addr + 1, (BYTE)data);
+	WriteByte(addr + 1, (uint8_t)data);
 }
 
 //---------------------------------------------------------------------------
@@ -425,7 +429,7 @@ void FASTCALL ADPCM::WriteWord(DWORD addr, DWORD data)
 //	読み込みのみ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL ADPCM::ReadOnly(DWORD addr) const
+uint32_t FASTCALL ADPCM::ReadOnly(uint32_t addr) const
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -479,11 +483,10 @@ void FASTCALL ADPCM::GetADPCM(adpcm_t *buffer)
 //	イベントコールバック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL ADPCM::Callback(Event *ev)
+int FASTCALL ADPCM::Callback(Event *ev)
 {
-	BOOL valid;
-	DWORD num;
-	char string[64];
+	int valid;
+	uint32_t num;
 
 	ASSERT(this);
 	ASSERT(ev);
@@ -534,8 +537,13 @@ BOOL FASTCALL ADPCM::Callback(Event *ev)
 		if (ev->GetTime() == adpcm.speed) {
 			return TRUE;
 		}
-		sprintf(string, "Sampling %dHz", (2 * 1000 * 1000) / adpcm.speed);
-		ev->SetDesc(string);
+#if defined(XM6_USE_EVENT_DESC)
+		{
+			char string[64];
+			sprintf(string, "Sampling %dHz", (2 * 1000 * 1000) / adpcm.speed);
+			ev->SetDesc(string);
+		}
+#endif
 		ev->SetTime(adpcm.speed);
 		return TRUE;
 	}
@@ -547,8 +555,13 @@ BOOL FASTCALL ADPCM::Callback(Event *ev)
 	if (ev->GetTime() == adpcm.speed) {
 		return TRUE;
 	}
-	sprintf(string, "Sampling %dHz", (2 * 1000 * 1000) / adpcm.speed);
-	ev->SetDesc(string);
+#if defined(XM6_USE_EVENT_DESC)
+	{
+		char string[64];
+		sprintf(string, "Sampling %dHz", (2 * 1000 * 1000) / adpcm.speed);
+		ev->SetDesc(string);
+	}
+#endif
 	ev->SetTime(adpcm.speed);
 	return TRUE;
 }
@@ -558,7 +571,7 @@ BOOL FASTCALL ADPCM::Callback(Event *ev)
 //	基準クロック指定
 //
 //---------------------------------------------------------------------------
-void FASTCALL ADPCM::SetClock(DWORD clk)
+void FASTCALL ADPCM::SetClock(uint32_t clk)
 {
 	ASSERT(this);
 	ASSERT((clk == 4) || (clk == 8));
@@ -578,7 +591,7 @@ void FASTCALL ADPCM::SetClock(DWORD clk)
 //	クロック比率指定
 //
 //---------------------------------------------------------------------------
-void FASTCALL ADPCM::SetRatio(DWORD ratio)
+void FASTCALL ADPCM::SetRatio(uint32_t ratio)
 {
 	ASSERT(this);
 	ASSERT((ratio >= 0) || (ratio <= 3));
@@ -606,7 +619,7 @@ void FASTCALL ADPCM::SetRatio(DWORD ratio)
 //	パンポット指定
 //
 //---------------------------------------------------------------------------
-void FASTCALL ADPCM::SetPanpot(DWORD panpot)
+void FASTCALL ADPCM::SetPanpot(uint32_t panpot)
 {
 	ASSERT(this);
 	ASSERT((panpot >= 0) || (panpot <= 3));
@@ -647,8 +660,6 @@ void FASTCALL ADPCM::CalcSpeed()
 //---------------------------------------------------------------------------
 void FASTCALL ADPCM::Start(int type)
 {
-	char string[64];
-
 	ASSERT(this);
 	ASSERT((type == 0) || (type == 1));
 	ASSERT_DIAG();
@@ -667,8 +678,11 @@ void FASTCALL ADPCM::Start(int type)
 	event.SetUser(type);
 
 	// ここで必ず時間設定(実機とは異なる可能性があるが、FM音源との同期を優先)
+#if defined(XM6_USE_EVENT_DESC)
+	char string[64];
 	sprintf(string, "Sampling %dHz", (2 * 1000 * 1000) / adpcm.speed);
 	event.SetDesc(string);
+#endif
 	event.SetTime(adpcm.speed);
 
 	// 初回のイベントをここで実行(FM音源との同期をとる特別措置)
@@ -727,7 +741,7 @@ const int ADPCM::OffsetTable[] = {
 //	デコード
 //
 //---------------------------------------------------------------------------
-void FASTCALL ADPCM::Decode(int data, int num, BOOL valid)
+void FASTCALL ADPCM::Decode(int data, int num, int valid)
 {
 	int i;
 	int store;
@@ -850,7 +864,7 @@ void FASTCALL ADPCM::Decode(int data, int num, BOOL valid)
 //	合成イネーブル
 //
 //---------------------------------------------------------------------------
-void FASTCALL ADPCM::Enable(BOOL enable)
+void FASTCALL ADPCM::Enable(int enable)
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -863,7 +877,7 @@ void FASTCALL ADPCM::Enable(BOOL enable)
 //	バッファ初期化
 //
 //---------------------------------------------------------------------------
-void FASTCALL ADPCM::InitBuf(DWORD rate)
+void FASTCALL ADPCM::InitBuf(uint32_t rate)
 {
 	ASSERT(this);
 	ASSERT(rate > 0);
@@ -894,14 +908,14 @@ void FASTCALL ADPCM::InitBuf(DWORD rate)
 //	バッファからデータ取得
 //
 //---------------------------------------------------------------------------
-void FASTCALL ADPCM::GetBuf(DWORD *buffer, int samples)
+void FASTCALL ADPCM::GetBuf(uint32_t *buffer, int samples)
 {
 	int i;
 	int j;
 	int l;
 	int r;
 	int *ptr;
-	DWORD point;
+	uint32_t point;
 
 	ASSERT(this);
 	ASSERT(buffer);
@@ -1088,8 +1102,22 @@ void FASTCALL ADPCM::MakeTable()
 
 	// テーブル作成(floorで丸めた方がpanic等で良い結果が得られる)
 	p = DiffTable;
+
 	for (i=0; i<49; i++) {
+#if 1
+		static const int baseTbl[49] = {
+			16,17,19,21,23,25,28,31,
+			34,37,41,45,50,55,60,66,
+			73,80,88,97,107,118,130,143,
+			157,173,190,209,230,253,279,307,
+			337,371,408,449,494,544,598,658,
+			724,796,876,963,1060,1166,1282,1411,
+			1552,
+		};
+		base = baseTbl[i];
+#else
 		base = (int)floor(16.0 * pow(1.1, i));
+#endif
 
 		// 演算もすべてintで行う
 		for (j=0; j<16; j++) {
@@ -1120,16 +1148,32 @@ void FASTCALL ADPCM::MakeTable()
 //---------------------------------------------------------------------------
 void FASTCALL ADPCM::SetVolume(int volume)
 {
-	double offset;
-	double vol;
-
 	ASSERT(this);
 	ASSERT((volume >= 0) && (volume < 100));
 
+#if 1
+	static const short volTbl[100] = {
+		3269,3306,3345,3383,3423,3462,3502,3543,3584,3625,
+		3667,3710,3753,3796,3840,3885,3930,3975,4021,4068,
+		4115,4163,4211,4260,4309,4359,4409,4460,4512,4564,
+		4617,4671,4725,4779,4835,4891,4947,5005,5063,5121,
+		5181,5241,5301,5363,5425,5488,5551,5615,5680,5746,
+		5813,5880,5948,6017,6087,6157,6229,6301,6374,6447,
+		6522,6598,6674,6751,6829,6909,6989,7070,7151,7234,
+		7318,7403,7488,7575,7663,7752,7841,7932,8024,8117,
+		8211,8306,8402,8500,8598,8698,8798,8900,9003,9107,
+		9213,9320,9428,9537,9647,9759,9872,9986,10102,10219,
+	};
+	adpcm.vol = volTbl[volume];
+#else
+	double offset;
+	double vol;
+
 	// 16384 * 10^((volume-140) / 200)を算出、セット
-	offset = (double)(volume - 140);
+	offset = (double)(volume - 140);		// offset = [-40,60]
 	offset /= (double)200.0;
 	vol = pow((double)10.0, offset);
 	vol *= (double)16384.0;
 	adpcm.vol = int(vol);
+#endif
 }

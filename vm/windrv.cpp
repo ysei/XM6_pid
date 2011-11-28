@@ -13,7 +13,7 @@
 #include "vm.h"
 #include "log.h"
 #include "schedule.h"
-#include "memory.h"
+#include "memory_xm6.h"
 #include "cpu.h"
 #include "config.h"
 
@@ -48,7 +48,7 @@ Windrv::Windrv(VM *p) : MemDevice(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Windrv::Init()
+int FASTCALL Windrv::Init()
 {
 	return MemDevice::Init();
 }
@@ -78,12 +78,12 @@ void FASTCALL Windrv::Reset()
 //	バイト読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL Windrv::ReadByte(DWORD addr)
+uint32_t FASTCALL Windrv::ReadByte(uint32_t addr)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
 
-	DWORD result;
+	uint32_t result;
 
 	if (addr == 0xE9F001) {
 		// Port#1
@@ -103,12 +103,12 @@ DWORD FASTCALL Windrv::ReadByte(DWORD addr)
 //	読み込みのみ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL Windrv::ReadOnly(DWORD addr) const
+uint32_t FASTCALL Windrv::ReadOnly(uint32_t addr) const
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
 
-	DWORD result;
+	uint32_t result;
 
 	// 識別ポート以外は-1
 	if(addr == 0xE9F000) {
@@ -125,7 +125,7 @@ DWORD FASTCALL Windrv::ReadOnly(DWORD addr) const
 //	バイト書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL Windrv::WriteByte(DWORD addr, DWORD data)
+void FASTCALL Windrv::WriteByte(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));

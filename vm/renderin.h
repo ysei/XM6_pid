@@ -29,7 +29,7 @@ inline void FASTCALL Render::SetPalette(int index)
 //	テキストVRAM変更
 //
 //---------------------------------------------------------------------------
-inline void FASTCALL Render::TextMem(DWORD addr)
+inline void FASTCALL Render::TextMem(uint32_t addr)
 {
 	// テキストVRAMの時点で比較チェックを行う
 	addr &= 0x1ffff;
@@ -44,7 +44,7 @@ inline void FASTCALL Render::TextMem(DWORD addr)
 //	グラフィックVRAM変更
 //
 //---------------------------------------------------------------------------
-inline void FASTCALL Render::GrpMem(DWORD addr, DWORD block)
+inline void FASTCALL Render::GrpMem(uint32_t addr, uint32_t block)
 {
 	// グラフィックVRAMの時点で比較チェックを行う
 	ASSERT(addr <= 0x7ffff);
@@ -65,7 +65,7 @@ inline void FASTCALL Render::GrpMem(DWORD addr, DWORD block)
 //	グラフィックVRAM変更(全て)
 //
 //---------------------------------------------------------------------------
-inline void FASTCALL Render::GrpAll(DWORD line, DWORD block)
+inline void FASTCALL Render::GrpAll(uint32_t line, uint32_t block)
 {
 	ASSERT(line <= 0x1ff);
 	ASSERT(block <= 3);

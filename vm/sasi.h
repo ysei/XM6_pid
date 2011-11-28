@@ -44,21 +44,21 @@ public:
 	typedef struct {
 		// SASIコントローラ
 		phase_t phase;					// フェーズ
-		BOOL sel;						// Select信号
-		BOOL msg;						// Message信号
-		BOOL cd;						// Command/Data信号
-		BOOL io;						// Input/Output信号
-		BOOL bsy;						// Busy信号
-		BOOL req;						// Request信号
-		DWORD ctrl;						// セレクトされたコントローラ
-		DWORD cmd[10];					// コマンドデータ
-		DWORD status;					// ステータスデータ
-		DWORD message;					// メッセージデータ
-		BYTE buffer[0x800];				// 転送バッファ
-		DWORD blocks;					// 転送ブロック数
-		DWORD next;						// 次のレコード
-		DWORD offset;					// 転送オフセット
-		DWORD length;					// 転送残り長さ
+		int sel;						// Select信号
+		int msg;						// Message信号
+		int cd;						// Command/Data信号
+		int io;						// Input/Output信号
+		int bsy;						// Busy信号
+		int req;						// Request信号
+		uint32_t ctrl;						// セレクトされたコントローラ
+		uint32_t cmd[10];					// コマンドデータ
+		uint32_t status;					// ステータスデータ
+		uint32_t message;					// メッセージデータ
+		uint8_t buffer[0x800];				// 転送バッファ
+		uint32_t blocks;					// 転送ブロック数
+		uint32_t next;						// 次のレコード
+		uint32_t offset;					// 転送オフセット
+		uint32_t length;					// 転送残り長さ
 
 		// ディスク
 		Disk *disk[SASIMax];			// ディスク
@@ -67,61 +67,61 @@ public:
 
 		// コンフィグ
 		int sasi_drives;				// ドライブ数(SASI)
-		BOOL memsw;						// メモリスイッチ更新
-		BOOL parity;					// パリティ付加
+		int memsw;						// メモリスイッチ更新
+		int parity;					// パリティ付加
 		int sxsi_drives;				// ドライブ数(SxSI)
-		BOOL mo_first;					// MO優先フラグ(SxSI)
+		int mo_first;					// MO優先フラグ(SxSI)
 		int scsi_type;					// SCSIタイプ
 
 		// MOパラメータ
-		BOOL writep;					// MO書き込み禁止フラグ
+		int writep;					// MO書き込み禁止フラグ
 	} sasi_t;
 
 public:
 	// 基本ファンクション
 	SASI(VM *p);
 										// コンストラクタ
-	BOOL FASTCALL Init();
+	int FASTCALL Init();
 										// 初期化
 	void FASTCALL Cleanup();
 										// クリーンアップ
 	void FASTCALL Reset();
 										// リセット
-	BOOL FASTCALL Save(Fileio *fio, int ver);
+	int FASTCALL Save(Fileio *fio, int ver);
 										// セーブ
-	BOOL FASTCALL Load(Fileio *fio, int ver);
+	int FASTCALL Load(Fileio *fio, int ver);
 										// ロード
 	void FASTCALL ApplyCfg(const Config *config);
 										// 設定適用
 
 	// メモリデバイス
-	DWORD FASTCALL ReadByte(DWORD addr);
+	uint32_t FASTCALL ReadByte(uint32_t addr);
 										// バイト読み込み
-	DWORD FASTCALL ReadWord(DWORD addr);
+	uint32_t FASTCALL ReadWord(uint32_t addr);
 										// ワード読み込み
-	void FASTCALL WriteByte(DWORD addr, DWORD data);
+	void FASTCALL WriteByte(uint32_t addr, uint32_t data);
 										// バイト書き込み
-	void FASTCALL WriteWord(DWORD addr, DWORD data);
+	void FASTCALL WriteWord(uint32_t addr, uint32_t data);
 										// ワード書き込み
-	DWORD FASTCALL ReadOnly(DWORD addr) const;
+	uint32_t FASTCALL ReadOnly(uint32_t addr) const;
 										// 読み込みのみ
 
 	// MOアクセス
-	BOOL FASTCALL Open(const Filepath& path);
+	int FASTCALL Open(const Filepath& path);
 										// MO オープン
-	void FASTCALL Eject(BOOL force);
+	void FASTCALL Eject(int force);
 										// MO イジェクト
-	void FASTCALL WriteP(BOOL writep);
+	void FASTCALL WriteP(int writep);
 										// MO 書き込み禁止
-	BOOL FASTCALL IsWriteP() const;
+	int FASTCALL IsWriteP() const;
 										// MO 書き込み禁止チェック
-	BOOL FASTCALL IsReadOnly() const;
+	int FASTCALL IsReadOnly() const;
 										// MO ReadOnlyチェック
-	BOOL FASTCALL IsLocked() const;
+	int FASTCALL IsLocked() const;
 										// MO Lockチェック
-	BOOL FASTCALL IsReady() const;
+	int FASTCALL IsReady() const;
 										// MO Readyチェック
-	BOOL FASTCALL IsValid() const;
+	int FASTCALL IsValid() const;
 										// MO 有効チェック
 	void FASTCALL GetPath(Filepath &path) const;
 										// MO パス取得
@@ -129,25 +129,25 @@ public:
 	// 外部API
 	void FASTCALL GetSASI(sasi_t *buffer) const;
 										// 内部データ取得
-	BOOL FASTCALL Callback(Event *ev);
+	int FASTCALL Callback(Event *ev);
 										// イベントコールバック
 	void FASTCALL Construct();
 										// ディスク再構築
-	BOOL FASTCALL IsBusy() const;
+	int FASTCALL IsBusy() const;
 										// HD BUSY取得
-	DWORD FASTCALL GetBusyDevice() const;
+	uint32_t FASTCALL GetBusyDevice() const;
 										// BUSYデバイス取得
 
 private:
-	DWORD FASTCALL ReadData();
+	uint32_t FASTCALL ReadData();
 										// データ読み出し
-	void FASTCALL WriteData(DWORD data);
+	void FASTCALL WriteData(uint32_t data);
 										// データ書き込み
 
 	// フェーズ処理
 	void FASTCALL BusFree();
 										// バスフリーフェーズ
-	void FASTCALL Selection(DWORD data);
+	void FASTCALL Selection(uint32_t data);
 										// セレクションフェーズ
 	void FASTCALL Command();
 										// コマンドフェーズ
@@ -205,11 +205,14 @@ private:
 										// 内部データ
 	Event event;
 										// イベント
-	Filepath sasihd[SASIMax];
+//	Filepath sasihd[SASIMax];
+	Filepath* sasihd;
 										// SASI-HDファイルパス
-	Filepath scsihd[SCSIMax];
+//	Filepath scsihd[SCSIMax];
+	Filepath* scsihd;
 										// SCSI-HDファイルパス
-	Filepath scsimo;
+//	Filepath scsimo;
+	Filepath* scsimo;
 										// SCSI-MOファイルパス
 	DMAC *dmac;
 										// DMAC
@@ -219,7 +222,7 @@ private:
 										// SRAM
 	SCSI *scsi;
 										// SCSI
-	BOOL sxsicpu;
+	int sxsicpu;
 										// SxSI CPU転送フラグ
 };
 

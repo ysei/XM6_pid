@@ -47,7 +47,7 @@ SCC::SCC(VM *p) : MemDevice(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCC::Init()
+int FASTCALL SCC::Init()
 {
 	ASSERT(this);
 
@@ -70,12 +70,16 @@ BOOL FASTCALL SCC::Init()
 
 	// イベント追加
 	event[0].SetDevice(this);
+#if defined(XM6_USE_EVENT_DESC)
 	event[0].SetDesc("Channel-A");
+#endif
 	event[0].SetUser(0);
 	event[0].SetTime(0);
 	scheduler->AddEvent(&event[0]);
 	event[1].SetDevice(this);
+#if defined(XM6_USE_EVENT_DESC)
 	event[1].SetDesc("Channel-B");
+#endif
 	event[1].SetUser(1);
 	event[1].SetTime(0);
 	scheduler->AddEvent(&event[1]);
@@ -124,7 +128,7 @@ void FASTCALL SCC::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCC::Save(Fileio *fio, int ver)
+int FASTCALL SCC::Save(Fileio *fio, int ver)
 {
 	size_t sz;
 
@@ -156,7 +160,7 @@ BOOL FASTCALL SCC::Save(Fileio *fio, int ver)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCC::Load(Fileio *fio, int ver)
+int FASTCALL SCC::Load(Fileio *fio, int ver)
 {
 	size_t sz;
 
@@ -216,12 +220,12 @@ void FASTCALL SCC::ApplyCfg(const Config *config)
 //	バイト読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCC::ReadByte(DWORD addr)
+uint32_t FASTCALL SCC::ReadByte(uint32_t addr)
 {
-	static const DWORD table[] = {
+	static const uint32_t table[] = {
 		0, 1, 2, 3, 0, 1, 2, 3, 8, 13, 10, 15, 12, 13, 10, 15
 	};
-	DWORD reg;
+	uint32_t reg;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -253,11 +257,11 @@ DWORD FASTCALL SCC::ReadByte(DWORD addr)
 				scc.ch[1].ph = FALSE;
 
 				// データリード
-				return (BYTE)ReadSCC(&scc.ch[1], reg);
+				return (uint8_t)ReadSCC(&scc.ch[1], reg);
 
 			// チャネルBデータポート
 			case 1:
-				return (BYTE)ReadRR8(&scc.ch[1]);
+				return (uint8_t)ReadRR8(&scc.ch[1]);
 
 			// チャネルAコマンドポート
 			case 2:
@@ -275,11 +279,11 @@ DWORD FASTCALL SCC::ReadByte(DWORD addr)
 				scc.ch[0].ph = FALSE;
 
 				// データリード
-				return (BYTE)ReadSCC(&scc.ch[0], reg);
+				return (uint8_t)ReadSCC(&scc.ch[0], reg);
 
 			// チャネルAデータポート
 			case 3:
-				return (BYTE)ReadRR8(&scc.ch[0]);
+				return (uint8_t)ReadRR8(&scc.ch[0]);
 		}
 
 		// ここには来ない
@@ -296,13 +300,13 @@ DWORD FASTCALL SCC::ReadByte(DWORD addr)
 //	ワード読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCC::ReadWord(DWORD addr)
+uint32_t FASTCALL SCC::ReadWord(uint32_t addr)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
 	ASSERT((addr & 1) == 0);
 
-	return (WORD)(0xff00 | ReadByte(addr + 1));
+	return (uint16_t)(0xff00 | ReadByte(addr + 1));
 }
 
 //---------------------------------------------------------------------------
@@ -310,9 +314,9 @@ DWORD FASTCALL SCC::ReadWord(DWORD addr)
 //	バイト書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCC::WriteByte(DWORD addr, DWORD data)
+void FASTCALL SCC::WriteByte(uint32_t addr, uint32_t data)
 {
-	DWORD reg;
+	uint32_t reg;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -342,12 +346,12 @@ void FASTCALL SCC::WriteByte(DWORD addr, DWORD data)
 				scc.ch[1].ph = FALSE;
 
 				// データライト
-				WriteSCC(&scc.ch[1], reg, (DWORD)data);
+				WriteSCC(&scc.ch[1], reg, (uint32_t)data);
 				return;
 
 			// チャネルBデータポート
 			case 1:
-				WriteWR8(&scc.ch[1], (DWORD)data);
+				WriteWR8(&scc.ch[1], (uint32_t)data);
 				return;
 
 			// チャネルAコマンドポート
@@ -364,12 +368,12 @@ void FASTCALL SCC::WriteByte(DWORD addr, DWORD data)
 				scc.ch[0].ph = FALSE;
 
 				// データライト
-				WriteSCC(&scc.ch[0], reg, (DWORD)data);
+				WriteSCC(&scc.ch[0], reg, (uint32_t)data);
 				return;
 
 			// チャネルAデータポート
 			case 3:
-				WriteWR8(&scc.ch[0], (DWORD)data);
+				WriteWR8(&scc.ch[0], (uint32_t)data);
 				return;
 		}
 
@@ -386,13 +390,13 @@ void FASTCALL SCC::WriteByte(DWORD addr, DWORD data)
 //	ワード書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCC::WriteWord(DWORD addr, DWORD data)
+void FASTCALL SCC::WriteWord(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
 	ASSERT((addr & 1) == 0);
 
-	WriteByte(addr + 1, (BYTE)data);
+	WriteByte(addr + 1, (uint8_t)data);
 }
 
 //---------------------------------------------------------------------------
@@ -400,12 +404,12 @@ void FASTCALL SCC::WriteWord(DWORD addr, DWORD data)
 //	読み込みのみ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCC::ReadOnly(DWORD addr) const
+uint32_t FASTCALL SCC::ReadOnly(uint32_t addr) const
 {
-	static const DWORD table[] = {
+	static const uint32_t table[] = {
 		0, 1, 2, 3, 0, 1, 2, 3, 8, 13, 10, 15, 12, 13, 10, 15
 	};
-	DWORD reg;
+	uint32_t reg;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -430,11 +434,11 @@ DWORD FASTCALL SCC::ReadOnly(DWORD addr) const
 				}
 
 				// データリード
-				return (BYTE)ROSCC(&scc.ch[1], reg);
+				return (uint8_t)ROSCC(&scc.ch[1], reg);
 
 			// チャネルBデータポート
 			case 1:
-				return (BYTE)ROSCC(&scc.ch[1], 8);
+				return (uint8_t)ROSCC(&scc.ch[1], 8);
 
 			// チャネルAコマンドポート
 			case 2:
@@ -448,11 +452,11 @@ DWORD FASTCALL SCC::ReadOnly(DWORD addr) const
 				}
 
 				// データリード
-				return (BYTE)ROSCC(&scc.ch[0], reg);
+				return (uint8_t)ROSCC(&scc.ch[0], reg);
 
 			// チャネルAデータポート
 			case 3:
-				return (BYTE)ROSCC(&scc.ch[0], 8);
+				return (uint8_t)ROSCC(&scc.ch[0], 8);
 		}
 
 		// ここには来ない
@@ -496,9 +500,9 @@ const SCC::scc_t* FASTCALL SCC::GetWork() const
 //	ベクタ取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCC::GetVector(int type) const
+uint32_t FASTCALL SCC::GetVector(int type) const
 {
-	DWORD vector;
+	uint32_t vector;
 
 	ASSERT(this);
 	ASSERT((type >= 0) && (type < 8));
@@ -640,7 +644,7 @@ void FASTCALL SCC::ResetSCC(ch_t *p)
 //	チャネル読み出し
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCC::ReadSCC(ch_t *p, DWORD reg)
+uint32_t FASTCALL SCC::ReadSCC(ch_t *p, uint32_t reg)
 {
 	ASSERT(this);
 	ASSERT(p);
@@ -701,9 +705,9 @@ DWORD FASTCALL SCC::ReadSCC(ch_t *p, DWORD reg)
 //	RR0読み出し
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCC::ReadRR0(const ch_t *p) const
+uint32_t FASTCALL SCC::ReadRR0(const ch_t *p) const
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT(p);
@@ -763,9 +767,9 @@ DWORD FASTCALL SCC::ReadRR0(const ch_t *p) const
 //	RR1読み出し
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCC::ReadRR1(const ch_t *p) const
+uint32_t FASTCALL SCC::ReadRR1(const ch_t *p) const
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT(p);
@@ -802,9 +806,9 @@ DWORD FASTCALL SCC::ReadRR1(const ch_t *p) const
 //	RR2読み出し
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCC::ReadRR2(ch_t *p)
+uint32_t FASTCALL SCC::ReadRR2(ch_t *p)
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT(p);
@@ -865,10 +869,10 @@ DWORD FASTCALL SCC::ReadRR2(ch_t *p)
 //	RR3読み出し
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCC::ReadRR3(const ch_t *p) const
+uint32_t FASTCALL SCC::ReadRR3(const ch_t *p) const
 {
 	int i;
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT(p);
@@ -909,9 +913,9 @@ DWORD FASTCALL SCC::ReadRR3(const ch_t *p) const
 //	RR8読み出し
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCC::ReadRR8(ch_t *p)
+uint32_t FASTCALL SCC::ReadRR8(ch_t *p)
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT(p);
@@ -953,9 +957,9 @@ DWORD FASTCALL SCC::ReadRR8(ch_t *p)
 //	RR15読み出し
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCC::ReadRR15(const ch_t *p) const
+uint32_t FASTCALL SCC::ReadRR15(const ch_t *p) const
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT(p);
@@ -1002,9 +1006,9 @@ DWORD FASTCALL SCC::ReadRR15(const ch_t *p) const
 //	読み出しのみ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCC::ROSCC(const ch_t *p, DWORD reg) const
+uint32_t FASTCALL SCC::ROSCC(const ch_t *p, uint32_t reg) const
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT(p);
@@ -1067,7 +1071,7 @@ DWORD FASTCALL SCC::ROSCC(const ch_t *p, DWORD reg) const
 //	チャネル書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCC::WriteSCC(ch_t *p, DWORD reg, DWORD data)
+void FASTCALL SCC::WriteSCC(ch_t *p, uint32_t reg, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(p);
@@ -1159,7 +1163,7 @@ void FASTCALL SCC::WriteSCC(ch_t *p, DWORD reg, DWORD data)
 //	WR0書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCC::WriteWR0(ch_t *p, DWORD data)
+void FASTCALL SCC::WriteWR0(ch_t *p, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(p);
@@ -1233,7 +1237,7 @@ void FASTCALL SCC::WriteWR0(ch_t *p, DWORD data)
 //	WR1書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCC::WriteWR1(ch_t *p, DWORD data)
+void FASTCALL SCC::WriteWR1(ch_t *p, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(p);
@@ -1273,7 +1277,7 @@ void FASTCALL SCC::WriteWR1(ch_t *p, DWORD data)
 //	WR3書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCC::WriteWR3(ch_t *p, DWORD data)
+void FASTCALL SCC::WriteWR3(ch_t *p, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(p);
@@ -1324,7 +1328,7 @@ void FASTCALL SCC::WriteWR3(ch_t *p, DWORD data)
 //	WR4書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCC::WriteWR4(ch_t *p, DWORD data)
+void FASTCALL SCC::WriteWR4(ch_t *p, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(p);
@@ -1380,7 +1384,7 @@ void FASTCALL SCC::WriteWR4(ch_t *p, DWORD data)
 //	WR5書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCC::WriteWR5(ch_t *p, DWORD data)
+void FASTCALL SCC::WriteWR5(ch_t *p, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(p);
@@ -1461,7 +1465,7 @@ void FASTCALL SCC::WriteWR5(ch_t *p, DWORD data)
 //	WR8書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCC::WriteWR8(ch_t *p, DWORD data)
+void FASTCALL SCC::WriteWR8(ch_t *p, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(p);
@@ -1484,7 +1488,7 @@ void FASTCALL SCC::WriteWR8(ch_t *p, DWORD data)
 //	WR9書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCC::WriteWR9(DWORD data)
+void FASTCALL SCC::WriteWR9(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1579,7 +1583,7 @@ void FASTCALL SCC::WriteWR9(DWORD data)
 //	WR10書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCC::WriteWR10(ch_t* /*p*/, DWORD data)
+void FASTCALL SCC::WriteWR10(ch_t* /*p*/, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -1595,7 +1599,7 @@ void FASTCALL SCC::WriteWR10(ch_t* /*p*/, DWORD data)
 //	WR11書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCC::WriteWR11(ch_t *p, DWORD data)
+void FASTCALL SCC::WriteWR11(ch_t *p, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(p);
@@ -1618,7 +1622,7 @@ void FASTCALL SCC::WriteWR11(ch_t *p, DWORD data)
 //	WR12書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCC::WriteWR12(ch_t *p, DWORD data)
+void FASTCALL SCC::WriteWR12(ch_t *p, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(p);
@@ -1638,7 +1642,7 @@ void FASTCALL SCC::WriteWR12(ch_t *p, DWORD data)
 //	WR13書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCC::WriteWR13(ch_t *p, DWORD data)
+void FASTCALL SCC::WriteWR13(ch_t *p, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(p);
@@ -1658,7 +1662,7 @@ void FASTCALL SCC::WriteWR13(ch_t *p, DWORD data)
 //	WR14書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCC::WriteWR14(ch_t *p, DWORD data)
+void FASTCALL SCC::WriteWR14(ch_t *p, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(p);
@@ -1722,8 +1726,8 @@ void FASTCALL SCC::WriteWR14(ch_t *p, DWORD data)
 //---------------------------------------------------------------------------
 void FASTCALL SCC::ClockSCC(ch_t *p)
 {
-	DWORD len;
-	DWORD speed;
+	uint32_t len;
+	uint32_t speed;
 
 	ASSERT(this);
 	ASSERT(p);
@@ -1801,7 +1805,7 @@ void FASTCALL SCC::ClockSCC(ch_t *p)
 //	WR15書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCC::WriteWR15(ch_t *p, DWORD data)
+void FASTCALL SCC::WriteWR15(ch_t *p, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(p);
@@ -1862,7 +1866,7 @@ void FASTCALL SCC::WriteWR15(ch_t *p, DWORD data)
 //	割り込みリクエスト
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCC::IntSCC(ch_t *p, itype_t type, BOOL flag)
+void FASTCALL SCC::IntSCC(ch_t *p, itype_t type, int flag)
 {
 	ASSERT(this);
 	ASSERT(p);
@@ -1928,7 +1932,7 @@ void FASTCALL SCC::IntSCC(ch_t *p, itype_t type, BOOL flag)
 void FASTCALL SCC::IntCheck()
 {
 	int i;
-	DWORD v;
+	uint32_t v;
 
 	ASSERT(this);
 
@@ -2001,7 +2005,7 @@ void FASTCALL SCC::IntCheck()
 #if defined(SCC_LOG)
 				LOG2(Log::Normal, "割り込み要求 リクエスト$%02X ベクタ$%02X ", scc.request, v);
 #endif	// SCC_LOG
-				cpu->Interrupt(5, (BYTE)v);
+				cpu->Interrupt(5, (uint8_t)v);
 				scc.vector = (int)v;
 			}
 			return;
@@ -2061,14 +2065,14 @@ void FASTCALL SCC::IntAck()
 //	データ送信
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCC::Send(int channel, DWORD data)
+void FASTCALL SCC::Send(int channel, uint32_t data)
 {
 	ch_t *p;
 
 	ASSERT(this);
 	ASSERT((channel == 0) || (channel == 1));
 
-	// BYTEに制限(マウスからはsigned intの変換でくるため)
+	// uint8_tに制限(マウスからはsigned intの変換でくるため)
 	data &= 0xff;
 
 #if defined(SCC_LOG)
@@ -2079,7 +2083,7 @@ void FASTCALL SCC::Send(int channel, DWORD data)
 	p = &scc.ch[channel];
 
 	// 受信バッファへ挿入
-	p->rxbuf[p->rxwrite] = (BYTE)data;
+	p->rxbuf[p->rxwrite] = (uint8_t)data;
 	p->rxwrite = (p->rxwrite + 1) & (sizeof(p->rxbuf) - 1);
 	p->rxnum++;
 	if (p->rxnum >= sizeof(p->rxbuf)) {
@@ -2152,7 +2156,7 @@ void FASTCALL SCC::FramingErr(int channel)
 //	受信イネーブルか
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCC::IsRxEnable(int channel) const
+int FASTCALL SCC::IsRxEnable(int channel) const
 {
 	const ch_t *p;
 
@@ -2170,7 +2174,7 @@ BOOL FASTCALL SCC::IsRxEnable(int channel) const
 //	受信バッファが空いているか
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCC::IsRxBufEmpty(int channel) const
+int FASTCALL SCC::IsRxBufEmpty(int channel) const
 {
 	const ch_t *p;
 
@@ -2191,10 +2195,10 @@ BOOL FASTCALL SCC::IsRxBufEmpty(int channel) const
 //	ボーレートチェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCC::IsBaudRate(int channel, DWORD baudrate) const
+int FASTCALL SCC::IsBaudRate(int channel, uint32_t baudrate) const
 {
 	const ch_t *p;
-	DWORD offset;
+	uint32_t offset;
 
 	ASSERT(this);
 	ASSERT((channel == 0) || (channel == 1));
@@ -2223,7 +2227,7 @@ BOOL FASTCALL SCC::IsBaudRate(int channel, DWORD baudrate) const
 //	受信データビット長取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCC::GetRxBit(int channel) const
+uint32_t FASTCALL SCC::GetRxBit(int channel) const
 {
 	const ch_t *p;
 
@@ -2241,7 +2245,7 @@ DWORD FASTCALL SCC::GetRxBit(int channel) const
 //	ストップビット長取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCC::GetStopBit(int channel) const
+uint32_t FASTCALL SCC::GetStopBit(int channel) const
 {
 	const ch_t *p;
 
@@ -2259,7 +2263,7 @@ DWORD FASTCALL SCC::GetStopBit(int channel) const
 //	パリティ取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCC::GetParity(int channel) const
+uint32_t FASTCALL SCC::GetParity(int channel) const
 {
 	const ch_t *p;
 
@@ -2277,10 +2281,10 @@ DWORD FASTCALL SCC::GetParity(int channel) const
 //	データ受信
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCC::Receive(int channel)
+uint32_t FASTCALL SCC::Receive(int channel)
 {
 	ch_t *p;
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((channel == 0) || (channel == 1));
@@ -2307,7 +2311,7 @@ DWORD FASTCALL SCC::Receive(int channel)
 //	送信バッファエンプティチェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCC::IsTxEmpty(int channel)
+int FASTCALL SCC::IsTxEmpty(int channel)
 {
 	ch_t *p;
 
@@ -2329,7 +2333,7 @@ BOOL FASTCALL SCC::IsTxEmpty(int channel)
 //	送信バッファフルチェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCC::IsTxFull(int channel)
+int FASTCALL SCC::IsTxFull(int channel)
 {
 	ch_t *p;
 
@@ -2351,7 +2355,7 @@ BOOL FASTCALL SCC::IsTxFull(int channel)
 //	送信ブロック
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCC::WaitTx(int channel, BOOL wait)
+void FASTCALL SCC::WaitTx(int channel, int wait)
 {
 	ch_t *p;
 
@@ -2377,7 +2381,7 @@ void FASTCALL SCC::WaitTx(int channel, BOOL wait)
 //	ブレークセット
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCC::SetBreak(int channel, BOOL flag)
+void FASTCALL SCC::SetBreak(int channel, int flag)
 {
 	ch_t *p;
 
@@ -2401,7 +2405,7 @@ void FASTCALL SCC::SetBreak(int channel, BOOL flag)
 //	CTSセット
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCC::SetCTS(int channel, BOOL flag)
+void FASTCALL SCC::SetCTS(int channel, int flag)
 {
 	ch_t *p;
 
@@ -2425,7 +2429,7 @@ void FASTCALL SCC::SetCTS(int channel, BOOL flag)
 //	DCDセット
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCC::SetDCD(int channel, BOOL flag)
+void FASTCALL SCC::SetDCD(int channel, int flag)
 {
 	ch_t *p;
 
@@ -2449,7 +2453,7 @@ void FASTCALL SCC::SetDCD(int channel, BOOL flag)
 //	ブレーク取得
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCC::GetBreak(int channel)
+int FASTCALL SCC::GetBreak(int channel)
 {
 	ch_t *p;
 
@@ -2468,7 +2472,7 @@ BOOL FASTCALL SCC::GetBreak(int channel)
 //	RTS取得
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCC::GetRTS(int channel)
+int FASTCALL SCC::GetRTS(int channel)
 {
 	ch_t *p;
 
@@ -2487,7 +2491,7 @@ BOOL FASTCALL SCC::GetRTS(int channel)
 //	DTR取得
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCC::GetDTR(int channel)
+int FASTCALL SCC::GetDTR(int channel)
 {
 	ch_t *p;
 
@@ -2514,7 +2518,7 @@ BOOL FASTCALL SCC::GetDTR(int channel)
 //	イベントコールバック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCC::Callback(Event *ev)
+int FASTCALL SCC::Callback(Event *ev)
 {
 	ch_t *p;
 	int channel;
@@ -2553,7 +2557,7 @@ BOOL FASTCALL SCC::Callback(Event *ev)
 //---------------------------------------------------------------------------
 void FASTCALL SCC::EventRx(ch_t *p)
 {
-	BOOL flag;
+	int flag;
 
 	ASSERT(this);
 	ASSERT(p);
@@ -2592,7 +2596,7 @@ void FASTCALL SCC::EventRx(ch_t *p)
 		ASSERT(p->rxfifo <= 2);
 
 		// 受信FIFOに挿入
-		p->rxdata[2 - p->rxfifo] = (DWORD)p->rxbuf[p->rxread];
+		p->rxdata[2 - p->rxfifo] = (uint32_t)p->rxbuf[p->rxread];
 		p->rxread = (p->rxread + 1) & (sizeof(p->rxbuf) - 1);
 		p->rxnum--;
 		p->rxfifo++;
@@ -2651,7 +2655,7 @@ void FASTCALL SCC::EventTx(ch_t *p)
 		// オートエコーモードでないか
 		if (!p->aecho) {
 			// 送信バッファへ挿入
-			p->txbuf[p->txwrite] = (BYTE)p->tdr;
+			p->txbuf[p->txwrite] = (uint8_t)p->tdr;
 			p->txwrite = (p->txwrite + 1) & (sizeof(p->txbuf) - 1);
 			p->txnum++;
 
@@ -2675,7 +2679,7 @@ void FASTCALL SCC::EventTx(ch_t *p)
 		// ローカルループバックモードであれば、データを受信側へ入れる
 		if (p->loopback && !p->aecho) {
 			// 受信バッファへ挿入
-			p->rxbuf[p->rxwrite] = (BYTE)p->tdr;
+			p->rxbuf[p->rxwrite] = (uint8_t)p->tdr;
 			p->rxwrite = (p->rxwrite + 1) & (sizeof(p->rxbuf) - 1);
 			p->rxnum++;
 

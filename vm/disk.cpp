@@ -10,6 +10,7 @@
 #include "stdafx.h"
 #include "os.h"
 #include "xm6.h"
+#include "filepath.h"
 #include "fileio.h"
 #include "vm.h"
 #include "sasi.h"
@@ -21,12 +22,20 @@
 //
 //===========================================================================
 
+static void setRevisionString(void* o, uint32_t major, uint32_t minor) {
+	char* p = static_cast<char*>(o);
+	p[0] = '0';
+	p[1] = '0' + (major & 0x0f);
+	p[2] = '0' + ((minor>>4) & 0x0f);
+	p[3] = '0' + (minor & 0x0f);
+}
+
 //---------------------------------------------------------------------------
 //
 //	コンストラクタ
 //
 //---------------------------------------------------------------------------
-DiskTrack::DiskTrack(int track, int size, int sectors, BOOL raw)
+DiskTrack::DiskTrack(int track, int size, int sectors, int raw)
 {
 	ASSERT(track >= 0);
 	ASSERT((size == 8) || (size == 9) || (size == 11));
@@ -72,10 +81,10 @@ DiskTrack::~DiskTrack()
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL DiskTrack::Load(const Filepath& path)
+int FASTCALL DiskTrack::Load(const Filepath& path)
 {
 	Fileio fio;
-	DWORD offset;
+	uint32_t offset;
 	int i;
 	int length;
 
@@ -109,7 +118,7 @@ BOOL FASTCALL DiskTrack::Load(const Filepath& path)
 	ASSERT((dt.size == 8) || (dt.size == 9) || (dt.size == 11));
 	ASSERT((dt.sectors > 0) && (dt.sectors <= 0x100));
 	try {
-		dt.buffer = new BYTE[ length ];
+		dt.buffer = new uint8_t[ length ];
 	}
 	catch (...) {
 		dt.buffer = NULL;
@@ -121,7 +130,7 @@ BOOL FASTCALL DiskTrack::Load(const Filepath& path)
 
 	// 変更マップのメモリを確保
 	try {
-		dt.changemap = new BOOL[dt.sectors];
+		dt.changemap = new int[dt.sectors];
 	}
 	catch (...) {
 		dt.changemap = NULL;
@@ -183,9 +192,9 @@ BOOL FASTCALL DiskTrack::Load(const Filepath& path)
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL DiskTrack::Save(const Filepath& path)
+int FASTCALL DiskTrack::Save(const Filepath& path)
 {
-	DWORD offset;
+	uint32_t offset;
 	int i;
 	Fileio fio;
 	int length;
@@ -255,7 +264,7 @@ BOOL FASTCALL DiskTrack::Save(const Filepath& path)
 //	リードセクタ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL DiskTrack::Read(BYTE *buf, int sec) const
+int FASTCALL DiskTrack::Read(uint8_t *buf, int sec) const
 {
 	ASSERT(this);
 	ASSERT(buf);
@@ -286,7 +295,7 @@ BOOL FASTCALL DiskTrack::Read(BYTE *buf, int sec) const
 //	ライトセクタ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL DiskTrack::Write(const BYTE *buf, int sec)
+int FASTCALL DiskTrack::Write(const uint8_t *buf, int sec)
 {
 	int offset;
 	int length;
@@ -340,11 +349,14 @@ BOOL FASTCALL DiskTrack::Write(const BYTE *buf, int sec)
 //
 //---------------------------------------------------------------------------
 DiskCache::DiskCache(const Filepath& path, int size, int blocks)
+	: pSec_path(0)
 {
 	int i;
 
 	ASSERT((size == 8) || (size == 9) || (size == 11));
 	ASSERT(blocks > 0);
+
+	pSec_path = new Filepath();
 
 	// キャッシュワーク
 	for (i=0; i<CacheMax; i++) {
@@ -354,7 +366,8 @@ DiskCache::DiskCache(const Filepath& path, int size, int blocks)
 
 	// その他
 	serial = 0;
-	sec_path = path;
+//	sec_path = path;
+	*pSec_path = path;
 	sec_size = size;
 	sec_blocks = blocks;
 	cd_raw = FALSE;
@@ -367,6 +380,10 @@ DiskCache::DiskCache(const Filepath& path, int size, int blocks)
 //---------------------------------------------------------------------------
 DiskCache::~DiskCache()
 {
+	if(pSec_path) {
+		delete pSec_path;
+		pSec_path = 0;
+	}
 	// トラックをクリア
 	Clear();
 }
@@ -376,7 +393,7 @@ DiskCache::~DiskCache()
 //	RAWモード設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL DiskCache::SetRawMode(BOOL raw)
+void FASTCALL DiskCache::SetRawMode(int raw)
 {
 	ASSERT(this);
 	ASSERT(sec_size == 11);
@@ -390,7 +407,7 @@ void FASTCALL DiskCache::SetRawMode(BOOL raw)
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL DiskCache::Save()
+int FASTCALL DiskCache::Save()
 {
 	int i;
 
@@ -401,7 +418,7 @@ BOOL FASTCALL DiskCache::Save()
 		// 有効なトラックか
 		if (cache[i].disktrk) {
 			// 保存
-			if (!cache[i].disktrk->Save(sec_path)) {
+			if (!cache[i].disktrk->Save(*pSec_path)) {
 				return FALSE;
 			}
 		}
@@ -415,7 +432,7 @@ BOOL FASTCALL DiskCache::Save()
 //	ディスクキャッシュ情報取得
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL DiskCache::GetCache(int index, int& track, DWORD& serial) const
+int FASTCALL DiskCache::GetCache(int index, int& track, uint32_t& serial) const
 {
 	ASSERT(this);
 	ASSERT((index >= 0) && (index < CacheMax));
@@ -457,7 +474,7 @@ void FASTCALL DiskCache::Clear()
 //	セクタリード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL DiskCache::Read(BYTE *buf, int block)
+int FASTCALL DiskCache::Read(uint8_t *buf, int block)
 {
 	int track;
 	DiskTrack *disktrk;
@@ -478,7 +495,7 @@ BOOL FASTCALL DiskCache::Read(BYTE *buf, int block)
 	}
 
 	// トラックに任せる
-	return disktrk->Read(buf, (BYTE)block);
+	return disktrk->Read(buf, (uint8_t)block);
 }
 
 //---------------------------------------------------------------------------
@@ -486,7 +503,7 @@ BOOL FASTCALL DiskCache::Read(BYTE *buf, int block)
 //	セクタライト
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL DiskCache::Write(const BYTE *buf, int block)
+int FASTCALL DiskCache::Write(const uint8_t *buf, int block)
 {
 	int track;
 	DiskTrack *disktrk;
@@ -507,7 +524,7 @@ BOOL FASTCALL DiskCache::Write(const BYTE *buf, int block)
 	}
 
 	// トラックに任せる
-	return disktrk->Write(buf, (BYTE)block);
+	return disktrk->Write(buf, (uint8_t)block);
 }
 
 //---------------------------------------------------------------------------
@@ -519,7 +536,7 @@ DiskTrack* FASTCALL DiskCache::Assign(int track)
 {
 	int i;
 	int c;
-	DWORD s;
+	uint32_t s;
 
 	ASSERT(this);
 	ASSERT(sec_size != 0);
@@ -569,7 +586,7 @@ DiskTrack* FASTCALL DiskCache::Assign(int track)
 	}
 
 	// このトラックを保存
-	if (!cache[c].disktrk->Save(sec_path)) {
+	if (!cache[c].disktrk->Save(*pSec_path)) {
 		return NULL;
 	}
 
@@ -593,7 +610,7 @@ DiskTrack* FASTCALL DiskCache::Assign(int track)
 //	トラックのロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL DiskCache::Load(int index, int track)
+int FASTCALL DiskCache::Load(int index, int track)
 {
 	int sectors;
 	DiskTrack *disktrk;
@@ -614,7 +631,7 @@ BOOL FASTCALL DiskCache::Load(int index, int track)
 	disktrk = new DiskTrack(track, sec_size, sectors, cd_raw);
 
 	// ロードを試みる
-	if (!disktrk->Load(sec_path)) {
+	if (!disktrk->Load(*pSec_path)) {
 		// 失敗
 		delete disktrk;
 		return FALSE;
@@ -661,6 +678,7 @@ void FASTCALL DiskCache::Update()
 //
 //---------------------------------------------------------------------------
 Disk::Disk(Device *dev)
+	: pDiskpath(0)
 {
 	// コントローラとなるデバイスを記憶
 	ctrl = dev;
@@ -679,6 +697,8 @@ Disk::Disk(Device *dev)
 	disk.lun = 0;
 	disk.code = 0;
 	disk.dcache = NULL;
+
+	pDiskpath = new Filepath();
 }
 
 //---------------------------------------------------------------------------
@@ -688,6 +708,10 @@ Disk::Disk(Device *dev)
 //---------------------------------------------------------------------------
 Disk::~Disk()
 {
+	if(pDiskpath) {
+		delete pDiskpath;
+		pDiskpath = 0;
+	}
 	// ディスクキャッシュの保存
 	if (disk.ready) {
 		// レディの場合のみ
@@ -722,7 +746,7 @@ void FASTCALL Disk::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Disk::Save(Fileio *fio, int ver)
+int FASTCALL Disk::Save(Fileio *fio, int ver)
 {
 	size_t sz;
 
@@ -741,7 +765,7 @@ BOOL FASTCALL Disk::Save(Fileio *fio, int ver)
 	}
 
 	// パスをセーブ
-	if (!diskpath.Save(fio, ver)) {
+	if (!pDiskpath->Save(fio, ver)) {
 		return FALSE;
 	}
 
@@ -753,7 +777,7 @@ BOOL FASTCALL Disk::Save(Fileio *fio, int ver)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Disk::Load(Fileio *fio, int ver)
+int FASTCALL Disk::Load(Fileio *fio, int ver)
 {
 	size_t sz;
 	disk_t buf;
@@ -823,7 +847,7 @@ BOOL FASTCALL Disk::Load(Fileio *fio, int ver)
 		disk.dcache = NULL;
 	}
 	else {
-		disk.dcache = new DiskCache(diskpath, disk.size, disk.blocks);
+		disk.dcache = new DiskCache(*pDiskpath, disk.size, disk.blocks);
 	}
 
 	return TRUE;
@@ -834,7 +858,7 @@ BOOL FASTCALL Disk::Load(Fileio *fio, int ver)
 //	NULLチェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Disk::IsNULL() const
+int FASTCALL Disk::IsNULL() const
 {
 	ASSERT(this);
 
@@ -849,7 +873,7 @@ BOOL FASTCALL Disk::IsNULL() const
 //	SASIチェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Disk::IsSASI() const
+int FASTCALL Disk::IsSASI() const
 {
 	ASSERT(this);
 
@@ -865,7 +889,7 @@ BOOL FASTCALL Disk::IsSASI() const
 //	※派生クラスで、オープン成功後の後処理として呼び出すこと
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Disk::Open(const Filepath& path)
+int FASTCALL Disk::Open(const Filepath& path)
 {
 	Fileio fio;
 
@@ -897,7 +921,7 @@ BOOL FASTCALL Disk::Open(const Filepath& path)
 	disk.lock = FALSE;
 
 	// パス保存
-	diskpath = path;
+	*pDiskpath = path;
 
 	// 成功
 	return TRUE;
@@ -908,7 +932,7 @@ BOOL FASTCALL Disk::Open(const Filepath& path)
 //	イジェクト
 //
 //---------------------------------------------------------------------------
-void FASTCALL Disk::Eject(BOOL force)
+void FASTCALL Disk::Eject(int force)
 {
 	ASSERT(this);
 
@@ -946,7 +970,7 @@ void FASTCALL Disk::Eject(BOOL force)
 //	書き込み禁止
 //
 //---------------------------------------------------------------------------
-void FASTCALL Disk::WriteP(BOOL writep)
+void FASTCALL Disk::WriteP(int writep)
 {
 	ASSERT(this);
 
@@ -986,7 +1010,7 @@ void FASTCALL Disk::GetDisk(disk_t *buffer) const
 //---------------------------------------------------------------------------
 void FASTCALL Disk::GetPath(Filepath& path) const
 {
-	path = diskpath;
+	path = *pDiskpath;
 }
 
 //---------------------------------------------------------------------------
@@ -994,7 +1018,7 @@ void FASTCALL Disk::GetPath(Filepath& path) const
 //	フラッシュ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Disk::Flush()
+int FASTCALL Disk::Flush()
 {
 	ASSERT(this);
 
@@ -1012,7 +1036,7 @@ BOOL FASTCALL Disk::Flush()
 //	レディチェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Disk::CheckReady()
+int FASTCALL Disk::CheckReady()
 {
 	ASSERT(this);
 
@@ -1047,7 +1071,7 @@ BOOL FASTCALL Disk::CheckReady()
 //	※常時成功する必要がある
 //
 //---------------------------------------------------------------------------
-int FASTCALL Disk::Inquiry(const DWORD* /*cdb*/, BYTE* /*buf*/)
+int FASTCALL Disk::Inquiry(const uint32_t* /*cdb*/, uint8_t* /*buf*/)
 {
 	ASSERT(this);
 
@@ -1062,7 +1086,7 @@ int FASTCALL Disk::Inquiry(const DWORD* /*cdb*/, BYTE* /*buf*/)
 //	※SASIは別処理
 //
 //---------------------------------------------------------------------------
-int FASTCALL Disk::RequestSense(const DWORD *cdb, BYTE *buf)
+int FASTCALL Disk::RequestSense(const uint32_t *cdb, uint8_t *buf)
 {
 	int size;
 
@@ -1091,10 +1115,10 @@ int FASTCALL Disk::RequestSense(const DWORD *cdb, BYTE *buf)
 
 	// 拡張センスデータを含めた、18バイトを設定
 	buf[0] = 0x70;
-	buf[2] = (BYTE)(disk.code >> 16);
+	buf[2] = (uint8_t)(disk.code >> 16);
 	buf[7] = 10;
-	buf[12] = (BYTE)(disk.code >> 8);
-	buf[13] = (BYTE)disk.code;
+	buf[12] = (uint8_t)(disk.code >> 8);
+	buf[13] = (uint8_t)disk.code;
 
 	// コードをクリア
 	disk.code = 0x00;
@@ -1108,7 +1132,7 @@ int FASTCALL Disk::RequestSense(const DWORD *cdb, BYTE *buf)
 //	※disk.codeの影響を受けない
 //
 //---------------------------------------------------------------------------
-int FASTCALL Disk::SelectCheck(const DWORD *cdb)
+int FASTCALL Disk::SelectCheck(const uint32_t *cdb)
 {
 	int length;
 
@@ -1132,7 +1156,7 @@ int FASTCALL Disk::SelectCheck(const DWORD *cdb)
 //	※disk.codeの影響を受けない
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Disk::ModeSelect(const BYTE *buf, int size)
+int FASTCALL Disk::ModeSelect(const uint8_t *buf, int size)
 {
 	ASSERT(this);
 	ASSERT(buf);
@@ -1150,13 +1174,13 @@ BOOL FASTCALL Disk::ModeSelect(const BYTE *buf, int size)
 //	※disk.codeの影響を受けない
 //
 //---------------------------------------------------------------------------
-int FASTCALL Disk::ModeSense(const DWORD *cdb, BYTE *buf)
+int FASTCALL Disk::ModeSense(const uint32_t *cdb, uint8_t *buf)
 {
 	int page;
 	int length;
 	int size;
-	BOOL valid;
-	BOOL change;
+	int valid;
+	int change;
 
 	ASSERT(this);
 	ASSERT(cdb);
@@ -1199,15 +1223,15 @@ int FASTCALL Disk::ModeSense(const DWORD *cdb, BYTE *buf)
 		// レディの場合に限り
 		if (disk.ready) {
 			// ブロックディスクリプタ(ブロック数)
-			buf[ 5] = (BYTE)(disk.blocks >> 16);
-			buf[ 6] = (BYTE)(disk.blocks >> 8);
-			buf[ 7] = (BYTE)disk.blocks;
+			buf[ 5] = (uint8_t)(disk.blocks >> 16);
+			buf[ 6] = (uint8_t)(disk.blocks >> 8);
+			buf[ 7] = (uint8_t)disk.blocks;
 
 			// ブロックディスクリプタ(ブロックレングス)
 			size = 1 << disk.size;
-			buf[ 9] = (BYTE)(size >> 16);
-			buf[10] = (BYTE)(size >> 8);
-			buf[11] = (BYTE)size;
+			buf[ 9] = (uint8_t)(size >> 16);
+			buf[10] = (uint8_t)(size >> 8);
+			buf[11] = (uint8_t)size;
 		}
 
 		// サイズ再設定
@@ -1257,7 +1281,7 @@ int FASTCALL Disk::ModeSense(const DWORD *cdb, BYTE *buf)
 	}
 
 	// モードデータレングスを最終設定
-	buf[0] = (BYTE)(size - 1);
+	buf[0] = (uint8_t)(size - 1);
 
 	// サポートしていないページか
 	if (!valid) {
@@ -1281,7 +1305,7 @@ int FASTCALL Disk::ModeSense(const DWORD *cdb, BYTE *buf)
 //	エラーページ追加
 //
 //---------------------------------------------------------------------------
-int FASTCALL Disk::AddError(BOOL change, BYTE *buf)
+int FASTCALL Disk::AddError(int change, uint8_t *buf)
 {
 	ASSERT(this);
 	ASSERT(buf);
@@ -1304,7 +1328,7 @@ int FASTCALL Disk::AddError(BOOL change, BYTE *buf)
 //	フォーマットページ追加
 //
 //---------------------------------------------------------------------------
-int FASTCALL Disk::AddFormat(BOOL change, BYTE *buf)
+int FASTCALL Disk::AddFormat(int change, uint8_t *buf)
 {
 	ASSERT(this);
 	ASSERT(buf);
@@ -1331,7 +1355,7 @@ int FASTCALL Disk::AddFormat(BOOL change, BYTE *buf)
 //	オプティカルページ追加
 //
 //---------------------------------------------------------------------------
-int FASTCALL Disk::AddOpt(BOOL change, BYTE *buf)
+int FASTCALL Disk::AddOpt(int change, uint8_t *buf)
 {
 	ASSERT(this);
 	ASSERT(buf);
@@ -1354,7 +1378,7 @@ int FASTCALL Disk::AddOpt(BOOL change, BYTE *buf)
 //	キャッシュページ追加
 //
 //---------------------------------------------------------------------------
-int FASTCALL Disk::AddCache(BOOL change, BYTE *buf)
+int FASTCALL Disk::AddCache(int change, uint8_t *buf)
 {
 	ASSERT(this);
 	ASSERT(buf);
@@ -1377,7 +1401,7 @@ int FASTCALL Disk::AddCache(BOOL change, BYTE *buf)
 //	CD-ROMページ追加
 //
 //---------------------------------------------------------------------------
-int FASTCALL Disk::AddCDROM(BOOL change, BYTE *buf)
+int FASTCALL Disk::AddCDROM(int change, uint8_t *buf)
 {
 	ASSERT(this);
 	ASSERT(buf);
@@ -1406,7 +1430,7 @@ int FASTCALL Disk::AddCDROM(BOOL change, BYTE *buf)
 //	CD-DAページ追加
 //
 //---------------------------------------------------------------------------
-int FASTCALL Disk::AddCDDA(BOOL change, BYTE *buf)
+int FASTCALL Disk::AddCDDA(int change, uint8_t *buf)
 {
 	ASSERT(this);
 	ASSERT(buf);
@@ -1429,7 +1453,7 @@ int FASTCALL Disk::AddCDDA(BOOL change, BYTE *buf)
 //	TEST UNIT READY
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Disk::TestUnitReady(const DWORD* /*cdb*/)
+int FASTCALL Disk::TestUnitReady(const uint32_t* /*cdb*/)
 {
 	ASSERT(this);
 
@@ -1447,7 +1471,7 @@ BOOL FASTCALL Disk::TestUnitReady(const DWORD* /*cdb*/)
 //	REZERO UNIT
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Disk::Rezero(const DWORD* /*cdb*/)
+int FASTCALL Disk::Rezero(const uint32_t* /*cdb*/)
 {
 	ASSERT(this);
 
@@ -1466,7 +1490,7 @@ BOOL FASTCALL Disk::Rezero(const DWORD* /*cdb*/)
 //	※SASIはオペコード$06、SCSIはオペコード$04
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Disk::Format(const DWORD *cdb)
+int FASTCALL Disk::Format(const uint32_t *cdb)
 {
 	ASSERT(this);
 
@@ -1490,7 +1514,7 @@ BOOL FASTCALL Disk::Format(const DWORD *cdb)
 //	REASSIGN BLOCKS
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Disk::Reassign(const DWORD* /*cdb*/)
+int FASTCALL Disk::Reassign(const uint32_t* /*cdb*/)
 {
 	ASSERT(this);
 
@@ -1508,7 +1532,7 @@ BOOL FASTCALL Disk::Reassign(const DWORD* /*cdb*/)
 //	READ
 //
 //---------------------------------------------------------------------------
-int FASTCALL Disk::Read(BYTE *buf, int block)
+int FASTCALL Disk::Read(uint8_t *buf, int block)
 {
 	ASSERT(this);
 	ASSERT(buf);
@@ -1570,7 +1594,7 @@ int FASTCALL Disk::WriteCheck(int block)
 //	WRITE
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Disk::Write(const BYTE *buf, int block)
+int FASTCALL Disk::Write(const uint8_t *buf, int block)
 {
 	ASSERT(this);
 	ASSERT(buf);
@@ -1611,7 +1635,7 @@ BOOL FASTCALL Disk::Write(const BYTE *buf, int block)
 //	※LBAのチェックは行わない(SASI IOCS)
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Disk::Seek(const DWORD* /*cdb*/)
+int FASTCALL Disk::Seek(const uint32_t* /*cdb*/)
 {
 	ASSERT(this);
 
@@ -1629,7 +1653,7 @@ BOOL FASTCALL Disk::Seek(const DWORD* /*cdb*/)
 //	START STOP UNIT
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Disk::StartStop(const DWORD *cdb)
+int FASTCALL Disk::StartStop(const uint32_t *cdb)
 {
 	ASSERT(this);
 	ASSERT(cdb);
@@ -1657,7 +1681,7 @@ BOOL FASTCALL Disk::StartStop(const DWORD *cdb)
 //	SEND DIAGNOSTIC
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Disk::SendDiag(const DWORD *cdb)
+int FASTCALL Disk::SendDiag(const uint32_t *cdb)
 {
 	ASSERT(this);
 	ASSERT(cdb);
@@ -1685,7 +1709,7 @@ BOOL FASTCALL Disk::SendDiag(const DWORD *cdb)
 //	PREVENT/ALLOW MEDIUM REMOVAL
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Disk::Removal(const DWORD *cdb)
+int FASTCALL Disk::Removal(const uint32_t *cdb)
 {
 	ASSERT(this);
 	ASSERT(cdb);
@@ -1713,10 +1737,10 @@ BOOL FASTCALL Disk::Removal(const DWORD *cdb)
 //	READ CAPACITY
 //
 //---------------------------------------------------------------------------
-int FASTCALL Disk::ReadCapacity(const DWORD* /*cdb*/, BYTE *buf)
+int FASTCALL Disk::ReadCapacity(const uint32_t* /*cdb*/, uint8_t *buf)
 {
-	DWORD blocks;
-	DWORD length;
+	uint32_t blocks;
+	uint32_t length;
 
 	ASSERT(this);
 	ASSERT(buf);
@@ -1732,17 +1756,17 @@ int FASTCALL Disk::ReadCapacity(const DWORD* /*cdb*/, BYTE *buf)
 	// 論理ブロックアドレスの終端(disk.blocks - 1)を作成
 	ASSERT(disk.blocks > 0);
 	blocks = disk.blocks - 1;
-	buf[0] = (BYTE)(blocks >> 24);
-	buf[1] = (BYTE)(blocks >> 16);
-	buf[2] = (BYTE)(blocks >>  8);
-	buf[3] = (BYTE)blocks;
+	buf[0] = (uint8_t)(blocks >> 24);
+	buf[1] = (uint8_t)(blocks >> 16);
+	buf[2] = (uint8_t)(blocks >>  8);
+	buf[3] = (uint8_t)blocks;
 
 	// ブロックレングス(1 << disk.size)を作成
 	length = 1 << disk.size;
-	buf[4] = (BYTE)(length >> 24);
-	buf[5] = (BYTE)(length >> 16);
-	buf[6] = (BYTE)(length >> 8);
-	buf[7] = (BYTE)length;
+	buf[4] = (uint8_t)(length >> 24);
+	buf[5] = (uint8_t)(length >> 16);
+	buf[6] = (uint8_t)(length >> 8);
+	buf[7] = (uint8_t)length;
 
 	// 返送サイズを返す
 	return 8;
@@ -1753,7 +1777,7 @@ int FASTCALL Disk::ReadCapacity(const DWORD* /*cdb*/, BYTE *buf)
 //	VERIFY
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Disk::Verify(const DWORD *cdb)
+int FASTCALL Disk::Verify(const uint32_t *cdb)
 {
 	int record;
     int blocks;
@@ -1794,7 +1818,7 @@ BOOL FASTCALL Disk::Verify(const DWORD *cdb)
 //	READ TOC
 //
 //---------------------------------------------------------------------------
-int FASTCALL Disk::ReadToc(const DWORD *cdb, BYTE *buf)
+int FASTCALL Disk::ReadToc(const uint32_t *cdb, uint8_t *buf)
 {
 	ASSERT(this);
 	ASSERT(cdb);
@@ -1811,7 +1835,7 @@ int FASTCALL Disk::ReadToc(const DWORD *cdb, BYTE *buf)
 //	PLAY AUDIO
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Disk::PlayAudio(const DWORD *cdb)
+int FASTCALL Disk::PlayAudio(const uint32_t *cdb)
 {
 	ASSERT(this);
 	ASSERT(cdb);
@@ -1827,7 +1851,7 @@ BOOL FASTCALL Disk::PlayAudio(const DWORD *cdb)
 //	PLAY AUDIO MSF
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Disk::PlayAudioMSF(const DWORD *cdb)
+int FASTCALL Disk::PlayAudioMSF(const uint32_t *cdb)
 {
 	ASSERT(this);
 	ASSERT(cdb);
@@ -1843,7 +1867,7 @@ BOOL FASTCALL Disk::PlayAudioMSF(const DWORD *cdb)
 //	PLAY AUDIO TRACK
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Disk::PlayAudioTrack(const DWORD *cdb)
+int FASTCALL Disk::PlayAudioTrack(const uint32_t *cdb)
 {
 	ASSERT(this);
 	ASSERT(cdb);
@@ -1876,10 +1900,10 @@ SASIHD::SASIHD(Device *dev) : Disk(dev)
 //	オープン
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SASIHD::Open(const Filepath& path)
+int FASTCALL SASIHD::Open(const Filepath& path)
 {
 	Fileio fio;
-	DWORD size;
+	uint32_t size;
 
 	ASSERT(this);
 	ASSERT(!disk.ready);
@@ -1943,7 +1967,7 @@ void FASTCALL SASIHD::Reset()
 //	REQUEST SENSE
 //
 //---------------------------------------------------------------------------
-int FASTCALL SASIHD::RequestSense(const DWORD *cdb, BYTE *buf)
+int FASTCALL SASIHD::RequestSense(const uint32_t *cdb, uint8_t *buf)
 {
 	int size;
 
@@ -1957,8 +1981,8 @@ int FASTCALL SASIHD::RequestSense(const DWORD *cdb, BYTE *buf)
 
 	// SASIは非拡張フォーマットに固定
 	memset(buf, 0, size);
-	buf[0] = (BYTE)(disk.code >> 16);
-	buf[1] = (BYTE)(disk.lun << 5);
+	buf[0] = (uint8_t)(disk.code >> 16);
+	buf[1] = (uint8_t)(disk.lun << 5);
 
 	// コードをクリア
 	disk.code = 0x00;
@@ -1988,10 +2012,10 @@ SCSIHD::SCSIHD(Device *dev) : Disk(dev)
 //	オープン
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSIHD::Open(const Filepath& path)
+int FASTCALL SCSIHD::Open(const Filepath& path)
 {
 	Fileio fio;
-	DWORD size;
+	uint32_t size;
 
 	ASSERT(this);
 	ASSERT(!disk.ready);
@@ -2031,11 +2055,10 @@ BOOL FASTCALL SCSIHD::Open(const Filepath& path)
 //	INQUIRY
 //
 //---------------------------------------------------------------------------
-int FASTCALL SCSIHD::Inquiry(const DWORD *cdb, BYTE *buf)
+int FASTCALL SCSIHD::Inquiry(const uint32_t *cdb, uint8_t *buf)
 {
-	DWORD major;
-	DWORD minor;
-	char string[32];
+	uint32_t major;
+	uint32_t minor;
 	int size;
 	int len;
 
@@ -2072,6 +2095,8 @@ int FASTCALL SCSIHD::Inquiry(const DWORD *cdb, BYTE *buf)
 
 	// 製品名
 	size = disk.blocks >> 11;
+#if 0
+	char string[32];
 	if (size < 300)
 		sprintf(string, "PRODRIVE LPS%dS", size);
 	else if (size < 600)
@@ -2085,12 +2110,34 @@ int FASTCALL SCSIHD::Inquiry(const DWORD *cdb, BYTE *buf)
 	else
 		sprintf(string, "FBSE%d.%dS", size / 1000, (size % 1000) / 100);
 	memcpy(&buf[16], string, strlen(string));
-
 	// リビジョン(XM6のバージョンNo)
 	ctrl->GetVM()->GetVersion(major, minor);
 	sprintf(string, "0%01d%01d%01d",
 				major, (minor >> 4), (minor & 0x0f));
 	memcpy((char*)&buf[32], string, 4);
+#else
+	buf[16] = 'P';
+	buf[17] = 'R';
+	buf[18] = 'O';
+	buf[19] = 'D';
+	buf[20] = 'R';
+	buf[21] = 'I';
+	buf[22] = 'V';
+	buf[23] = 'E';
+	buf[24] = ' ';
+	buf[25] = 'L';
+	buf[26] = 'P';
+	buf[27] = 'S';
+	buf[28] = '9';
+	buf[29] = '9';
+	buf[30] = '9';
+	buf[31] = '\0';
+
+	// リビジョン(XM6のバージョンNo)
+	ctrl->GetVM()->GetVersion(major, minor);
+
+	setRevisionString(&buf[32], major, minor);
+#endif
 
 	// サイズ36バイトかアロケーションレングスのうち、短い方で転送
 	size = 36;
@@ -2129,10 +2176,10 @@ SCSIMO::SCSIMO(Device *dev) : Disk(dev)
 //	オープン
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSIMO::Open(const Filepath& path, BOOL attn)
+int FASTCALL SCSIMO::Open(const Filepath& path, int attn)
 {
 	Fileio fio;
-	DWORD size;
+	uint32_t size;
 
 	ASSERT(this);
 	ASSERT(!disk.ready);
@@ -2192,7 +2239,7 @@ BOOL FASTCALL SCSIMO::Open(const Filepath& path, BOOL attn)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSIMO::Load(Fileio *fio, int ver)
+int FASTCALL SCSIMO::Load(Fileio *fio, int ver)
 {
 	size_t sz;
 	disk_t buf;
@@ -2259,11 +2306,10 @@ BOOL FASTCALL SCSIMO::Load(Fileio *fio, int ver)
 //	INQUIRY
 //
 //---------------------------------------------------------------------------
-int FASTCALL SCSIMO::Inquiry(const DWORD *cdb, BYTE *buf)
+int FASTCALL SCSIMO::Inquiry(const uint32_t *cdb, uint8_t *buf)
 {
-	DWORD major;
-	DWORD minor;
-	char string[32];
+	uint32_t major;
+	uint32_t minor;
 	int size;
 	int len;
 
@@ -2300,10 +2346,14 @@ int FASTCALL SCSIMO::Inquiry(const DWORD *cdb, BYTE *buf)
 
 	// リビジョン(XM6のバージョンNo)
 	ctrl->GetVM()->GetVersion(major, minor);
+#if 0
+	char string[32];
 	sprintf(string, "0%01d%01d%01d",
 				major, (minor >> 4), (minor & 0x0f));
 	memcpy((char*)&buf[32], string, 4);
-
+#else
+	setRevisionString(&buf[32], major, minor);
+#endif
 	// サイズ36バイトかアロケーションレングスのうち、短い方で転送
 	size = 36;
 	len = cdb[4];
@@ -2328,6 +2378,7 @@ int FASTCALL SCSIMO::Inquiry(const DWORD *cdb, BYTE *buf)
 //
 //---------------------------------------------------------------------------
 CDTrack::CDTrack(SCSICD *scsicd)
+	: pImgpath(0)
 {
 	ASSERT(scsicd);
 
@@ -2343,6 +2394,8 @@ CDTrack::CDTrack(SCSICD *scsicd)
 	last_lba = 0;
 	audio = FALSE;
 	raw = FALSE;
+
+	pImgpath = new Filepath();
 }
 
 //---------------------------------------------------------------------------
@@ -2352,6 +2405,10 @@ CDTrack::CDTrack(SCSICD *scsicd)
 //---------------------------------------------------------------------------
 CDTrack::~CDTrack()
 {
+	if(pImgpath) {
+		delete pImgpath;
+		pImgpath = 0;
+	}
 }
 
 //---------------------------------------------------------------------------
@@ -2359,7 +2416,7 @@ CDTrack::~CDTrack()
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL CDTrack::Init(int track, DWORD first, DWORD last)
+int FASTCALL CDTrack::Init(int track, uint32_t first, uint32_t last)
 {
 	ASSERT(this);
 	ASSERT(!valid);
@@ -2382,7 +2439,7 @@ BOOL FASTCALL CDTrack::Init(int track, DWORD first, DWORD last)
 //	パス設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL CDTrack::SetPath(BOOL cdda, const Filepath& path)
+void FASTCALL CDTrack::SetPath(int cdda, const Filepath& path)
 {
 	ASSERT(this);
 	ASSERT(valid);
@@ -2391,7 +2448,7 @@ void FASTCALL CDTrack::SetPath(BOOL cdda, const Filepath& path)
 	audio = cdda;
 
 	// パス記憶
-	imgpath = path;
+	*pImgpath = path;
 }
 
 //---------------------------------------------------------------------------
@@ -2405,7 +2462,7 @@ void FASTCALL CDTrack::GetPath(Filepath& path) const
 	ASSERT(valid);
 
 	// パスを返す
-	path = imgpath;
+	path = *pImgpath;
 }
 
 //---------------------------------------------------------------------------
@@ -2413,7 +2470,7 @@ void FASTCALL CDTrack::GetPath(Filepath& path) const
 //	インデックス追加
 //
 //---------------------------------------------------------------------------
-void FASTCALL CDTrack::AddIndex(int index, DWORD lba)
+void FASTCALL CDTrack::AddIndex(int index, uint32_t lba)
 {
 	ASSERT(this);
 	ASSERT(valid);
@@ -2430,7 +2487,7 @@ void FASTCALL CDTrack::AddIndex(int index, DWORD lba)
 //	開始LBA取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL CDTrack::GetFirst() const
+uint32_t FASTCALL CDTrack::GetFirst() const
 {
 	ASSERT(this);
 	ASSERT(valid);
@@ -2444,7 +2501,7 @@ DWORD FASTCALL CDTrack::GetFirst() const
 //	終端LBA取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL CDTrack::GetLast() const
+uint32_t FASTCALL CDTrack::GetLast() const
 {
 	ASSERT(this);
 	ASSERT(valid);
@@ -2458,14 +2515,14 @@ DWORD FASTCALL CDTrack::GetLast() const
 //	ブロック数取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL CDTrack::GetBlocks() const
+uint32_t FASTCALL CDTrack::GetBlocks() const
 {
 	ASSERT(this);
 	ASSERT(valid);
 	ASSERT(first_lba < last_lba);
 
 	// 開始LBAと最終LBAから算出
-	return (DWORD)(last_lba - first_lba + 1);
+	return (uint32_t)(last_lba - first_lba + 1);
 }
 
 //---------------------------------------------------------------------------
@@ -2487,7 +2544,7 @@ int FASTCALL CDTrack::GetTrackNo() const
 //	有効なブロックか
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL CDTrack::IsValid(DWORD lba) const
+int FASTCALL CDTrack::IsValid(uint32_t lba) const
 {
 	ASSERT(this);
 
@@ -2515,7 +2572,7 @@ BOOL FASTCALL CDTrack::IsValid(DWORD lba) const
 //	オーディオトラックか
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL CDTrack::IsAudio() const
+int FASTCALL CDTrack::IsAudio() const
 {
 	ASSERT(this);
 	ASSERT(valid);
@@ -2600,7 +2657,7 @@ SCSICD::~SCSICD()
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSICD::Load(Fileio *fio, int ver)
+int FASTCALL SCSICD::Load(Fileio *fio, int ver)
 {
 	size_t sz;
 	disk_t buf;
@@ -2685,10 +2742,10 @@ BOOL FASTCALL SCSICD::Load(Fileio *fio, int ver)
 //	オープン
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSICD::Open(const Filepath& path, BOOL attn)
+int FASTCALL SCSICD::Open(const Filepath& path, int attn)
 {
 	Fileio fio;
-	DWORD size;
+	uint32_t size;
 	char file[5];
 
 	ASSERT(this);
@@ -2717,8 +2774,12 @@ BOOL FASTCALL SCSICD::Open(const Filepath& path, BOOL attn)
 	fio.Close();
 
 	// FILEで始まっていれば、CUEシートとみなす
-//	if (strnicmp(file, "FILE", 4) == 0) {	//-XM6_pid//
-	if (_strnicmp(file, "FILE", 4) == 0) {	//+XM6_pid//
+	bool b = (file[0] == 'F' || file[0] == 'f');
+	b = b && (file[1] == 'I' || file[1] == 'i');
+	b = b && (file[2] == 'L' || file[2] == 'l');
+	b = b && (file[3] == 'E' || file[3] == 'e');
+
+	if (b) {
 		// CUEとしてオープン
 		if (!OpenCue(path)) {
 			return FALSE;
@@ -2758,7 +2819,7 @@ BOOL FASTCALL SCSICD::Open(const Filepath& path, BOOL attn)
 //	オープン(CUE)
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSICD::OpenCue(const Filepath& path)
+int FASTCALL SCSICD::OpenCue(const Filepath& path)
 {
 	ASSERT(this);
 
@@ -2771,12 +2832,12 @@ BOOL FASTCALL SCSICD::OpenCue(const Filepath& path)
 //	オープン(ISO)
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSICD::OpenIso(const Filepath& path)
+int FASTCALL SCSICD::OpenIso(const Filepath& path)
 {
 	Fileio fio;
-	DWORD size;
-	BYTE header[12];
-	BYTE sync[12];
+	uint32_t size;
+	uint8_t header[12];
+	uint8_t sync[12];
 
 	ASSERT(this);
 
@@ -2864,11 +2925,10 @@ BOOL FASTCALL SCSICD::OpenIso(const Filepath& path)
 //	INQUIRY
 //
 //---------------------------------------------------------------------------
-int FASTCALL SCSICD::Inquiry(const DWORD *cdb, BYTE *buf)
+int FASTCALL SCSICD::Inquiry(const uint32_t *cdb, uint8_t *buf)
 {
-	DWORD major;
-	DWORD minor;
-	char string[32];
+	uint32_t major;
+	uint32_t minor;
 	int size;
 	int len;
 
@@ -2905,9 +2965,14 @@ int FASTCALL SCSICD::Inquiry(const DWORD *cdb, BYTE *buf)
 
 	// リビジョン(XM6のバージョンNo)
 	ctrl->GetVM()->GetVersion(major, minor);
+#if 0
+	char string[32];
 	sprintf(string, "0%01d%01d%01d",
 				major, (minor >> 4), (minor & 0x0f));
 	memcpy((char*)&buf[32], string, 4);
+#else
+	setRevisionString(&buf[32], major, minor);
+#endif
 
 	// サイズ36バイトかアロケーションレングスのうち、短い方で転送
 	size = 36;
@@ -2926,7 +2991,7 @@ int FASTCALL SCSICD::Inquiry(const DWORD *cdb, BYTE *buf)
 //	READ
 //
 //---------------------------------------------------------------------------
-int FASTCALL SCSICD::Read(BYTE *buf, int block)
+int FASTCALL SCSICD::Read(uint8_t *buf, int block)
 {
 	int index;
 	Filepath path;
@@ -2979,15 +3044,15 @@ int FASTCALL SCSICD::Read(BYTE *buf, int block)
 //	READ TOC
 //
 //---------------------------------------------------------------------------
-int FASTCALL SCSICD::ReadToc(const DWORD *cdb, BYTE *buf)
+int FASTCALL SCSICD::ReadToc(const uint32_t *cdb, uint8_t *buf)
 {
 	int last;
 	int index;
 	int length;
 	int loop;
 	int i;
-	BOOL msf;
-	DWORD lba;
+	int msf;
+	uint32_t lba;
 
 	ASSERT(this);
 	ASSERT(cdb);
@@ -3043,16 +3108,16 @@ int FASTCALL SCSICD::ReadToc(const DWORD *cdb, BYTE *buf)
 				// AAなので、最終LBA+1を返す
 				buf[0] = 0x00;
 				buf[1] = 0x0a;
-				buf[2] = (BYTE)track[0]->GetTrackNo();
-				buf[3] = (BYTE)last;
+				buf[2] = (uint8_t)track[0]->GetTrackNo();
+				buf[3] = (uint8_t)last;
 				buf[6] = 0xaa;
 				lba = track[tracks -1]->GetLast() + 1;
 				if (msf) {
 					LBAtoMSF(lba, &buf[8]);
 				}
 				else {
-					buf[10] = (BYTE)(lba >> 8);
-					buf[11] = (BYTE)lba;
+					buf[10] = (uint8_t)(lba >> 8);
+					buf[11] = (uint8_t)lba;
 				}
 				return length;
 			}
@@ -3068,10 +3133,10 @@ int FASTCALL SCSICD::ReadToc(const DWORD *cdb, BYTE *buf)
 	ASSERT(loop >= 1);
 
 	// ヘッダ作成
-	buf[0] = (BYTE)(((loop << 3) + 2) >> 8);
-	buf[1] = (BYTE)((loop << 3) + 2);
-	buf[2] = (BYTE)track[0]->GetTrackNo();
-	buf[3] = (BYTE)last;
+	buf[0] = (uint8_t)(((loop << 3) + 2) >> 8);
+	buf[1] = (uint8_t)((loop << 3) + 2);
+	buf[2] = (uint8_t)track[0]->GetTrackNo();
+	buf[3] = (uint8_t)last;
 	buf += 4;
 
 	// ループ
@@ -3087,15 +3152,15 @@ int FASTCALL SCSICD::ReadToc(const DWORD *cdb, BYTE *buf)
 		}
 
 		// トラック番号
-		buf[2] = (BYTE)track[index]->GetTrackNo();
+		buf[2] = (uint8_t)track[index]->GetTrackNo();
 
 		// トラックアドレス
 		if (msf) {
 			LBAtoMSF(track[index]->GetFirst(), &buf[4]);
 		}
 		else {
-			buf[6] = (BYTE)(track[index]->GetFirst() >> 8);
-			buf[7] = (BYTE)(track[index]->GetFirst());
+			buf[6] = (uint8_t)(track[index]->GetFirst() >> 8);
+			buf[7] = (uint8_t)(track[index]->GetFirst());
 		}
 
 		// バッファとインデックスを進める
@@ -3112,7 +3177,7 @@ int FASTCALL SCSICD::ReadToc(const DWORD *cdb, BYTE *buf)
 //	PLAY AUDIO
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSICD::PlayAudio(const DWORD *cdb)
+int FASTCALL SCSICD::PlayAudio(const uint32_t *cdb)
 {
 	ASSERT(this);
 
@@ -3125,7 +3190,7 @@ BOOL FASTCALL SCSICD::PlayAudio(const DWORD *cdb)
 //	PLAY AUDIO MSF
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSICD::PlayAudioMSF(const DWORD *cdb)
+int FASTCALL SCSICD::PlayAudioMSF(const uint32_t *cdb)
 {
 	ASSERT(this);
 
@@ -3138,7 +3203,7 @@ BOOL FASTCALL SCSICD::PlayAudioMSF(const DWORD *cdb)
 //	PLAY AUDIO TRACK
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSICD::PlayAudioTrack(const DWORD *cdb)
+int FASTCALL SCSICD::PlayAudioTrack(const uint32_t *cdb)
 {
 	ASSERT(this);
 
@@ -3151,11 +3216,11 @@ BOOL FASTCALL SCSICD::PlayAudioTrack(const DWORD *cdb)
 //	LBA→MSF変換
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCSICD::LBAtoMSF(DWORD lba, BYTE *msf) const
+void FASTCALL SCSICD::LBAtoMSF(uint32_t lba, uint8_t *msf) const
 {
-	DWORD m;
-	DWORD s;
-	DWORD f;
+	uint32_t m;
+	uint32_t s;
+	uint32_t f;
 
 	ASSERT(this);
 
@@ -3177,9 +3242,9 @@ void FASTCALL SCSICD::LBAtoMSF(DWORD lba, BYTE *msf) const
 	ASSERT(s < 60);
 	ASSERT(f < 75);
 	msf[0] = 0x00;
-	msf[1] = (BYTE)m;
-	msf[2] = (BYTE)s;
-	msf[3] = (BYTE)f;
+	msf[1] = (uint8_t)m;
+	msf[2] = (uint8_t)s;
+	msf[3] = (uint8_t)f;
 }
 
 //---------------------------------------------------------------------------
@@ -3187,9 +3252,9 @@ void FASTCALL SCSICD::LBAtoMSF(DWORD lba, BYTE *msf) const
 //	MSF→LBA変換
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL SCSICD::MSFtoLBA(const BYTE *msf) const
+uint32_t FASTCALL SCSICD::MSFtoLBA(const uint8_t *msf) const
 {
-	DWORD lba;
+	uint32_t lba;
 
 	ASSERT(this);
 	ASSERT(msf[2] < 60);
@@ -3241,7 +3306,7 @@ void FASTCALL SCSICD::ClearTrack()
 //	※見つからなければ-1を返す
 //
 //---------------------------------------------------------------------------
-int FASTCALL SCSICD::SearchTrack(DWORD lba) const
+int FASTCALL SCSICD::SearchTrack(uint32_t lba) const
 {
 	int i;
 
@@ -3265,7 +3330,7 @@ int FASTCALL SCSICD::SearchTrack(DWORD lba) const
 //	フレーム通知
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL SCSICD::NextFrame()
+int FASTCALL SCSICD::NextFrame()
 {
 	ASSERT(this);
 	ASSERT((frame >= 0) && (frame < 75));
@@ -3287,7 +3352,7 @@ BOOL FASTCALL SCSICD::NextFrame()
 //	CD-DAバッファ取得
 //
 //---------------------------------------------------------------------------
-void FASTCALL SCSICD::GetBuf(DWORD *buffer, int samples, DWORD rate)
+void FASTCALL SCSICD::GetBuf(uint32_t *buffer, int samples, uint32_t rate)
 {
 	ASSERT(this);
 }

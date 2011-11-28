@@ -8,6 +8,7 @@
 //---------------------------------------------------------------------------
 
 #include "stdafx.h"
+#if defined(XM6_USE_LOG)
 #include "os.h"
 #include "xm6.h"
 #include "sync.h"
@@ -16,6 +17,8 @@
 #include "vm.h"
 #include "cpu.h"
 #include "schedule.h"
+#include <stdio.h>
+#include <stdarg.h>
 
 //===========================================================================
 //
@@ -48,7 +51,7 @@ Log::Log()
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Log::Init(VM *vm)
+int FASTCALL Log::Init(VM *vm)
 {
 	ASSERT(this);
 	ASSERT(vm);
@@ -219,7 +222,7 @@ void Log::vFormat(loglevel level, const Device *device, char *format, va_list ar
 //	データを追加
 //
 //---------------------------------------------------------------------------
-void FASTCALL Log::AddString(DWORD id, loglevel level, char *string)
+void FASTCALL Log::AddString(uint32_t id, loglevel level, char *string)
 {
 	int index;
 
@@ -309,7 +312,7 @@ int FASTCALL Log::GetMax() const
 //	データを取得
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Log::GetData(int index, logdata_t *ptr)
+int FASTCALL Log::GetData(int index, logdata_t *ptr)
 {
 	char *string;
 
@@ -344,3 +347,22 @@ BOOL FASTCALL Log::GetData(int index, logdata_t *ptr)
 	sync->Unlock();
 	return TRUE;
 }
+
+#if !defined(NO_LOG)
+// コンストラクタ
+LogProxy::LogProxy(const Device* device, Log* log)
+{
+	m_device = device;
+	m_log = log;
+}
+
+// ログ出力
+void LogProxy::operator()(enum Log::loglevel level, char* format, ...) const
+{
+	va_list args;
+	va_start(args, format);
+	m_log->vFormat(level, m_device, format, args);
+	va_end(args);
+}
+#endif	// !NO_LOG
+#endif

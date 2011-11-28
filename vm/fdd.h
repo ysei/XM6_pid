@@ -12,7 +12,8 @@
 
 #include "device.h"
 #include "event.h"
-#include "filepath.h"
+//#include "filepath.h"
+class Filepath;
 
 //---------------------------------------------------------------------------
 //
@@ -64,40 +65,40 @@ public:
 	typedef struct {
 		FDI *fdi;						// フロッピーディスクイメージ
 		FDI *next;						// 次に挿入するイメージ
-		BOOL seeking;					// シーク中
+		int seeking;					// シーク中
 		int cylinder;					// シリンダ
-		BOOL insert;					// 挿入
-		BOOL invalid;					// 誤挿入
-		BOOL eject;						// イジェクトできる
-		BOOL blink;						// 挿入されていなければ点滅
-		BOOL access;					// アクセス中
+		int insert;					// 挿入
+		int invalid;					// 誤挿入
+		int eject;						// イジェクトできる
+		int blink;						// 挿入されていなければ点滅
+		int access;					// アクセス中
 	} drv_t;
 
 	// 内部データ定義
 	typedef struct {
-		BOOL motor;						// モータフラグ
-		BOOL settle;					// セトリング中
-		BOOL force;						// 強制レディフラグ
+		int motor;						// モータフラグ
+		int settle;					// セトリング中
+		int force;						// 強制レディフラグ
 		int selected;					// セレクトドライブ
-		BOOL first;						// モータON後の初回シーク
-		BOOL hd;						// HDフラグ
+		int first;						// モータON後の初回シーク
+		int hd;						// HDフラグ
 
-		BOOL fast;						// 高速モード
+		int fast;						// 高速モード
 	} fdd_t;
 
 public:
 	// 基本ファンクション
 	FDD(VM *p);
 										// コンストラクタ
-	BOOL FASTCALL Init();
+	int FASTCALL Init();
 										// 初期化
 	void FASTCALL Cleanup();
 										// クリーンアップ
 	void FASTCALL Reset();
 										// リセット
-	BOOL FASTCALL Save(Fileio *fio, int ver);
+	int FASTCALL Save(Fileio *fio, int ver);
 										// セーブ
-	BOOL FASTCALL Load(Fileio *fio, int ver);
+	int FASTCALL Load(Fileio *fio, int ver);
 										// ロード
 	void FASTCALL ApplyCfg(const Config *config);
 										// 設定適用
@@ -109,45 +110,45 @@ public:
 										// 内部ワーク取得
 	FDI* FASTCALL GetFDI(int drive);
 										// FDI取得
-	BOOL FASTCALL Callback(Event *ev);
+	int FASTCALL Callback(Event *ev);
 										// イベントコールバック
-	void FASTCALL ForceReady(BOOL flag);
+	void FASTCALL ForceReady(int flag);
 										// 強制レディ
-	DWORD FASTCALL GetRotationPos() const;
+	uint32_t FASTCALL GetRotationPos() const;
 										// 回転位置取得
-	DWORD FASTCALL GetRotationTime() const;
+	uint32_t FASTCALL GetRotationTime() const;
 										// 回転時間取得
-	DWORD FASTCALL GetSearch();
+	uint32_t FASTCALL GetSearch();
 										// 検索時間取得
-	void FASTCALL SetHD(BOOL hd);
+	void FASTCALL SetHD(int hd);
 										// HDフラグ設定
-	BOOL FASTCALL IsHD() const;
+	int FASTCALL IsHD() const;
 										// HDフラグ取得
-	void FASTCALL Access(BOOL flag);
+	void FASTCALL Access(int flag);
 										// アクセスLED設定
 
 	// ドライブ別
-	BOOL FASTCALL Open(int drive, const Filepath& path, int media = 0);
+	int FASTCALL Open(int drive, const Filepath& path, int media = 0);
 										// イメージオープン
 	void FASTCALL Insert(int drive);
 										// インサート
-	void FASTCALL Eject(int drive, BOOL force);
+	void FASTCALL Eject(int drive, int force);
 										// イジェクト
 	void FASTCALL Invalid(int drive);
 										// 誤挿入
-	void FASTCALL Control(int drive, DWORD func);
+	void FASTCALL Control(int drive, uint32_t func);
 										// ドライブコントロール
-	BOOL FASTCALL IsReady(int drive, BOOL fdc = TRUE) const;
+	int FASTCALL IsReady(int drive, int fdc = TRUE) const;
 										// レディチェック
-	BOOL FASTCALL IsWriteP(int drive) const;
+	int FASTCALL IsWriteP(int drive) const;
 										// 書き込み禁止チェック
-	BOOL FASTCALL IsReadOnly(int drive) const;
+	int FASTCALL IsReadOnly(int drive) const;
 										// Read Onlyチェック
-	void FASTCALL WriteP(int drive, BOOL flag);
+	void FASTCALL WriteP(int drive, int flag);
 										// 書き込み禁止設定
 	int FASTCALL GetStatus(int drive) const;
 										// ドライブステータス取得
-	void FASTCALL SetMotor(int drive, BOOL flag);
+	void FASTCALL SetMotor(int drive, int flag);
 										// モータ設定＋ドライブセレクト
 	int FASTCALL GetCylinder(int drive) const;
 										// シリンダ取得
@@ -161,27 +162,27 @@ public:
 										// イメージ内カレントメディア取得
 
 	// シーク
-	void FASTCALL Recalibrate(DWORD srt);
+	void FASTCALL Recalibrate(uint32_t srt);
 										// リキャリブレート
-	void FASTCALL StepIn(int step, DWORD srt);
+	void FASTCALL StepIn(int step, uint32_t srt);
 										// ステップイン
-	void FASTCALL StepOut(int step, DWORD srt);
+	void FASTCALL StepOut(int step, uint32_t srt);
 										// ステップアウト
 
 	// 読み込み・書き込み
-	int FASTCALL ReadID(DWORD *buf, BOOL mfm, int hd);
+	int FASTCALL ReadID(uint32_t *buf, int mfm, int hd);
 										// リードID
-	int FASTCALL ReadSector(BYTE *buf, int *len, BOOL mfm, DWORD *chrn, int hd);
+	int FASTCALL ReadSector(uint8_t *buf, int *len, int mfm, uint32_t *chrn, int hd);
 										// リードセクタ
-	int FASTCALL WriteSector(const BYTE *buf, int *len, BOOL mfm, DWORD *chrn, int hd, BOOL deleted);
+	int FASTCALL WriteSector(const uint8_t *buf, int *len, int mfm, uint32_t *chrn, int hd, int deleted);
 										// ライトセクタ
-	int FASTCALL ReadDiag(BYTE *buf, int *len, BOOL mfm, DWORD *chrn, int hd);
+	int FASTCALL ReadDiag(uint8_t *buf, int *len, int mfm, uint32_t *chrn, int hd);
 										// リードダイアグ
-	int FASTCALL WriteID(const BYTE *buf, DWORD d, int sc, BOOL mfm, int hd, int gpl);
+	int FASTCALL WriteID(const uint8_t *buf, uint32_t d, int sc, int mfm, int hd, int gpl);
 										// ライトID
 
 private:
-	void FASTCALL SeekInOut(int cylinder, DWORD srt);
+	void FASTCALL SeekInOut(int cylinder, uint32_t srt);
 										// シーク共通
 	void FASTCALL Rotation();
 										// モータ回転

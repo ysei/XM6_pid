@@ -23,9 +23,9 @@
 
 // ---------------------------------------------------------------------------
 
-#define FM_TLENTS		(1 << FM_TLBITS)
-#define FM_LFOENTS		(1 << FM_LFOBITS)
-#define FM_TLPOS		(FM_TLENTS/4)
+#define FM_TLENTS		(1 << FM_TLBITS)	// 128
+#define FM_LFOENTS		(1 << FM_LFOBITS)	// 256
+#define FM_TLPOS		(FM_TLENTS/4)		// 32
 
 //	ƒTƒCƒ“”g‚Ì¸“x‚Í 2^(1/256)
 #define FM_CLENTS		(0x1000 * 2)	// sin + TL + LFO
@@ -33,7 +33,7 @@
 // ---------------------------------------------------------------------------
 
 namespace FM
-{	
+{
 	//	Types ----------------------------------------------------------------
 	typedef FM_SAMPLETYPE	Sample;
 	typedef int32 			ISample;

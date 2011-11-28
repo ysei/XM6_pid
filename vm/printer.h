@@ -27,55 +27,55 @@ public:
 
 	// 内部データ定義
 	typedef struct {
-		BOOL connect;					// 接続
-		BOOL strobe;					// ストローブ
-		BOOL ready;						// レディ
-		BYTE data;						// 書き込みデータ
-		BYTE buf[BufMax];				// バッファデータ
-		DWORD read;						// バッファ読み込み位置
-		DWORD write;					// バッファ書き込み位置
-		DWORD num;						// バッファ有効数
+		int connect;					// 接続
+		int strobe;					// ストローブ
+		int ready;						// レディ
+		uint8_t data;						// 書き込みデータ
+		uint8_t buf[BufMax];				// バッファデータ
+		uint32_t read;						// バッファ読み込み位置
+		uint32_t write;					// バッファ書き込み位置
+		uint32_t num;						// バッファ有効数
 	} printer_t;
 
 public:
 	// 基本ファンクション
 	Printer(VM *p);
 										// コンストラクタ
-	BOOL FASTCALL Init();
+	int FASTCALL Init();
 										// 初期化
 	void FASTCALL Cleanup();
 										// クリーンアップ
 	void FASTCALL Reset();
 										// リセット
-	BOOL FASTCALL Save(Fileio *fio, int ver);
+	int FASTCALL Save(Fileio *fio, int ver);
 										// セーブ
-	BOOL FASTCALL Load(Fileio *fio, int ver);
+	int FASTCALL Load(Fileio *fio, int ver);
 										// ロード
 	void FASTCALL ApplyCfg(const Config *config);
 										// 設定適用
 
 	// メモリデバイス
-	DWORD FASTCALL ReadByte(DWORD addr);
+	uint32_t FASTCALL ReadByte(uint32_t addr);
 										// バイト読み込み
-	DWORD FASTCALL ReadWord(DWORD addr);
+	uint32_t FASTCALL ReadWord(uint32_t addr);
 										// ワード読み込み
-	void FASTCALL WriteByte(DWORD addr, DWORD data);
+	void FASTCALL WriteByte(uint32_t addr, uint32_t data);
 										// バイト書き込み
-	void FASTCALL WriteWord(DWORD addr, DWORD data);
+	void FASTCALL WriteWord(uint32_t addr, uint32_t data);
 										// ワード書き込み
-	DWORD FASTCALL ReadOnly(DWORD addr) const;
+	uint32_t FASTCALL ReadOnly(uint32_t addr) const;
 										// 読み込みのみ
 
 	// 外部API
-	BOOL FASTCALL IsReady() const		{ return printer.ready; }
+	int FASTCALL IsReady() const		{ return printer.ready; }
 										// レディ取得
 	void FASTCALL HSync();
 										// H-Sync通知
 	void FASTCALL GetPrinter(printer_t *buffer) const;
 										// 内部データ取得
-	void FASTCALL Connect(BOOL flag);
+	void FASTCALL Connect(int flag);
 										// プリンタ接続
-	BOOL FASTCALL GetData(BYTE *ptr);
+	int FASTCALL GetData(uint8_t *ptr);
 										// 先頭データ取得
 
 private:

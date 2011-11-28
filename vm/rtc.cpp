@@ -16,7 +16,6 @@
 #include "schedule.h"
 #include "fileio.h"
 #include "rtc.h"
-#include <time.h>
 
 //===========================================================================
 //
@@ -49,7 +48,7 @@ RTC::RTC(VM *p) : MemDevice(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL RTC::Init()
+int FASTCALL RTC::Init()
 {
 	ASSERT(this);
 
@@ -65,7 +64,9 @@ BOOL FASTCALL RTC::Init()
 
 	// イベントを作成(32Hz)
 	event.SetDevice(this);
+#if defined(XM6_USE_EVENT_DESC)
 	event.SetDesc("Clock 16Hz");
+#endif
 	event.SetUser(0);
 	event.SetTime(62500);
 	scheduler->AddEvent(&event);
@@ -145,7 +146,7 @@ void FASTCALL RTC::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL RTC::Save(Fileio *fio, int ver)
+int FASTCALL RTC::Save(Fileio *fio, int ver)
 {
 	size_t sz;
 
@@ -178,7 +179,7 @@ BOOL FASTCALL RTC::Save(Fileio *fio, int ver)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL RTC::Load(Fileio *fio, int ver)
+int FASTCALL RTC::Load(Fileio *fio, int ver)
 {
 	size_t sz;
 
@@ -225,9 +226,9 @@ void FASTCALL RTC::ApplyCfg(const Config* /*config*/)
 //	バイト読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL RTC::ReadByte(DWORD addr)
+uint32_t FASTCALL RTC::ReadByte(uint32_t addr)
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -439,7 +440,7 @@ DWORD FASTCALL RTC::ReadByte(DWORD addr)
 //	ワード読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL RTC::ReadWord(DWORD addr)
+uint32_t FASTCALL RTC::ReadWord(uint32_t addr)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -453,7 +454,7 @@ DWORD FASTCALL RTC::ReadWord(DWORD addr)
 //	バイト書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL RTC::WriteByte(DWORD addr, DWORD data)
+void FASTCALL RTC::WriteByte(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -840,14 +841,14 @@ void FASTCALL RTC::WriteByte(DWORD addr, DWORD data)
 //	ワード書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL RTC::WriteWord(DWORD addr, DWORD data)
+void FASTCALL RTC::WriteWord(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
 	ASSERT((addr & 1) == 0);
 	ASSERT(data < 0x10000);
 
-	WriteByte(addr + 1, (BYTE)data);
+	WriteByte(addr + 1, (uint8_t)data);
 }
 
 //---------------------------------------------------------------------------
@@ -855,9 +856,9 @@ void FASTCALL RTC::WriteWord(DWORD addr, DWORD data)
 //	読み込みのみ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL RTC::ReadOnly(DWORD addr) const
+uint32_t FASTCALL RTC::ReadOnly(uint32_t addr) const
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -1078,7 +1079,7 @@ void FASTCALL RTC::GetRTC(rtc_t *buffer)
 //	イベントコールバック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL RTC::Callback(Event* /*ev*/)
+int FASTCALL RTC::Callback(Event* /*ev*/)
 {
 	ASSERT(this);
 
@@ -1128,38 +1129,34 @@ BOOL FASTCALL RTC::Callback(Event* /*ev*/)
 //	現在時刻をセット
 //
 //---------------------------------------------------------------------------
-void FASTCALL RTC::Adjust(BOOL alarm)
+void FASTCALL RTC::Adjust(int alarm)
 {
-	time_t ltime;
-	struct tm *now;
-	int leap;
-
     ASSERT(this);
 
-	// 時刻を取得
-	ltime = time(NULL);
-	now = localtime(&ltime);
+	int leap;
 
-	// 変換
-	rtc.year = (now->tm_year + 20) % 100;
-	rtc.month = now->tm_mon + 1;
-	rtc.day = now->tm_mday;
-	rtc.week = now->tm_wday;
-	rtc.hour = now->tm_hour;
-	rtc.min = now->tm_min;
-	rtc.sec = now->tm_sec;
+	XM6_RTC t;
+	if(vm->GetHostRtc(&t)) {
+		rtc.year	= (t.year + 20) % 100;
+		rtc.month	= t.mon + 1;
+		rtc.day		= t.mday;
+		rtc.week	= t.wday;
+		rtc.hour	= t.hour;
+		rtc.min		= t.min;
+		rtc.sec		= t.sec;
 
-	// leapを計算(2100年には未対応)
-	leap = now->tm_year;
-	leap %= 4;
-	rtc.leap = leap;
+		// leapを計算(2100年には未対応)
+		leap = t.year;
+		leap %= 4;
+		rtc.leap = leap;
 
-	// アラームには同じ時間を設定
-	if (alarm) {
-		rtc.alarm_min = rtc.min;
-		rtc.alarm_hour = rtc.hour;
-		rtc.alarm_week = rtc.week;
-		rtc.alarm_day = rtc.day;
+		// アラームには同じ時間を設定
+		if (alarm) {
+			rtc.alarm_min	= rtc.min;
+			rtc.alarm_hour	= rtc.hour;
+			rtc.alarm_week	= rtc.week;
+			rtc.alarm_day	= rtc.day;
+		}
 	}
 }
 
@@ -1170,7 +1167,7 @@ void FASTCALL RTC::Adjust(BOOL alarm)
 //---------------------------------------------------------------------------
 void FASTCALL RTC::AlarmOut()
 {
-	BOOL flag;
+	int flag;
 
 	flag = FALSE;
 
@@ -1206,7 +1203,7 @@ void FASTCALL RTC::AlarmOut()
 //	アラーム信号取得
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL RTC::GetAlarmOut() const
+int FASTCALL RTC::GetAlarmOut() const
 {
 	ASSERT(this);
 
@@ -1218,7 +1215,7 @@ BOOL FASTCALL RTC::GetAlarmOut() const
 //	FDD用点滅信号取得
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL RTC::GetBlink(int drive) const
+int FASTCALL RTC::GetBlink(int drive) const
 {
 	ASSERT(this);
 	ASSERT((drive == 0) || (drive == 1));
@@ -1243,9 +1240,9 @@ BOOL FASTCALL RTC::GetBlink(int drive) const
 //	タイマーLEDを取得
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL RTC::GetTimerLED() const
+int FASTCALL RTC::GetTimerLED() const
 {
-	BOOL led;
+	int led;
 
 	ASSERT(this);
 	ASSERT(rtc.clkout <= 7);
@@ -1388,7 +1385,7 @@ void FASTCALL RTC::MinUp()
 //---------------------------------------------------------------------------
 void FASTCALL RTC::AlarmCheck()
 {
-	BOOL flag;
+	int flag;
 
 	flag = TRUE;
 
@@ -1415,6 +1412,6 @@ void FASTCALL RTC::AlarmCheck()
 //	日付テーブル
 //
 //---------------------------------------------------------------------------
-const DWORD RTC::DayTable[] = {
+const uint32_t RTC::DayTable[] = {
 	31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
 };

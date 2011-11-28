@@ -57,7 +57,7 @@ PPI::PPI(VM *p) : MemDevice(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL PPI::Init()
+int FASTCALL PPI::Init()
 {
 	int i;
 
@@ -138,11 +138,11 @@ void FASTCALL PPI::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL PPI::Save(Fileio *fio, int ver)
+int FASTCALL PPI::Save(Fileio *fio, int ver)
 {
 	size_t sz;
 	int i;
-	DWORD type;
+	uint32_t type;
 
 	ASSERT(this);
 	ASSERT(fio);
@@ -184,11 +184,11 @@ BOOL FASTCALL PPI::Save(Fileio *fio, int ver)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL PPI::Load(Fileio *fio, int ver)
+int FASTCALL PPI::Load(Fileio *fio, int ver)
 {
 	size_t sz;
 	int i;
-	DWORD type;
+	uint32_t type;
 
 	ASSERT(this);
 	ASSERT(fio);
@@ -299,9 +299,9 @@ void FASTCALL PPI::AssertDiag() const
 //	バイト読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL PPI::ReadByte(DWORD addr)
+uint32_t FASTCALL PPI::ReadByte(uint32_t addr)
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -366,7 +366,7 @@ DWORD FASTCALL PPI::ReadByte(DWORD addr)
 //	ワード読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL PPI::ReadWord(DWORD addr)
+uint32_t FASTCALL PPI::ReadWord(uint32_t addr)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -381,9 +381,9 @@ DWORD FASTCALL PPI::ReadWord(DWORD addr)
 //	バイト書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL PPI::WriteByte(DWORD addr, DWORD data)
+void FASTCALL PPI::WriteByte(uint32_t addr, uint32_t data)
 {
-	DWORD bit;
+	uint32_t bit;
 	int i;
 
 	ASSERT(this);
@@ -414,12 +414,12 @@ void FASTCALL PPI::WriteByte(DWORD addr, DWORD data)
 		if (data < 0x80) {
 			// ビットセット・リセットモード
 			i = ((data >> 1) & 0x07);
-			bit = (DWORD)(1 << i);
+			bit = (uint32_t)(1 << i);
 			if (data & 1) {
-				SetPortC(DWORD(ppi.portc | bit));
+				SetPortC(uint32_t(ppi.portc | bit));
 			}
 			else {
-				SetPortC(DWORD(ppi.portc & ~bit));
+				SetPortC(uint32_t(ppi.portc & ~bit));
 			}
 			return;
 		}
@@ -440,7 +440,7 @@ void FASTCALL PPI::WriteByte(DWORD addr, DWORD data)
 //	ワード書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL PPI::WriteWord(DWORD addr, DWORD data)
+void FASTCALL PPI::WriteWord(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -448,7 +448,7 @@ void FASTCALL PPI::WriteWord(DWORD addr, DWORD data)
 	ASSERT(data < 0x10000);
 	ASSERT_DIAG();
 
-	WriteByte(addr + 1, (BYTE)data);
+	WriteByte(addr + 1, (uint8_t)data);
 }
 
 //---------------------------------------------------------------------------
@@ -456,9 +456,9 @@ void FASTCALL PPI::WriteWord(DWORD addr, DWORD data)
 //	読み込みのみ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL PPI::ReadOnly(DWORD addr) const
+uint32_t FASTCALL PPI::ReadOnly(uint32_t addr) const
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -507,7 +507,7 @@ DWORD FASTCALL PPI::ReadOnly(DWORD addr) const
 //	ポートCセット
 //
 //---------------------------------------------------------------------------
-void FASTCALL PPI::SetPortC(DWORD data)
+void FASTCALL PPI::SetPortC(uint32_t data)
 {
 	ASSERT(this);
 	ASSERT(data < 0x100);
@@ -747,7 +747,7 @@ void FASTCALL JoyDevice::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL JoyDevice::Save(Fileio *fio, int /*ver*/)
+int FASTCALL JoyDevice::Save(Fileio *fio, int /*ver*/)
 {
 	ASSERT(this);
 	ASSERT(fio);
@@ -759,7 +759,7 @@ BOOL FASTCALL JoyDevice::Save(Fileio *fio, int /*ver*/)
 	}
 
 	// データ数だけ保存
-	if (!fio->Write(data, sizeof(DWORD) * datas)) {
+	if (!fio->Write(data, sizeof(uint32_t) * datas)) {
 		return FALSE;
 	}
 
@@ -771,7 +771,7 @@ BOOL FASTCALL JoyDevice::Save(Fileio *fio, int /*ver*/)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL JoyDevice::Load(Fileio *fio, int /*ver*/)
+int FASTCALL JoyDevice::Load(Fileio *fio, int /*ver*/)
 {
 	ASSERT(this);
 	ASSERT(fio);
@@ -786,7 +786,7 @@ BOOL FASTCALL JoyDevice::Load(Fileio *fio, int /*ver*/)
 	changed = TRUE;
 
 	// データ実体をロード
-	if (!fio->Read(data, sizeof(DWORD) * datas)) {
+	if (!fio->Read(data, sizeof(uint32_t) * datas)) {
 		return FALSE;
 	}
 
@@ -798,7 +798,7 @@ BOOL FASTCALL JoyDevice::Load(Fileio *fio, int /*ver*/)
 //	ポート読み取り
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL JoyDevice::ReadPort(DWORD ctl)
+uint32_t FASTCALL JoyDevice::ReadPort(uint32_t ctl)
 {
 	ASSERT(this);
 	ASSERT((port >= 0) && (port < PPI::PortMax));
@@ -823,7 +823,7 @@ DWORD FASTCALL JoyDevice::ReadPort(DWORD ctl)
 //	ポート読み取り(Read Only)
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL JoyDevice::ReadOnly(DWORD /*ctl*/) const
+uint32_t FASTCALL JoyDevice::ReadOnly(uint32_t /*ctl*/) const
 {
 	ASSERT(this);
 
@@ -836,7 +836,7 @@ DWORD FASTCALL JoyDevice::ReadOnly(DWORD /*ctl*/) const
 //	コントロール
 //
 //---------------------------------------------------------------------------
-void FASTCALL JoyDevice::Control(DWORD /*ctl*/)
+void FASTCALL JoyDevice::Control(uint32_t /*ctl*/)
 {
 	ASSERT(this);
 }
@@ -926,7 +926,7 @@ JoyAtari::JoyAtari(PPI *parent, int no) : JoyDevice(parent, no)
 	button_desc = ButtonDescTable;
 
 	// データバッファ確保
-	data = new DWORD[datas];
+	data = new uint32_t[datas];
 
 	// 初期データ設定
 	data[0] = 0xff;
@@ -937,7 +937,7 @@ JoyAtari::JoyAtari(PPI *parent, int no) : JoyDevice(parent, no)
 //	ポート読み取り(Read Only)
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL JoyAtari::ReadOnly(DWORD ctl) const
+uint32_t FASTCALL JoyAtari::ReadOnly(uint32_t ctl) const
 {
 	ASSERT(this);
 	ASSERT(ctl < 0x100);
@@ -959,7 +959,7 @@ DWORD FASTCALL JoyAtari::ReadOnly(DWORD ctl) const
 void FASTCALL JoyAtari::MakeData()
 {
 	const PPI::joyinfo_t *info;
-	DWORD axis;
+	uint32_t axis;
 
 	ASSERT(this);
 	ASSERT(ppi);
@@ -1046,7 +1046,7 @@ JoyASS::JoyASS(PPI *parent, int no) : JoyDevice(parent, no)
 	button_desc = ButtonDescTable;
 
 	// データバッファ確保
-	data = new DWORD[datas];
+	data = new uint32_t[datas];
 
 	// 初期データ設定
 	data[0] = 0xff;
@@ -1057,7 +1057,7 @@ JoyASS::JoyASS(PPI *parent, int no) : JoyDevice(parent, no)
 //	ポート読み取り(Read Only)
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL JoyASS::ReadOnly(DWORD ctl) const
+uint32_t FASTCALL JoyASS::ReadOnly(uint32_t ctl) const
 {
 	ASSERT(this);
 	ASSERT(ctl < 0x100);
@@ -1079,7 +1079,7 @@ DWORD FASTCALL JoyASS::ReadOnly(DWORD ctl) const
 void FASTCALL JoyASS::MakeData()
 {
 	const PPI::joyinfo_t *info;
-	DWORD axis;
+	uint32_t axis;
 
 	ASSERT(this);
 	ASSERT(ppi);
@@ -1181,7 +1181,7 @@ JoyCyberA::JoyCyberA(PPI *parent, int no) : JoyDevice(parent, no)
 	button_desc = ButtonDescTable;
 
 	// データバッファ確保
-	data = new DWORD[datas];
+	data = new uint32_t[datas];
 
 	// 初期データ設定
 	for (i=0; i<12; i++) {
@@ -1236,7 +1236,7 @@ void FASTCALL JoyCyberA::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL JoyCyberA::Save(Fileio *fio, int ver)
+int FASTCALL JoyCyberA::Save(Fileio *fio, int ver)
 {
 	ASSERT(this);
 	ASSERT(fio);
@@ -1269,7 +1269,7 @@ BOOL FASTCALL JoyCyberA::Save(Fileio *fio, int ver)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL JoyCyberA::Load(Fileio *fio, int ver)
+int FASTCALL JoyCyberA::Load(Fileio *fio, int ver)
 {
 	ASSERT(this);
 	ASSERT(fio);
@@ -1311,10 +1311,10 @@ BOOL FASTCALL JoyCyberA::Load(Fileio *fio, int ver)
 //	ポート読み取り
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL JoyCyberA::ReadPort(DWORD ctl)
+uint32_t FASTCALL JoyCyberA::ReadPort(uint32_t ctl)
 {
-	DWORD diff;
-	DWORD n;
+	uint32_t diff;
+	uint32_t n;
 
 	// シーケンス0は無効
 	if (seq == 0) {
@@ -1386,7 +1386,7 @@ DWORD FASTCALL JoyCyberA::ReadPort(DWORD ctl)
 //	ポート読み取り(Read Only)
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL JoyCyberA::ReadOnly(DWORD /*ctl*/) const
+uint32_t FASTCALL JoyCyberA::ReadOnly(uint32_t /*ctl*/) const
 {
 	ASSERT(this);
 
@@ -1410,7 +1410,7 @@ DWORD FASTCALL JoyCyberA::ReadOnly(DWORD /*ctl*/) const
 //	コントロール
 //
 //---------------------------------------------------------------------------
-void FASTCALL JoyCyberA::Control(DWORD ctl)
+void FASTCALL JoyCyberA::Control(uint32_t ctl)
 {
 	ASSERT(this);
 	ASSERT(ctl < 0x100);
@@ -1458,7 +1458,7 @@ void FASTCALL JoyCyberA::Control(DWORD ctl)
 void FASTCALL JoyCyberA::MakeData()
 {
 	const PPI::joyinfo_t *info;
-	DWORD axis;
+	uint32_t axis;
 
 	ASSERT(this);
 	ASSERT(ppi);
@@ -1605,7 +1605,7 @@ JoyCyberD::JoyCyberD(PPI *parent, int no) : JoyDevice(parent, no)
 	button_desc = ButtonDescTable;
 
 	// データバッファ確保
-	data = new DWORD[datas];
+	data = new uint32_t[datas];
 
 	// 初期データ設定
 	data[0] = 0xff;
@@ -1617,7 +1617,7 @@ JoyCyberD::JoyCyberD(PPI *parent, int no) : JoyDevice(parent, no)
 //	ポート読み取り(Read Only)
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL JoyCyberD::ReadOnly(DWORD ctl) const
+uint32_t FASTCALL JoyCyberD::ReadOnly(uint32_t ctl) const
 {
 	ASSERT(this);
 	ASSERT(ctl < 0x100);
@@ -1641,7 +1641,7 @@ DWORD FASTCALL JoyCyberD::ReadOnly(DWORD ctl) const
 void FASTCALL JoyCyberD::MakeData()
 {
 	const PPI::joyinfo_t *info;
-	DWORD axis;
+	uint32_t axis;
 
 	ASSERT(this);
 	ASSERT(ppi);
@@ -1764,7 +1764,7 @@ JoyMd3::JoyMd3(PPI *parent, int no) : JoyDevice(parent, no)
 	button_desc = ButtonDescTable;
 
 	// データバッファ確保
-	data = new DWORD[datas];
+	data = new uint32_t[datas];
 
 	// 初期データ設定
 	data[0] = 0xf3;
@@ -1776,7 +1776,7 @@ JoyMd3::JoyMd3(PPI *parent, int no) : JoyDevice(parent, no)
 //	ポート読み取り(Read Only)
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL JoyMd3::ReadOnly(DWORD ctl) const
+uint32_t FASTCALL JoyMd3::ReadOnly(uint32_t ctl) const
 {
 	ASSERT(this);
 	ASSERT(ctl < 0x100);
@@ -1800,7 +1800,7 @@ DWORD FASTCALL JoyMd3::ReadOnly(DWORD ctl) const
 void FASTCALL JoyMd3::MakeData()
 {
 	const PPI::joyinfo_t *info;
-	DWORD axis;
+	uint32_t axis;
 
 	ASSERT(this);
 	ASSERT(ppi);
@@ -1902,7 +1902,7 @@ JoyMd6::JoyMd6(PPI *parent, int no) : JoyDevice(parent, no)
 	button_desc = ButtonDescTable;
 
 	// データバッファ確保
-	data = new DWORD[datas];
+	data = new uint32_t[datas];
 
 	// 初期データ設定
 	data[0] = 0xf3;
@@ -1943,7 +1943,7 @@ void FASTCALL JoyMd6::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL JoyMd6::Save(Fileio *fio, int ver)
+int FASTCALL JoyMd6::Save(Fileio *fio, int ver)
 {
 	ASSERT(this);
 	ASSERT(fio);
@@ -1976,7 +1976,7 @@ BOOL FASTCALL JoyMd6::Save(Fileio *fio, int ver)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL JoyMd6::Load(Fileio *fio, int ver)
+int FASTCALL JoyMd6::Load(Fileio *fio, int ver)
 {
 	ASSERT(this);
 	ASSERT(fio);
@@ -2009,7 +2009,7 @@ BOOL FASTCALL JoyMd6::Load(Fileio *fio, int ver)
 //	ポート読み取り(Read Only)
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL JoyMd6::ReadOnly(DWORD /*ctl*/) const
+uint32_t FASTCALL JoyMd6::ReadOnly(uint32_t /*ctl*/) const
 {
 	ASSERT(this);
 	ASSERT(data[0] < 0x100);
@@ -2070,9 +2070,9 @@ DWORD FASTCALL JoyMd6::ReadOnly(DWORD /*ctl*/) const
 //	コントロール
 //
 //---------------------------------------------------------------------------
-void FASTCALL JoyMd6::Control(DWORD ctl)
+void FASTCALL JoyMd6::Control(uint32_t ctl)
 {
-	DWORD diff;
+	uint32_t diff;
 
 	ASSERT(this);
 	ASSERT(ctl < 0x100);
@@ -2194,7 +2194,7 @@ void FASTCALL JoyMd6::Control(DWORD ctl)
 void FASTCALL JoyMd6::MakeData()
 {
 	const PPI::joyinfo_t *info;
-	DWORD axis;
+	uint32_t axis;
 
 	ASSERT(this);
 	ASSERT(ppi);
@@ -2352,7 +2352,7 @@ JoyCpsf::JoyCpsf(PPI *parent, int no) : JoyDevice(parent, no)
 	button_desc = ButtonDescTable;
 
 	// データバッファ確保
-	data = new DWORD[datas];
+	data = new uint32_t[datas];
 
 	// 初期データ設定
 	data[0] = 0xff;
@@ -2364,7 +2364,7 @@ JoyCpsf::JoyCpsf(PPI *parent, int no) : JoyDevice(parent, no)
 //	ポート読み取り(Read Only)
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL JoyCpsf::ReadOnly(DWORD ctl) const
+uint32_t FASTCALL JoyCpsf::ReadOnly(uint32_t ctl) const
 {
 	ASSERT(this);
 	ASSERT(ctl < 0x100);
@@ -2388,7 +2388,7 @@ DWORD FASTCALL JoyCpsf::ReadOnly(DWORD ctl) const
 void FASTCALL JoyCpsf::MakeData()
 {
 	const PPI::joyinfo_t *info;
-	DWORD axis;
+	uint32_t axis;
 
 	ASSERT(this);
 	ASSERT(ppi);
@@ -2512,7 +2512,7 @@ JoyCpsfMd::JoyCpsfMd(PPI *parent, int no) : JoyDevice(parent, no)
 	button_desc = ButtonDescTable;
 
 	// データバッファ確保
-	data = new DWORD[datas];
+	data = new uint32_t[datas];
 
 	// 初期データ設定
 	data[0] = 0xff;
@@ -2524,7 +2524,7 @@ JoyCpsfMd::JoyCpsfMd(PPI *parent, int no) : JoyDevice(parent, no)
 //	ポート読み取り(Read Only)
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL JoyCpsfMd::ReadOnly(DWORD ctl) const
+uint32_t FASTCALL JoyCpsfMd::ReadOnly(uint32_t ctl) const
 {
 	ASSERT(this);
 	ASSERT(ctl < 0x100);
@@ -2548,7 +2548,7 @@ DWORD FASTCALL JoyCpsfMd::ReadOnly(DWORD ctl) const
 void FASTCALL JoyCpsfMd::MakeData()
 {
 	const PPI::joyinfo_t *info;
-	DWORD axis;
+	uint32_t axis;
 
 	ASSERT(this);
 	ASSERT(ppi);
@@ -2672,7 +2672,7 @@ JoyMagical::JoyMagical(PPI *parent, int no) : JoyDevice(parent, no)
 	button_desc = ButtonDescTable;
 
 	// データバッファ確保
-	data = new DWORD[datas];
+	data = new uint32_t[datas];
 
 	// 初期データ設定
 	data[0] = 0xff;
@@ -2684,7 +2684,7 @@ JoyMagical::JoyMagical(PPI *parent, int no) : JoyDevice(parent, no)
 //	ポート読み取り(Read Only)
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL JoyMagical::ReadOnly(DWORD ctl) const
+uint32_t FASTCALL JoyMagical::ReadOnly(uint32_t ctl) const
 {
 	ASSERT(this);
 	ASSERT(ctl < 0x100);
@@ -2708,7 +2708,7 @@ DWORD FASTCALL JoyMagical::ReadOnly(DWORD ctl) const
 void FASTCALL JoyMagical::MakeData()
 {
 	const PPI::joyinfo_t *info;
-	DWORD axis;
+	uint32_t axis;
 
 	ASSERT(this);
 	ASSERT(ppi);
@@ -2820,7 +2820,7 @@ JoyLR::JoyLR(PPI *parent, int no) : JoyDevice(parent, no)
 	button_desc = ButtonDescTable;
 
 	// データバッファ確保
-	data = new DWORD[datas];
+	data = new uint32_t[datas];
 
 	// 初期データ設定
 	data[0] = 0xff;
@@ -2832,7 +2832,7 @@ JoyLR::JoyLR(PPI *parent, int no) : JoyDevice(parent, no)
 //	ポート読み取り(Read Only)
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL JoyLR::ReadOnly(DWORD ctl) const
+uint32_t FASTCALL JoyLR::ReadOnly(uint32_t ctl) const
 {
 	ASSERT(this);
 	ASSERT(ctl < 0x100);
@@ -2856,7 +2856,7 @@ DWORD FASTCALL JoyLR::ReadOnly(DWORD ctl) const
 void FASTCALL JoyLR::MakeData()
 {
 	const PPI::joyinfo_t *info;
-	DWORD axis;
+	uint32_t axis;
 
 	ASSERT(this);
 	ASSERT(ppi);
@@ -2975,7 +2975,7 @@ JoyPacl::JoyPacl(PPI *parent, int no) : JoyDevice(parent, no)
 	button_desc = ButtonDescTable;
 
 	// データバッファ確保
-	data = new DWORD[datas];
+	data = new uint32_t[datas];
 
 	// 初期データ設定
 	data[0] = 0xff;
@@ -2986,7 +2986,7 @@ JoyPacl::JoyPacl(PPI *parent, int no) : JoyDevice(parent, no)
 //	ポート読み取り(Read Only)
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL JoyPacl::ReadOnly(DWORD ctl) const
+uint32_t FASTCALL JoyPacl::ReadOnly(uint32_t ctl) const
 {
 	ASSERT(this);
 	ASSERT(ctl < 0x100);
@@ -3070,7 +3070,7 @@ JoyBM::JoyBM(PPI *parent, int no) : JoyDevice(parent, no)
 	button_desc = ButtonDescTable;
 
 	// データバッファ確保
-	data = new DWORD[datas];
+	data = new uint32_t[datas];
 
 	// 初期データ設定
 	data[0] = 0xff;
@@ -3081,7 +3081,7 @@ JoyBM::JoyBM(PPI *parent, int no) : JoyDevice(parent, no)
 //	ポート読み取り(Read Only)
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL JoyBM::ReadOnly(DWORD ctl) const
+uint32_t FASTCALL JoyBM::ReadOnly(uint32_t ctl) const
 {
 	ASSERT(this);
 	ASSERT(ctl < 0x100);

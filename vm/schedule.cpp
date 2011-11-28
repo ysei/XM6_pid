@@ -90,7 +90,7 @@ Scheduler::Scheduler(VM *p) : Device(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Scheduler::Init()
+int FASTCALL Scheduler::Init()
 {
 	ASSERT(this);
 
@@ -162,7 +162,7 @@ void FASTCALL Scheduler::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Scheduler::Save(Fileio *fio, int /*ver*/)
+int FASTCALL Scheduler::Save(Fileio *fio, int /*ver*/)
 {
 	size_t sz;
 
@@ -212,7 +212,7 @@ BOOL FASTCALL Scheduler::Save(Fileio *fio, int /*ver*/)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Scheduler::Load(Fileio *fio, int ver)
+int FASTCALL Scheduler::Load(Fileio *fio, int ver)
 {
 	size_t sz;
 	Event *first;
@@ -330,11 +330,11 @@ void FASTCALL Scheduler::GetScheduler(scheduler_t *buffer) const
 //	実行
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL Scheduler::Exec(DWORD hus)
+uint32_t FASTCALL Scheduler::Exec(uint32_t hus)
 {
 	int cycle;
-	DWORD result;
-	DWORD dcycle;
+	uint32_t result;
+	uint32_t dcycle;
 
 	ASSERT(this);
 	ASSERT(hus > 0);
@@ -388,7 +388,7 @@ DWORD FASTCALL Scheduler::Exec(DWORD hus)
 
 				// 時間Sync
 				while (sch.time >= 200) {
-					if ((DWORD)sch.cycle < sch.speed) {
+					if ((uint32_t)sch.cycle < sch.speed) {
 						break;
 					}
 					sch.time -= 200;
@@ -404,7 +404,7 @@ DWORD FASTCALL Scheduler::Exec(DWORD hus)
 				LOG0(Log::Normal, "ブレーク");
 #endif	// SCHEDULER_LOG
 				sch.brk = FALSE;
-				return (DWORD)(sch.one | 0x80000000);
+				return (uint32_t)(sch.one | 0x80000000);
 			}
 			else {
 				// 実行エラー
@@ -419,7 +419,7 @@ DWORD FASTCALL Scheduler::Exec(DWORD hus)
 					ExecEvent(sch.one);
 
 					while (sch.time >= 200) {
-						if ((DWORD)sch.cycle < sch.speed) {
+						if ((uint32_t)sch.cycle < sch.speed) {
 							break;
 						}
 						sch.time -= 200;
@@ -446,7 +446,7 @@ DWORD FASTCALL Scheduler::Exec(DWORD hus)
 
 			// sch.timeを更新
 			while (sch.time >= 200) {
-				if ((DWORD)sch.cycle < sch.speed) {
+				if ((uint32_t)sch.cycle < sch.speed) {
 					break;
 				}
 				sch.time -= 200;
@@ -521,10 +521,10 @@ DWORD FASTCALL Scheduler::Exec(DWORD hus)
 //	トレース
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL Scheduler::Trace(DWORD hus)
+uint32_t FASTCALL Scheduler::Trace(uint32_t hus)
 {
 	int cycle;
-	DWORD result;
+	uint32_t result;
 
 	ASSERT(this);
 	ASSERT(hus > 0);
@@ -607,10 +607,10 @@ DWORD FASTCALL Scheduler::Trace(DWORD hus)
 //	CPU速度を設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL Scheduler::SetCPUSpeed(DWORD speed)
+void FASTCALL Scheduler::SetCPUSpeed(uint32_t speed)
 {
 	int i;
-	DWORD cycle;
+	uint32_t cycle;
 
 	ASSERT(this);
 	ASSERT(speed > 0);
@@ -623,7 +623,7 @@ void FASTCALL Scheduler::SetCPUSpeed(DWORD speed)
 
 	// 0～2048usまで、0.5us単位での対応するサイクル数を計算
 	for (i=0; i<0x1000; i++) {
-		cycle = (DWORD)i;
+		cycle = (uint32_t)i;
 		cycle *= speed;
 		cycle /= 200;
 		CycleTable[i] = cycle;
@@ -635,9 +635,9 @@ void FASTCALL Scheduler::SetCPUSpeed(DWORD speed)
 //	経過時間を取得
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL Scheduler::GetPassedTime() const
+uint32_t FASTCALL Scheduler::GetPassedTime() const
 {
-	DWORD hus;
+	uint32_t hus;
 
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -667,10 +667,10 @@ DWORD FASTCALL Scheduler::GetPassedTime() const
 //	ブレークポイント設定
 //
 //---------------------------------------------------------------------------
-void FASTCALL Scheduler::SetBreak(DWORD addr, BOOL enable)
+void FASTCALL Scheduler::SetBreak(uint32_t addr, int enable)
 {
 	int i;
-	BOOL flag;
+	int flag;
 
 	ASSERT(this);
 	ASSERT(addr <= 0xffffff);
@@ -728,10 +728,10 @@ void FASTCALL Scheduler::SetBreak(DWORD addr, BOOL enable)
 //	ブレークポイント削除
 //
 //---------------------------------------------------------------------------
-void FASTCALL Scheduler::DelBreak(DWORD addr)
+void FASTCALL Scheduler::DelBreak(uint32_t addr)
 {
 	int i;
-	BOOL flag;
+	int flag;
 
 	ASSERT(this);
 	ASSERT(addr <= 0xffffff);
@@ -787,7 +787,7 @@ void FASTCALL Scheduler::GetBreak(int index, breakpoint_t *buf) const
 //	ブレークポイント有効・無効
 //
 //---------------------------------------------------------------------------
-void FASTCALL Scheduler::EnableBreak(int index, BOOL enable)
+void FASTCALL Scheduler::EnableBreak(int index, int enable)
 {
 	ASSERT(this);
 	ASSERT((index >= 0) && (index < BreakMax));
@@ -818,7 +818,7 @@ void FASTCALL Scheduler::ClearBreak(int index)
 //	ブレークアドレス変更
 //
 //---------------------------------------------------------------------------
-void FASTCALL Scheduler::AddrBreak(int index, DWORD addr)
+void FASTCALL Scheduler::AddrBreak(int index, uint32_t addr)
 {
 	ASSERT(this);
 	ASSERT((index >= 0) && (index < BreakMax));
@@ -834,7 +834,7 @@ void FASTCALL Scheduler::AddrBreak(int index, DWORD addr)
 //	ブレークアドレスチェック
 //
 //---------------------------------------------------------------------------
-int FASTCALL Scheduler::IsBreak(DWORD addr, BOOL any) const
+int FASTCALL Scheduler::IsBreak(uint32_t addr, int any) const
 {
 	int i;
 
@@ -868,7 +868,7 @@ int FASTCALL Scheduler::IsBreak(DWORD addr, BOOL any) const
 //	ブレークアドレス適用
 //
 //---------------------------------------------------------------------------
-void FASTCALL Scheduler::OnBreak(DWORD addr)
+void FASTCALL Scheduler::OnBreak(uint32_t addr)
 {
 	int i;
 
@@ -1009,7 +1009,7 @@ void FASTCALL Scheduler::DelEvent(Event *event)
 //	イベント所有チェック
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL Scheduler::HasEvent(Event *event) const
+int FASTCALL Scheduler::HasEvent(Event *event) const
 {
 	Event *p;
 
@@ -1070,11 +1070,11 @@ int FASTCALL Scheduler::GetEventNum() const
 //	※別途アセンブラ版を用意
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL Scheduler::GetMinRemain(DWORD hus)
+uint32_t FASTCALL Scheduler::GetMinRemain(uint32_t hus)
 {
 	Event *p;
-	DWORD minimum;
-	DWORD remain;
+	uint32_t minimum;
+	uint32_t remain;
 
 	ASSERT(this);
 	ASSERT(hus > 0);
@@ -1118,7 +1118,7 @@ DWORD FASTCALL Scheduler::GetMinRemain(DWORD hus)
 //	※別途アセンブラ版を用意
 //
 //---------------------------------------------------------------------------
-void FASTCALL Scheduler::ExecEvent(DWORD hus)
+void FASTCALL Scheduler::ExecEvent(uint32_t hus)
 {
 #if !defined(SCHEDULER_ASM)
 	Event *p;
@@ -1159,7 +1159,7 @@ void FASTCALL Scheduler::ExecEvent(DWORD hus)
 //	クロックテーブル
 //
 //---------------------------------------------------------------------------
-const DWORD Scheduler::ClockTable[] = {
+const uint32_t Scheduler::ClockTable[] = {
 	979,			// 10MHz
 	1171,			// 12MHz
 	1460,			// 15MHz

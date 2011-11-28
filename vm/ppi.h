@@ -29,15 +29,15 @@ public:
 
 	// ジョイスティックデータ定義
 	typedef struct {
-		DWORD axis[AxisMax];				// 軸情報
-		BOOL button[ButtonMax];				// ボタン情報
+		uint32_t axis[AxisMax];				// 軸情報
+		int button[ButtonMax];				// ボタン情報
 	} joyinfo_t;
 
 	// 内部データ定義
 	typedef struct {
-		DWORD portc;					// ポートC
+		uint32_t portc;					// ポートC
 		int type[PortMax];				// ジョイスティックタイプ
-		DWORD ctl[PortMax];				// ジョイスティックコントロール
+		uint32_t ctl[PortMax];				// ジョイスティックコントロール
 		joyinfo_t info[PortMax];		// ジョイスティック情報
 	} ppi_t;
 
@@ -45,15 +45,15 @@ public:
 	// 基本ファンクション
 	PPI(VM *p);
 										// コンストラクタ
-	BOOL FASTCALL Init();
+	int FASTCALL Init();
 										// 初期化
 	void FASTCALL Cleanup();
 										// クリーンアップ
 	void FASTCALL Reset();
 										// リセット
-	BOOL FASTCALL Save(Fileio *fio, int ver);
+	int FASTCALL Save(Fileio *fio, int ver);
 										// セーブ
-	BOOL FASTCALL Load(Fileio *fio, int ver);
+	int FASTCALL Load(Fileio *fio, int ver);
 										// ロード
 	void FASTCALL ApplyCfg(const Config *config);
 										// 設定適用
@@ -63,15 +63,15 @@ public:
 #endif	// _DEBUG
 
 	// メモリデバイス
-	DWORD FASTCALL ReadByte(DWORD addr);
+	uint32_t FASTCALL ReadByte(uint32_t addr);
 										// バイト読み込み
-	DWORD FASTCALL ReadWord(DWORD addr);
+	uint32_t FASTCALL ReadWord(uint32_t addr);
 										// ワード読み込み
-	void FASTCALL WriteByte(DWORD addr, DWORD data);
+	void FASTCALL WriteByte(uint32_t addr, uint32_t data);
 										// バイト書き込み
-	void FASTCALL WriteWord(DWORD addr, DWORD data);
+	void FASTCALL WriteWord(uint32_t addr, uint32_t data);
 										// ワード書き込み
-	DWORD FASTCALL ReadOnly(DWORD addr) const;
+	uint32_t FASTCALL ReadOnly(uint32_t addr) const;
 										// 読み込みのみ
 
 	// 外部API
@@ -85,7 +85,7 @@ public:
 										// ジョイスティックデバイス作成
 
 private:
-	void FASTCALL SetPortC(DWORD data);
+	void FASTCALL SetPortC(uint32_t data);
 										// ポートCセット
 	ADPCM *adpcm;
 										// ADPCM
@@ -108,23 +108,23 @@ public:
 										// コンストラクタ
 	virtual ~JoyDevice();
 										// デストラクタ
-	DWORD FASTCALL GetID() const		{ return id; }
+	uint32_t FASTCALL GetID() const		{ return id; }
 										// ID取得
-	DWORD FASTCALL GetType() const		{ return type; }
+	uint32_t FASTCALL GetType() const		{ return type; }
 										// タイプ取得
 	virtual void FASTCALL Reset();
 										// リセット
-	virtual BOOL FASTCALL Save(Fileio *fio, int ver);
+	virtual int FASTCALL Save(Fileio *fio, int ver);
 										// セーブ
-	virtual BOOL FASTCALL Load(Fileio *fio, int ver);
+	virtual int FASTCALL Load(Fileio *fio, int ver);
 										// ロード
 
 	// アクセス
-	virtual DWORD FASTCALL ReadPort(DWORD ctl);
+	virtual uint32_t FASTCALL ReadPort(uint32_t ctl);
 										// ポート読み取り
-	virtual DWORD FASTCALL ReadOnly(DWORD ctl) const;
+	virtual uint32_t FASTCALL ReadOnly(uint32_t ctl) const;
 										// ポート読み取り(Read Only)
-	virtual void FASTCALL Control(DWORD ctl);
+	virtual void FASTCALL Control(uint32_t ctl);
 										// コントロール
 
 	// キャッシュ
@@ -142,15 +142,15 @@ public:
 										// ボタン数取得
 	const char* FASTCALL GetButtonDesc(int button) const;
 										// ボタン表示取得
-	BOOL FASTCALL IsAnalog() const		{ return analog; }
+	int FASTCALL IsAnalog() const		{ return analog; }
 										// アナログ・デジタル取得
 	int FASTCALL GetDatas() const		{ return datas; }
 										// データ数取得
 
 protected:
-	DWORD type;
+	uint32_t type;
 										// タイプ
-	DWORD id;
+	uint32_t id;
 										// ID
 	PPI *ppi;
 										// PPI
@@ -164,13 +164,13 @@ protected:
 										// ボタン数
 	const char **button_desc;
 										// ボタン表示
-	BOOL analog;
+	int analog;
 										// 種別(アナログ・デジタル)
-	DWORD *data;
+	uint32_t *data;
 										// データ実体
 	int datas;
 										// データ数
-	BOOL changed;
+	int changed;
 										// ジョイスティック変更通知
 };
 
@@ -186,7 +186,7 @@ public:
 										// コンストラクタ
 
 protected:
-	DWORD FASTCALL ReadOnly(DWORD ctl) const;
+	uint32_t FASTCALL ReadOnly(uint32_t ctl) const;
 										// ポート読み取り(Read Only)
 	void FASTCALL MakeData();
 										// データ作成
@@ -210,7 +210,7 @@ public:
 										// コンストラクタ
 
 protected:
-	DWORD FASTCALL ReadOnly(DWORD ctl) const;
+	uint32_t FASTCALL ReadOnly(uint32_t ctl) const;
 										// ポート読み取り(Read Only)
 	void FASTCALL MakeData();
 										// データ作成
@@ -236,25 +236,25 @@ public:
 protected:
 	void FASTCALL Reset();
 										// リセット
-	DWORD FASTCALL ReadPort(DWORD ctl);
+	uint32_t FASTCALL ReadPort(uint32_t ctl);
 										// ポート読み取り
-	DWORD FASTCALL ReadOnly(DWORD ctl) const;
+	uint32_t FASTCALL ReadOnly(uint32_t ctl) const;
 										// ポート読み取り(Read Only)
-	void FASTCALL Control(DWORD ctl);
+	void FASTCALL Control(uint32_t ctl);
 										// コントロール
 	void FASTCALL MakeData();
 										// データ作成
-	BOOL FASTCALL Save(Fileio *fio, int ver);
+	int FASTCALL Save(Fileio *fio, int ver);
 										// セーブ
-	BOOL FASTCALL Load(Fileio *fio, int ver);
+	int FASTCALL Load(Fileio *fio, int ver);
 										// ロード
 
 private:
-	DWORD seq;
+	uint32_t seq;
 										// シーケンス
-	DWORD ctrl;
+	uint32_t ctrl;
 										// 前回のコントロール(0 or 1)
-	DWORD hus;
+	uint32_t hus;
 										// 判定用時間
 	Scheduler *scheduler;
 										// スケジューラ
@@ -276,7 +276,7 @@ public:
 										// コンストラクタ
 
 protected:
-	DWORD FASTCALL ReadOnly(DWORD ctl) const;
+	uint32_t FASTCALL ReadOnly(uint32_t ctl) const;
 										// ポート読み取り(Read Only)
 	void FASTCALL MakeData();
 										// データ作成
@@ -300,7 +300,7 @@ public:
 										// コンストラクタ
 
 protected:
-	DWORD FASTCALL ReadOnly(DWORD ctl) const;
+	uint32_t FASTCALL ReadOnly(uint32_t ctl) const;
 										// ポート読み取り(Read Only)
 	void FASTCALL MakeData();
 										// データ作成
@@ -326,23 +326,23 @@ public:
 protected:
 	void FASTCALL Reset();
 										// リセット
-	DWORD FASTCALL ReadOnly(DWORD ctl) const;
+	uint32_t FASTCALL ReadOnly(uint32_t ctl) const;
 										// ポート読み取り(Read Only)
-	void FASTCALL Control(DWORD ctl);
+	void FASTCALL Control(uint32_t ctl);
 										// コントロール
 	void FASTCALL MakeData();
 										// データ作成
-	BOOL FASTCALL Save(Fileio *fio, int ver);
+	int FASTCALL Save(Fileio *fio, int ver);
 										// セーブ
-	BOOL FASTCALL Load(Fileio *fio, int ver);
+	int FASTCALL Load(Fileio *fio, int ver);
 										// ロード
 
 private:
-	DWORD seq;
+	uint32_t seq;
 										// シーケンス
-	DWORD ctrl;
+	uint32_t ctrl;
 										// 前回のコントロール(0 or 1)
-	DWORD hus;
+	uint32_t hus;
 										// 判定用時間
 	Scheduler *scheduler;
 										// スケジューラ
@@ -364,7 +364,7 @@ public:
 										// コンストラクタ
 
 protected:
-	DWORD FASTCALL ReadOnly(DWORD ctl) const;
+	uint32_t FASTCALL ReadOnly(uint32_t ctl) const;
 										// ポート読み取り(Read Only)
 	void FASTCALL MakeData();
 										// データ作成
@@ -388,7 +388,7 @@ public:
 										// コンストラクタ
 
 protected:
-	DWORD FASTCALL ReadOnly(DWORD ctl) const;
+	uint32_t FASTCALL ReadOnly(uint32_t ctl) const;
 										// ポート読み取り(Read Only)
 	void FASTCALL MakeData();
 										// データ作成
@@ -412,7 +412,7 @@ public:
 										// コンストラクタ
 
 protected:
-	DWORD FASTCALL ReadOnly(DWORD ctl) const;
+	uint32_t FASTCALL ReadOnly(uint32_t ctl) const;
 										// ポート読み取り(Read Only)
 	void FASTCALL MakeData();
 										// データ作成
@@ -436,7 +436,7 @@ public:
 										// コンストラクタ
 
 protected:
-	DWORD FASTCALL ReadOnly(DWORD ctl) const;
+	uint32_t FASTCALL ReadOnly(uint32_t ctl) const;
 										// ポート読み取り(Read Only)
 	void FASTCALL MakeData();
 										// データ作成
@@ -460,7 +460,7 @@ public:
 										// コンストラクタ
 
 protected:
-	DWORD FASTCALL ReadOnly(DWORD ctl) const;
+	uint32_t FASTCALL ReadOnly(uint32_t ctl) const;
 										// ポート読み取り(Read Only)
 	void FASTCALL MakeData();
 										// データ作成
@@ -482,7 +482,7 @@ public:
 										// コンストラクタ
 
 protected:
-	DWORD FASTCALL ReadOnly(DWORD ctl) const;
+	uint32_t FASTCALL ReadOnly(uint32_t ctl) const;
 										// ポート読み取り(Read Only)
 	void FASTCALL MakeData();
 										// データ作成

@@ -9,8 +9,36 @@
 
 #include "os.h"
 #include "xm6.h"
+
+/*
+// MFC
+#if defined(_AFXDLL)
+#include <afxwin.h>
+#include <afxext.h>
+#include <afxdlgs.h>
+#include <afxcmn.h>
+#include <afxmt.h>
+#include <afxconv.h>
+#endif
+*/
+
+// Win32API
+#include <windows.h>
+#include <imm.h>
+#include <mmsystem.h>
+#include <shlobj.h>
+#include <tchar.h>
+
+// DirectX
+#include <dsound.h>
+#include <dinput.h>
+
+#include <stdio.h>
+#include <time.h>
+
+
 #include "vm.h"
-#include "memory.h"
+#include "memory_xm6.h"
 #include "scsi.h"
 #include "fdd.h"
 #include "fdi.h"
@@ -26,16 +54,17 @@
 
 #include "mfc_nomfc.h"
 
+typedef char CHAR;
+typedef const CHAR* LPCSTR;
 
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-static void OnDraw(HDC hdc);
-static HWND						mainWindow		= 0;
-
-HWND getMainWindow() {
-	return mainWindow;
-}
-
+#if defined(UNICODE)
+typedef wchar_t WCHAR;
+typedef WCHAR TCHAR;
+typedef LPCWSTR LPCTSTR;
+#else
+typedef char TCHAR;
+typedef LPCSTR LPCTSTR;
+#endif
 
 
 //---------------------------------------------------------------------------
@@ -105,11 +134,230 @@ public:
 		return r;
 	}
 
+	void setRtcCallback(XM6_RTC_CALLBACK cb) {
+		if(vm) {
+			vm->SetHostRtcCallback(cb);
+		}
+	}
+
+/*
+	void setFileSystem(XM6_FILEIO_SYSTEM* fios) {
+		if(vm) {
+			vm->SetHostFileSystem(fios);
+		}
+	}
+*/
 protected:
 	VM*					vm;
 };
 
-static CVm* cvm = 0;
+
+static int __stdcall rtcCallback(XM6_RTC* rtc) {
+OutputDebugString("rtcCallback\n");
+	time_t ltime = time(NULL);
+	struct tm* now = localtime(&ltime);
+
+	rtc->year	= now->tm_year;
+	rtc->mon	= now->tm_mon;
+	rtc->mday	= now->tm_mday;
+	rtc->wday	= now->tm_wday;
+	rtc->hour	= now->tm_hour;
+	rtc->min	= now->tm_min;
+	rtc->sec	= now->tm_sec;
+
+	return 1;
+}
+
+/*
+class Filepath {
+public:
+	Filepath() {
+	}
+
+	~Filepath() {
+	}
+
+	const char* getFilename() const {
+		return &filename[0];
+	}
+
+	char	filename[260];
+};
+
+class HostFiosSystem : public XM6_FILEIO_SYSTEM {
+public:
+	typedef FILE* HNDL;
+
+	HostFiosSystem() {
+	}
+
+	~HostFiosSystem() {
+	}
+
+	int open		(const Filepath* path, OpenMode openMode, XM6_FILE_HANDLE* out) {
+		const char* filename = &path->getFilename();
+		const char* mode = 0;
+		switch(openMode) {
+		default:
+		case OPEN_MODE_READ_ONLY:
+			mode = "rb";
+			break;
+		case OPEN_MODE_WRITE_ONLY:
+			mode = "r+";
+			break;
+		case OPEN_MODE_READ_WRITE:
+			mode = "r+";
+			break;
+		case OPEN_MODE_APPEND,
+			mode = "ab";
+			break;
+		}
+		FILE* fp = fopen(filename, mode);
+		if(fp) {
+			if(out) {
+				*out = fp;
+			}
+			ret = 1;
+		} else {
+			if(out) {
+				*out = 0;
+			}
+		}
+		return 1;
+	}
+
+	int	close		(XM6_FILE_HANDLE fh) {
+		int ret = 0;
+		if(isValid(fh)) {
+			HNDL h = (HNDL) fh;
+			fclose(h);
+			ret = 1;
+		}
+		return ret;
+	}
+
+	int	seek		(XM6_FILE_HANDLE fh, uint32_t offset) {
+		int ret = 0;
+		if(isValid(fh)) {
+			HNDL h = (HNDL) fh;
+			fseek(h, SEEK_SET, offset);
+			ret = 1;
+		}
+		return ret;
+	}
+
+	int	read		(XM6_FILE_HANDLE fh, void* buffer, uint32_t size) {
+		int ret = 0;
+		if(isValid(fh)) {
+			HNDL h = (HNDL) fh;
+			fread(buffer, 1, size, h);
+			ret = 1;
+		}
+		return ret;
+	}
+
+	int	write		(XM6_FILE_HANDLE fh, const void* buffer, uint32_t size) {
+		int ret = 0;
+		if(isValid(fh)) {
+			HNDL h = (HNDL) fh;
+			fwrite(buffer, 1, size, h);
+			ret = 1;
+		}
+		return ret;
+	}
+
+	int	getFileSize	(XM6_FILE_HANDLE fh, uint32_t* size) {
+		int ret = 0;
+		if(isValid(fh)) {
+			HNDL h = (HNDL) fh;
+			fpos_t pos;
+
+			fgetpos(h, &pos);
+			fseek(h, 0, SEEK_END);
+			if(size) {
+				*size = ftell(h);
+			}
+			fsetpos(h, &pos);
+			ret = 1;
+			ret = 1;
+		} else {
+			if(size) {
+				*size = 0;
+			}
+		}
+		return ret;
+	}
+
+	int	getFilePos	(XM6_FILE_HANDLE fh, uint32_t* pos) {
+		int ret = 0;
+		if(isValid(fh)) {
+			HNDL h = (HNDL) fh;
+			if(pos) {
+				*pos = ftell(h);
+			}
+			ret = 1;
+		}
+		return ret;
+	}
+
+	int	isValid		(XM6_FILE_HANDLE fh) {
+		HNDL h = (HNDL) fh;
+		return h != 0;
+	}
+
+	int setInvalid	(XM6_FILE_HANDLE* out) {
+		*out = 0;
+		return 1;
+	}
+};
+*/
+
+
+//---------------------------------------------------------------------------
+static void OnDraw(HDC hdc);
+static HWND					mainWindow		= 0;
+static volatile BOOL		scheduler_m_bExitReq = FALSE;			// スレッド終了要求
+//static HostFiosSystem*		hostFileSystem		= 0;
+
+static HWND getMainWindow() {
+	return mainWindow;
+}
+
+namespace XM6_pid {
+
+void memset(void* dst, int c, int length) {
+	char* p = static_cast<char*>(dst);
+	char cc = static_cast<char>(c);
+	while(length > 0) {
+		*p++ = cc;
+		length -= 1;
+	}
+}
+
+void t_strcpy(void* dst, const void* src) {
+	const int t_char_bytes = (int) sizeof(_T(' '));
+	if(t_char_bytes == 1) {
+		typedef uint8_t C;
+		C* d = static_cast<C*>(dst);
+		const C* s = static_cast<const C*>(src);
+		while(*s != 0) {
+			*d++ = *s++;
+		}
+		*d = 0;
+	} else if(t_char_bytes == 2) {
+		typedef uint16_t C;
+		C* d = static_cast<C*>(dst);
+		const C* s = static_cast<const C*>(src);
+		while(*s != 0) {
+			*d++ = *s++;
+		}
+		*d = 0;
+	} else {
+		ASSERT(0 && "sizeof(_T()) is unspported size");
+	}
+}
+
+} // namespace XM6_pid
 
 
 
@@ -118,12 +366,6 @@ static CVm* cvm = 0;
 //	scheduler
 //
 //---------------------------------------------------------------------------
-static volatile BOOL		scheduler_m_bExitReq = FALSE;			// スレッド終了要求
-
-static DWORD FASTCALL GetTime() {
-	return timeGetTime();
-}
-
 static void configGetConfig(Config* c) {
 	memset(c, 0, sizeof(*c));
 
@@ -253,7 +495,7 @@ static void configGetConfig(Config* c) {
 	c->resume_xm6			= 0;		// ステート有効フラグ
 	c->resume_screen		= 0;		// 画面モードレジューム
 	c->resume_dir			= 0;		// デフォルトディレクトリレジューム
-	strcpy(c->resume_path, _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\"));
+	XM6_pid::t_strcpy(c->resume_path, _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\"));
 
 	// 描画
 	c->caption_info			= 1;		// キャプション情報表示
@@ -274,139 +516,22 @@ static void configGetConfig(Config* c) {
 	c->host_option			= 0;		// 動作フラグ (class CHostFilename 参照)
 	c->host_resume			= FALSE;	// ベースパス状態復元有効 FALSEだと毎回スキャンする
 	c->host_drives			= 0;		// 有効なドライブ数
-	memset(&c->host_flag[0], 0, sizeof(c->host_flag));		// 動作フラグ (class CWinFileDrv 参照)
-	memset(&c->host_path[0][0], 0, sizeof(c->host_path));		// ベースパス
+	XM6_pid::memset(&c->host_flag[0], 0, sizeof(c->host_flag));		// 動作フラグ (class CWinFileDrv 参照)
+	XM6_pid::memset(&c->host_path[0][0], 0, sizeof(c->host_path));		// ベースパス
 }
+
 
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 namespace XM6_pid {
-	typedef enum X68kKeyCode {
-		X68K_KEYCODE_NONE	= 0,
-		X68K_KEYCODE_ESC	= 1	,	// 01 [ESC]			.			.				.
-		X68K_KEYCODE_1			,	// 02 [1]			!			ぬ				.
-		X68K_KEYCODE_2			,	// 03 [2]			"			ふ				.
-		X68K_KEYCODE_3			,	// 04 [3]			#			あ				ぁ
-		X68K_KEYCODE_4			,	// 05 [4]			$			う				ぅ
-		X68K_KEYCODE_5			,	// 06 [5]			%			え				ぇ
-		X68K_KEYCODE_6			,	// 07 [6]			&			お				ぉ
-		X68K_KEYCODE_7			,	// 08 [7]			'			や				ゃ
-		X68K_KEYCODE_8			,	// 09 [8]			(			ゆ				ゅ
-		X68K_KEYCODE_9			,	// 0A [9]			)			よ				ょ
-		X68K_KEYCODE_0			,	// 0B [0]			.			わ				を
-		X68K_KEYCODE_MINUS		,	// 0C [-]			=			ほ				.
-		X68K_KEYCODE_CIRCUMFLEX	,	// 0D [^]			~			へ				.
-		X68K_KEYCODE_YEN		,	// 0E [￥]			|			ー				.
-		X68K_KEYCODE_BS			,	// 0F [BS]			.			.				.
-		X68K_KEYCODE_TAB		,	// 10 [TAB]			.			.				.
-		X68K_KEYCODE_Q			,	// 11 [Q]			.			た				.
-		X68K_KEYCODE_W			,	// 12 [W]			.			て				.
-		X68K_KEYCODE_E			,	// 13 [E]			.			い				ぃ
-		X68K_KEYCODE_R			,	// 14 [R]			.			す				.
-		X68K_KEYCODE_T			,	// 15 [T]			.			か				.
-		X68K_KEYCODE_Y			,	// 16 [Y]			.			ん				.
-		X68K_KEYCODE_U			,	// 17 [U]			.			な				.
-		X68K_KEYCODE_I			,	// 18 [I]			.			に				.
-		X68K_KEYCODE_O			,	// 19 [O]			.			ら				.
-		X68K_KEYCODE_P			,	// 1A [P]			.			せ				.
-		X68K_KEYCODE_AT			,	// 1B [@]			`			゛				.
-		X68K_KEYCODE_LBRACKET	,	// 1C [[]			{			゜				「
-		X68K_KEYCODE_CR			,	// 1D [CR]			.			.				.
-		X68K_KEYCODE_A			,	// 1E [A]			.			ち				.
-		X68K_KEYCODE_S			,	// 1F [S]			.			と				.
-		X68K_KEYCODE_D			,	// 20 [D]			.			し				.
-		X68K_KEYCODE_F			,	// 21 [F]			.			は				.
-		X68K_KEYCODE_G			,	// 22 [G]			.			き				.
-		X68K_KEYCODE_H			,	// 23 [H]			.			く				.
-		X68K_KEYCODE_J			,	// 24 [J]			.			ま				.
-		X68K_KEYCODE_K			,	// 25 [K]			.			の				.
-		X68K_KEYCODE_L			,	// 26 [L]			.			り				.
-		X68K_KEYCODE_SEMICOLON	,	// 27 [;]			+			れ				.
-		X68K_KEYCODE_COLON		,	// 28 [:]			*			け				.
-		X68K_KEYCODE_RBRACKET	,	// 29 []]			}			む				」
-		X68K_KEYCODE_Z			,	// 2A [Z]			.			つ				っ
-		X68K_KEYCODE_X			,	// 2B [X]			.			さ				.
-		X68K_KEYCODE_C			,	// 2C [C]			.			そ				.
-		X68K_KEYCODE_V			,	// 2D [V]			.			ひ				.
-		X68K_KEYCODE_B			,	// 2E [B]			.			こ				.
-		X68K_KEYCODE_N			,	// 2F [N]			.			み				.
-		X68K_KEYCODE_M			,	// 30 [M]			.			も				.
-		X68K_KEYCODE_COMMA		,	// 31 [,]			<			ね				、
-		X68K_KEYCODE_PERIOD		,	// 32 [.]			>			る				。
-		X68K_KEYCODE_SLASH		,	// 33 [/]			?			め				・
-		X68K_KEYCODE_UNDERSCORE	,	// 34 .				_			ろ				.
-		X68K_KEYCODE_SPACE		,	// 35 [SPACE]
-		X68K_KEYCODE_HOME		,	// 36 [HOME]
-		X68K_KEYCODE_DEL		,	// 37 [DEL]
-		X68K_KEYCODE_ROLLUP 	,	// 38 [ROLL UP]
-		X68K_KEYCODE_ROLLDOWN 	,	// 39 [ROLL DOWN]
-		X68K_KEYCODE_UNDO		,	// 3A [UNDO]
-		X68K_KEYCODE_LEFT		,	// 3B [LEFT]
-		X68K_KEYCODE_UP			,	// 3C [UP]
-		X68K_KEYCODE_RIGHT		,	// 3D [RIGHT]
-		X68K_KEYCODE_DOWN		,	// 3E [DOWN]
-		X68K_KEYCODE_TKCLR		,	// 3F [Tenkey CLR]
-		X68K_KEYCODE_TKSLASH	,	// 40 [Tenkey /]
-		X68K_KEYCODE_TKASTERISK	,	// 41 [Tenkey *]
-		X68K_KEYCODE_TKMINUS	,	// 42 [Tenkey -]
-		X68K_KEYCODE_TK7		,	// 43 [Tenkey 7]
-		X68K_KEYCODE_TK8		,	// 44 [Tenkey 8]
-		X68K_KEYCODE_TK9		,	// 45 [Tenkey 9]
-		X68K_KEYCODE_TKPLUS		,	// 46 [Tenkey +]
-		X68K_KEYCODE_TK4		,	// 47 [Tenkey 4]
-		X68K_KEYCODE_TK5		,	// 48 [Tenkey 5]
-		X68K_KEYCODE_TK6		,	// 49 [Tenkey 6]
-		X68K_KEYCODE_TKEQUAL	,	// 4A [Tenkey =]
-		X68K_KEYCODE_TK1		,	// 4B [Tenkey 1]
-		X68K_KEYCODE_TK2		,	// 4C [Tenkey 2]
-		X68K_KEYCODE_TK3		,	// 4D [Tenkey 3]
-		X68K_KEYCODE_TKCR		,	// 4E [Tenkey CR]
-		X68K_KEYCODE_TK0		,	// 4F [Tenkey 0]
-		X68K_KEYCODE_TKCOMMA	,	// 50 [Tenkey ,]
-		X68K_KEYCODE_TKPERIOD	,	// 51 [Tenkey .]
-		X68K_KEYCODE_KIGOU		,	// 52 [記号入力]
-		X68K_KEYCODE_TOUROKU	,	// 53 [登録]
-		X68K_KEYCODE_HELP		,	// 54 [HELP]
-		X68K_KEYCODE_XF1		,	// 55 [XF1]
-		X68K_KEYCODE_XF2		,	// 56 [XF2]
-		X68K_KEYCODE_XF3		,	// 57 [XF3]
-		X68K_KEYCODE_XF4		,	// 58 [XF4]
-		X68K_KEYCODE_XF5		,	// 59 [XF5]
-		X68K_KEYCODE_KANA		,	// 5A [かな]
-		X68K_KEYCODE_ROMA		,	// 5B [ローマ字]
-		X68K_KEYCODE_CODE		,	// 5C [コード入力]
-		X68K_KEYCODE_CAPS		,	// 5D [CAPS]
-		X68K_KEYCODE_INS		,	// 5E [INS]
-		X68K_KEYCODE_HIRAGANA	,	// 5F [ひらがな]
-		X68K_KEYCODE_ZENKAKU	,	// 60 [全角]
-		X68K_KEYCODE_BREAK		,	// 61 [BREAK]
-		X68K_KEYCODE_COPY		,	// 62 [COPY]
-		X68K_KEYCODE_F1			,	// 63 [F1]
-		X68K_KEYCODE_F2			,	// 64 [F2]
-		X68K_KEYCODE_F3			,	// 65 [F3]
-		X68K_KEYCODE_F4			,	// 66 [F4]
-		X68K_KEYCODE_F5			,	// 67 [F5]
-		X68K_KEYCODE_F6			,	// 68 [F6]
-		X68K_KEYCODE_F7			,	// 69 [F7]
-		X68K_KEYCODE_F8			,	// 6A [F8]
-		X68K_KEYCODE_F9			,	// 6B [F9]
-		X68K_KEYCODE_F10		,	// 6C [F10]
-		X68K_KEYCODE_x6d		,	// 6D (Reserved)
-		X68K_KEYCODE_x6e		,	// 6E (Reserved)
-		X68K_KEYCODE_x6f		,	// 6F (Reserved)
-		X68K_KEYCODE_SHIFT		,	// 70 [SHIFT]
-		X68K_KEYCODE_CTRL		,	// 71 [CTRL]
-		X68K_KEYCODE_OPT1		,	// 72 [OPT1]
-		X68K_KEYCODE_OPT2		,	// 73 [OPT2]
-		X68K_KEYCODE_MAX		,
-		X68K_KEYCODE_FORCE_32BIT	= 0x7fffffff
-	} X68kKeycode;
-
+	typedef unsigned char X68kKeycode;
+	static const X68kKeycode X68K_KEYCODE_NONE = 0x00;
+	static const X68kKeycode X68K_KEYCODE_MAX = 0x74;
 	struct KeyEntry {
 		int			targetKeycode;
-		X68kKeyCode	x68kKeycode;
+		X68kKeycode	x68kKeycode;
 	};
 
 	struct KeyMap {
@@ -531,161 +656,139 @@ using namespace XM6_pid;
 //		keymap for US standard keyboard
 //
 static const KeyEntry keyEntry[] = {
-	{ VK_ESCAPE					,	X68K_KEYCODE_ESC		},	// 01 [ESC]			.			.				.
-	{ '1'						,	X68K_KEYCODE_1			},	// 02 [1]			!			ぬ				.
-	{ '2'						,	X68K_KEYCODE_2			},	// 03 [2]			"			ふ				.
-	{ '3'						,	X68K_KEYCODE_3			},	// 04 [3]			#			あ				ぁ
-	{ '4'						,	X68K_KEYCODE_4			},	// 05 [4]			$			う				ぅ
-	{ '5'						,	X68K_KEYCODE_5			},	// 06 [5]			%			え				ぇ
-	{ '6'						,	X68K_KEYCODE_6			},	// 07 [6]			&			お				ぉ
-	{ '7'						,	X68K_KEYCODE_7			},	// 08 [7]			'			や				ゃ
-	{ '8'						,	X68K_KEYCODE_8			},	// 09 [8]			(			ゆ				ゅ
-	{ '9'						,	X68K_KEYCODE_9			},	// 0A [9]			)			よ				ょ
-	{ '0'						,	X68K_KEYCODE_0			},	// 0B [0]			.			わ				を
-	{ VK_OEM_MINUS				,	X68K_KEYCODE_MINUS		},	// 0C [-]			=			ほ				.
-	{ VK_OEM_PLUS				,	X68K_KEYCODE_CIRCUMFLEX	},	// 0D [^]			~			へ				.
-	{ VK_OEM_5					,	X68K_KEYCODE_YEN		},	// 0E [￥]			|			ー				.
-	{ VK_BACK					,	X68K_KEYCODE_BS			},	// 0F [BS]			.			.				.
-	{ VK_TAB					,	X68K_KEYCODE_TAB		},	// 10 [TAB]			.			.				.
-	{ 'Q'						,	X68K_KEYCODE_Q			},	// 11 [Q]			.			た				.
-	{ 'W'						,	X68K_KEYCODE_W			},	// 12 [W]			.			て				.
-	{ 'E'						,	X68K_KEYCODE_E			},	// 13 [E]			.			い				ぃ
-	{ 'R'						,	X68K_KEYCODE_R			},	// 14 [R]			.			す				.
-	{ 'T'						,	X68K_KEYCODE_T			},	// 15 [T]			.			か				.
-	{ 'Y'						,	X68K_KEYCODE_Y			},	// 16 [Y]			.			ん				.
-	{ 'U'						,	X68K_KEYCODE_U			},	// 17 [U]			.			な				.
-	{ 'I'						,	X68K_KEYCODE_I			},	// 18 [I]			.			に				.
-	{ 'O'						,	X68K_KEYCODE_O			},	// 19 [O]			.			ら				.
-	{ 'P'						,	X68K_KEYCODE_P			},	// 1A [P]			.			せ				.
-	{ 0000						,	X68K_KEYCODE_AT			},	// 1B [@]			`			゛				.
-	{ VK_OEM_4					,	X68K_KEYCODE_LBRACKET	},	// 1C [[]			{			゜				「
-	{ VK_RETURN					,	X68K_KEYCODE_CR			},	// 1D [CR]			.			.				.
-	{ 'A'						,	X68K_KEYCODE_A			},	// 1E [A]			.			ち				.
-	{ 'S'						,	X68K_KEYCODE_S			},	// 1F [S]			.			と				.
-	{ 'D'						,	X68K_KEYCODE_D			},	// 20 [D]			.			し				.
-	{ 'F'						,	X68K_KEYCODE_F			},	// 21 [F]			.			は				.
-	{ 'G'						,	X68K_KEYCODE_G			},	// 22 [G]			.			き				.
-	{ 'H'						,	X68K_KEYCODE_H			},	// 23 [H]			.			く				.
-	{ 'J'						,	X68K_KEYCODE_J			},	// 24 [J]			.			ま				.
-	{ 'K'						,	X68K_KEYCODE_K			},	// 25 [K]			.			の				.
-	{ 'L'						,	X68K_KEYCODE_L			},	// 26 [L]			.			り				.
-	{ VK_OEM_1					,	X68K_KEYCODE_SEMICOLON	},	// 27 [;]			+			れ				.
-	{ 0000						,	X68K_KEYCODE_COLON		},	// 28 [:]			*			け				.
-	{ VK_OEM_6					,	X68K_KEYCODE_RBRACKET	},	// 29 []]			}			む				」
-	{ 'Z'						,	X68K_KEYCODE_Z			},	// 2A [Z]			.			つ				っ
-	{ 'X'						,	X68K_KEYCODE_X			},	// 2B [X]			.			さ				.
-	{ 'C'						,	X68K_KEYCODE_C			},	// 2C [C]			.			そ				.
-	{ 'V'						,	X68K_KEYCODE_V			},	// 2D [V]			.			ひ				.
-	{ 'B'						,	X68K_KEYCODE_B			},	// 2E [B]			.			こ				.
-	{ 'N'						,	X68K_KEYCODE_N			},	// 2F [N]			.			み				.
-	{ 'M'						,	X68K_KEYCODE_M			},	// 30 [M]			.			も				.
-	{ VK_OEM_COMMA				,	X68K_KEYCODE_COMMA		},	// 31 [,]			<			ね				、
-	{ VK_OEM_PERIOD				,	X68K_KEYCODE_PERIOD		},	// 32 [.]			>			る				。
-	{ VK_OEM_2					,	X68K_KEYCODE_SLASH		},	// 33 [/]			?			め				・
-	{ 0000						,	X68K_KEYCODE_UNDERSCORE	},	// 34 .				_			ろ				.
-	{ VK_SPACE					,	X68K_KEYCODE_SPACE		},	// 35 [SPACE]
-	{ VK_HOME					,	X68K_KEYCODE_HOME		},	// 36 [HOME]
-	{ VK_DELETE					,	X68K_KEYCODE_DEL		},	// 37 [DEL]
-	{ VK_PRIOR					,	X68K_KEYCODE_ROLLUP 	},	// 38 [ROLL UP]
-	{ VK_NEXT					,	X68K_KEYCODE_ROLLDOWN 	},	// 39 [ROLL DOWN]
-	{ 0000						,	X68K_KEYCODE_UNDO		},	// 3A [UNDO]
-	{ VK_LEFT					,	X68K_KEYCODE_LEFT		},	// 3B [LEFT]
-	{ VK_UP						,	X68K_KEYCODE_UP			},	// 3C [UP]
-	{ VK_RIGHT					,	X68K_KEYCODE_RIGHT		},	// 3D [RIGHT]
-	{ VK_DOWN					,	X68K_KEYCODE_DOWN		},	// 3E [DOWN]
-	{ VK_NUMLOCK				,	X68K_KEYCODE_TKCLR		},	// 3F [Tenkey CLR]
-	{ VK_DIVIDE					,	X68K_KEYCODE_TKSLASH	},	// 40 [Tenkey /]
-	{ VK_MULTIPLY				,	X68K_KEYCODE_TKASTERISK	},	// 41 [Tenkey *]
-	{ VK_SUBTRACT				,	X68K_KEYCODE_TKMINUS	},	// 42 [Tenkey -]
-	{ VK_NUMPAD7				,	X68K_KEYCODE_TK7		},	// 43 [Tenkey 7]
-	{ VK_NUMPAD8				,	X68K_KEYCODE_TK8		},	// 44 [Tenkey 8]
-	{ VK_NUMPAD9				,	X68K_KEYCODE_TK9		},	// 45 [Tenkey 9]
-	{ VK_ADD					,	X68K_KEYCODE_TKPLUS		},	// 46 [Tenkey +]
-	{ VK_NUMPAD4				,	X68K_KEYCODE_TK4		},	// 47 [Tenkey 4]
-	{ VK_NUMPAD5				,	X68K_KEYCODE_TK5		},	// 48 [Tenkey 5]
-	{ VK_NUMPAD6				,	X68K_KEYCODE_TK6		},	// 49 [Tenkey 6]
-	{ 0000						,	X68K_KEYCODE_TKEQUAL	},	// 4A [Tenkey =]
-	{ VK_NUMPAD1				,	X68K_KEYCODE_TK1		},	// 4B [Tenkey 1]
-	{ VK_NUMPAD2				,	X68K_KEYCODE_TK2		},	// 4C [Tenkey 2]
-	{ VK_NUMPAD3				,	X68K_KEYCODE_TK3		},	// 4D [Tenkey 3]
-	{ 0000						,	X68K_KEYCODE_TKCR		},	// 4E [Tenkey CR]
-	{ VK_NUMPAD0				,	X68K_KEYCODE_TK0		},	// 4F [Tenkey 0]
-	{ 0000						,	X68K_KEYCODE_TKCOMMA	},	// 50 [Tenkey ,]
-	{ VK_DECIMAL				,	X68K_KEYCODE_TKPERIOD	},	// 51 [Tenkey .]
-	{ 0000						,	X68K_KEYCODE_KIGOU		},	// 52 [記号入力]
-	{ 0000						,	X68K_KEYCODE_TOUROKU	},	// 53 [登録]
-	{ 0000						,	X68K_KEYCODE_HELP		},	// 54 [HELP]
-	{ 0000						,	X68K_KEYCODE_XF1		},	// 55 [XF1]
-	{ 0000						,	X68K_KEYCODE_XF2		},	// 56 [XF2]
-	{ 0000						,	X68K_KEYCODE_XF3		},	// 57 [XF3]
-	{ 0000						,	X68K_KEYCODE_XF4		},	// 58 [XF4]
-	{ 0000						,	X68K_KEYCODE_XF5		},	// 59 [XF5]
-	{ 0000						,	X68K_KEYCODE_KANA		},	// 5A [かな]
-	{ 0000						,	X68K_KEYCODE_ROMA		},	// 5B [ローマ字]
-	{ 0000						,	X68K_KEYCODE_CODE		},	// 5C [コード入力]
-	{ 0000						,	X68K_KEYCODE_CAPS		},	// 5D [CAPS]
-	{ VK_INSERT					,	X68K_KEYCODE_INS		},	// 5E [INS]
-	{ 0000						,	X68K_KEYCODE_HIRAGANA	},	// 5F [ひらがな]
-	{ 0000						,	X68K_KEYCODE_ZENKAKU	},	// 60 [全角]
-	{ 0000						,	X68K_KEYCODE_BREAK		},	// 61 [BREAK]
-	{ 0000						,	X68K_KEYCODE_COPY		},	// 62 [COPY]
-	{ VK_F1						,	X68K_KEYCODE_F1			},	// 63 [F1]
-	{ VK_F2						,	X68K_KEYCODE_F2			},	// 64 [F2]
-	{ VK_F3						,	X68K_KEYCODE_F3			},	// 65 [F3]
-	{ VK_F4						,	X68K_KEYCODE_F4			},	// 66 [F4]
-	{ VK_F5						,	X68K_KEYCODE_F5			},	// 67 [F5]
-	{ VK_F6						,	X68K_KEYCODE_F6			},	// 68 [F6]
-	{ VK_F7						,	X68K_KEYCODE_F7			},	// 69 [F7]
-	{ VK_F8						,	X68K_KEYCODE_F8			},	// 6A [F8]
-	{ VK_F9						,	X68K_KEYCODE_F9			},	// 6B [F9]
-	{ VK_F10					,	X68K_KEYCODE_F10		},	// 6C [F10]
-	{ -1						,	X68K_KEYCODE_x6d		},	// 6D (Reserved)
-	{ -1						,	X68K_KEYCODE_x6e		},	// 6E (Reserved)
-	{ -1						,	X68K_KEYCODE_x6f		},	// 6F (Reserved)
-	{ VK_SHIFT					,	X68K_KEYCODE_SHIFT		},	// 70 [SHIFT]
-	{ VK_CONTROL				,	X68K_KEYCODE_CTRL		},	// 71 [CTRL]
-	{ 0000						,	X68K_KEYCODE_OPT1		},	// 72 [OPT1]
-	{ 0000						,	X68K_KEYCODE_OPT2		},	// 73 [OPT2]
+	{ VK_ESCAPE					, 0x01	},	// 01 [ESC]			.			.				.
+	{ '1'						, 0x02	},	// 02 [1]			!			ぬ				.
+	{ '2'						, 0x03	},	// 03 [2]			"			ふ				.
+	{ '3'						, 0x04	},	// 04 [3]			#			あ				ぁ
+	{ '4'						, 0x05	},	// 05 [4]			$			う				ぅ
+	{ '5'						, 0x06	},	// 06 [5]			%			え				ぇ
+	{ '6'						, 0x07	},	// 07 [6]			&			お				ぉ
+	{ '7'						, 0x08	},	// 08 [7]			'			や				ゃ
+	{ '8'						, 0x09	},	// 09 [8]			(			ゆ				ゅ
+	{ '9'						, 0x0A	},	// 0A [9]			)			よ				ょ
+	{ '0'						, 0x0B	},	// 0B [0]			.			わ				を
+	{ VK_OEM_MINUS				, 0x0C	},	// 0C [-]			=			ほ				.
+	{ VK_OEM_PLUS				, 0x0D	},	// 0D [^]			~			へ				.
+	{ VK_OEM_5					, 0x0E	},	// 0E [￥]			|			ー				.
+	{ VK_BACK					, 0x0F	},	// 0F [BS]			.			.				.
+	{ VK_TAB					, 0x10	},	// 10 [TAB]			.			.				.
+	{ 'Q'						, 0x11	},	// 11 [Q]			.			た				.
+	{ 'W'						, 0x12	},	// 12 [W]			.			て				.
+	{ 'E'						, 0x13	},	// 13 [E]			.			い				ぃ
+	{ 'R'						, 0x14	},	// 14 [R]			.			す				.
+	{ 'T'						, 0x15	},	// 15 [T]			.			か				.
+	{ 'Y'						, 0x16	},	// 16 [Y]			.			ん				.
+	{ 'U'						, 0x17	},	// 17 [U]			.			な				.
+	{ 'I'						, 0x18	},	// 18 [I]			.			に				.
+	{ 'O'						, 0x19	},	// 19 [O]			.			ら				.
+	{ 'P'						, 0x1A	},	// 1A [P]			.			せ				.
+	{ 0000						, 0x1B	},	// 1B [@]			`			゛				.
+	{ VK_OEM_4					, 0x1C	},	// 1C [[]			{			゜				「
+	{ VK_RETURN					, 0x1D	},	// 1D [CR]			.			.				.
+	{ 'A'						, 0x1E	},	// 1E [A]			.			ち				.
+	{ 'S'						, 0x1F	},	// 1F [S]			.			と				.
+	{ 'D'						, 0x20	},	// 20 [D]			.			し				.
+	{ 'F'						, 0x21	},	// 21 [F]			.			は				.
+	{ 'G'						, 0x22	},	// 22 [G]			.			き				.
+	{ 'H'						, 0x23	},	// 23 [H]			.			く				.
+	{ 'J'						, 0x24	},	// 24 [J]			.			ま				.
+	{ 'K'						, 0x25	},	// 25 [K]			.			の				.
+	{ 'L'						, 0x26	},	// 26 [L]			.			り				.
+	{ VK_OEM_1					, 0x27	},	// 27 [;]			+			れ				.
+	{ 0000						, 0x28	},	// 28 [:]			*			け				.
+	{ VK_OEM_6					, 0x29	},	// 29 []]			}			む				」
+	{ 'Z'						, 0x2A	},	// 2A [Z]			.			つ				っ
+	{ 'X'						, 0x2B	},	// 2B [X]			.			さ				.
+	{ 'C'						, 0x2C	},	// 2C [C]			.			そ				.
+	{ 'V'						, 0x2D	},	// 2D [V]			.			ひ				.
+	{ 'B'						, 0x2E	},	// 2E [B]			.			こ				.
+	{ 'N'						, 0x2F	},	// 2F [N]			.			み				.
+	{ 'M'						, 0x30	},	// 30 [M]			.			も				.
+	{ VK_OEM_COMMA				, 0x31	},	// 31 [,]			<			ね				、
+	{ VK_OEM_PERIOD				, 0x32	},	// 32 [.]			>			る				。
+	{ VK_OEM_2					, 0x33	},	// 33 [/]			?			め				・
+	{ 0000						, 0x34	},	// 34 .				_			ろ				.
+	{ VK_SPACE					, 0x35	},	// 35 [SPACE]
+	{ VK_HOME					, 0x36	},	// 36 [HOME]
+	{ VK_DELETE					, 0x37	},	// 37 [DEL]
+	{ VK_PRIOR					, 0x38	},	// 38 [ROLL UP]
+	{ VK_NEXT					, 0x39	},	// 39 [ROLL DOWN]
+	{ 0000						, 0x3A	},	// 3A [UNDO]
+	{ VK_LEFT					, 0x3B	},	// 3B [LEFT]
+	{ VK_UP						, 0x3C	},	// 3C [UP]
+	{ VK_RIGHT					, 0x3D	},	// 3D [RIGHT]
+	{ VK_DOWN					, 0x3E	},	// 3E [DOWN]
+	{ VK_NUMLOCK				, 0x3F	},	// 3F [Tenkey CLR]
+	{ VK_DIVIDE					, 0x40	},	// 40 [Tenkey /]
+	{ VK_MULTIPLY				, 0x41	},	// 41 [Tenkey *]
+	{ VK_SUBTRACT				, 0x42	},	// 42 [Tenkey -]
+	{ VK_NUMPAD7				, 0x43	},	// 43 [Tenkey 7]
+	{ VK_NUMPAD8				, 0x44	},	// 44 [Tenkey 8]
+	{ VK_NUMPAD9				, 0x45	},	// 45 [Tenkey 9]
+	{ VK_ADD					, 0x46	},	// 46 [Tenkey +]
+	{ VK_NUMPAD4				, 0x47	},	// 47 [Tenkey 4]
+	{ VK_NUMPAD5				, 0x48	},	// 48 [Tenkey 5]
+	{ VK_NUMPAD6				, 0x49	},	// 49 [Tenkey 6]
+	{ 0000						, 0x4A	},	// 4A [Tenkey =]
+	{ VK_NUMPAD1				, 0x4B	},	// 4B [Tenkey 1]
+	{ VK_NUMPAD2				, 0x4C	},	// 4C [Tenkey 2]
+	{ VK_NUMPAD3				, 0x4D	},	// 4D [Tenkey 3]
+	{ 0000						, 0x4E	},	// 4E [Tenkey CR]
+	{ VK_NUMPAD0				, 0x4F	},	// 4F [Tenkey 0]
+	{ 0000						, 0x50	},	// 50 [Tenkey ,]
+	{ VK_DECIMAL				, 0x51	},	// 51 [Tenkey .]
+	{ 0000						, 0x52	},	// 52 [記号入力]
+	{ 0000						, 0x53	},	// 53 [登録]
+	{ 0000						, 0x54	},	// 54 [HELP]
+	{ 0000						, 0x55	},	// 55 [XF1]
+	{ 0000						, 0x56	},	// 56 [XF2]
+	{ 0000						, 0x57	},	// 57 [XF3]
+	{ 0000						, 0x58	},	// 58 [XF4]
+	{ 0000						, 0x59	},	// 59 [XF5]
+	{ 0000						, 0x5A	},	// 5A [かな]
+	{ 0000						, 0x5B	},	// 5B [ローマ字]
+	{ 0000						, 0x5C	},	// 5C [コード入力]
+	{ 0000						, 0x5D	},	// 5D [CAPS]
+	{ VK_INSERT					, 0x5E	},	// 5E [INS]
+	{ 0000						, 0x5F	},	// 5F [ひらがな]
+	{ 0000						, 0x60	},	// 60 [全角]
+	{ 0000						, 0x61	},	// 61 [BREAK]
+	{ 0000						, 0x62	},	// 62 [COPY]
+	{ VK_F1						, 0x63	},	// 63 [F1]
+	{ VK_F2						, 0x64	},	// 64 [F2]
+	{ VK_F3						, 0x65	},	// 65 [F3]
+	{ VK_F4						, 0x66	},	// 66 [F4]
+	{ VK_F5						, 0x67	},	// 67 [F5]
+	{ VK_F6						, 0x68	},	// 68 [F6]
+	{ VK_F7						, 0x69	},	// 69 [F7]
+	{ VK_F8						, 0x6A	},	// 6A [F8]
+	{ VK_F9						, 0x6B	},	// 6B [F9]
+	{ VK_F10					, 0x6C	},	// 6C [F10]
+	{ -1						, 0x6D	},	// 6D (Reserved)
+	{ -1						, 0x6E	},	// 6E (Reserved)
+	{ -1						, 0x6F	},	// 6F (Reserved)
+	{ VK_SHIFT					, 0x70	},	// 70 [SHIFT]
+	{ VK_CONTROL				, 0x71	},	// 71 [CTRL]
+	{ 0000						, 0x72	},	// 72 [OPT1]
+	{ 0000						, 0x73	},	// 73 [OPT2]
 };
 
-class KeyMapTargetToX68k {
+class KeyMapConverter {
 public:
-	KeyMapTargetToX68k() {
-		clear();
-	}
-
-	~KeyMapTargetToX68k() {
-	}
-
-	void clear() {
-		memset(&x68k_to_target[0], 0, sizeof(x68k_to_target));
+	KeyMapConverter() {
 		memset(&target_to_x68k[0], 0, sizeof(target_to_x68k));
 	}
 
-	void set(int targetKeycode, X68kKeyCode x68kKeyCode) {
-		x68k_to_target[x68kKeyCode]		= targetKeycode;
-		target_to_x68k[targetKeycode]	= x68kKeyCode;
+	void set(int targetKeycode, X68kKeycode x68kKeyCode) {
+		target_to_x68k[targetKeycode & 0xff] = x68kKeyCode & 0xff;
 	}
 
-	X68kKeyCode getX68kKeycodeByTargetKeycode(int targetKeycode) const {
-		X68kKeyCode ret = X68K_KEYCODE_NONE;
-		if(targetKeycode >= 0 && targetKeycode < 256) {
-			ret = target_to_x68k[targetKeycode];
-		}
-		return ret;
-	}
-
-	int getTargetKeycodeByX68kKeycode(X68kKeyCode x68kKeyCode) const {
-		int ret = 0;
-		if(x68kKeyCode > X68K_KEYCODE_NONE && x68kKeyCode < X68K_KEYCODE_MAX) {
-			ret = x68k_to_target[x68kKeyCode];
-		}
-		return ret;
+	X68kKeycode getX68kKeycodeByTargetKeycode(int targetKeycode) const {
+		return target_to_x68k[targetKeycode & 0xff];
 	}
 
 protected:
-	int			x68k_to_target[256];
-	X68kKeyCode	target_to_x68k[256];
+	X68kKeycode	target_to_x68k[256];
 };
 
 
@@ -693,8 +796,9 @@ protected:
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-static DiJoyStick djs;
-static KeyMapTargetToX68k km;
+static DiJoyStick		djs;
+static KeyMapConverter	kmc;
+static CVm*				cvm = 0;
 
 
 
@@ -706,7 +810,7 @@ static KeyMapTargetToX68k km;
 static void processInput(HWND hWnd) {
 	static LPDIRECTINPUT	lpDi		= 0;
 	static CRTC*			m_pCRTC;		// CRTC
-	static DWORD			m_dwDispCount;	// CRTC表示カウント
+	static uint32_t			m_dwDispCount;	// CRTC表示カウント
 	static Keyboard*		m_pKeyboard;	// キーボード
 	static Mouse*			m_pMouse;		// マウス
 	static PPI*				m_pPPI;			// PPI
@@ -728,7 +832,7 @@ static void processInput(HWND hWnd) {
 		for(int i = 0, n = sizeof(keyEntry)/sizeof(keyEntry[0]); i < n; ++i) {
 			const KeyEntry& e = keyEntry[i];
 			if(e.targetKeycode && e.x68kKeycode) {
-				km.set(e.targetKeycode, e.x68kKeycode);
+				kmc.set(e.targetKeycode, e.x68kKeycode);
 			}
 		}
 	}
@@ -773,7 +877,7 @@ static void processInput(HWND hWnd) {
 
 				for(int i = 0, n = sizeof(keys)/sizeof(keys[0]); i < n; ++i) {
 					if((keys[i] ^ prevKeys[i]) & 0x01) {
-						X68kKeyCode	x68kKeyCode	= km.getX68kKeycodeByTargetKeycode(i);
+						X68kKeycode	x68kKeyCode	= kmc.getX68kKeycodeByTargetKeycode(i);
 						if(x68kKeyCode != X68K_KEYCODE_NONE) {
 							bool		isPressed	= ((keys[i] & 0x01) != 0);
 							if(isPressed) {
@@ -870,10 +974,10 @@ static void processInput(HWND hWnd) {
 //	conversion 32bit word array to 16bit word array
 //
 //---------------------------------------------------------------------------
-static void soundPack(const DWORD* src, unsigned short* dst, int nDstBytes) {
+static void soundPack(const uint32_t* src, uint16_t* dst, int nDstBytes) {
 	int i = nDstBytes >> 1;
 	while(i-- > 0) {
-		*dst++ = static_cast<unsigned short>(*src++);
+		*dst++ = static_cast<uint16_t>(*src++);
 	}
 }
 
@@ -889,9 +993,9 @@ static void processSound(HWND hWnd) {
 	static BOOL			m_bEnable	= TRUE;
 
 	// 再生
-	static UINT					m_uRate;				// サンプリングレート
-	static UINT					m_bufBytes;				// バッファサイズ(バイト)
-	static DWORD*				m_lpBuf;				// サウンドバッファ
+	static uint32_t				m_uRate;				// サンプリングレート
+	static uint32_t				m_bufBytes;				// バッファサイズ(バイト)
+	static uint32_t*			m_lpBuf;				// サウンドバッファ
 	static LPDIRECTSOUND		m_lpDS;					// DirectSound
 	static LPDIRECTSOUNDBUFFER	m_lpDSb;				// DirectSoundBuffer(セカンダリ)
 
@@ -973,7 +1077,7 @@ static void processSound(HWND hWnd) {
 			// サウンドバッファを作成(セカンダリバッファと同一の長さ、1単位DWORD)
 			if(b) {
 				int nbuf = m_bufBytes / 2;
-				m_lpBuf = new DWORD [nbuf];
+				m_lpBuf = new uint32_t [nbuf];
 				memset(m_lpBuf, 0, sizeof(*m_lpBuf) * nbuf);
 
 				// OPMデバイス(標準)を作成
@@ -995,9 +1099,9 @@ static void processSound(HWND hWnd) {
 		}
 	}
 
-	static UINT					m_uPoll			= 5;	// ポーリング間隔(ms)
-	static UINT					m_uCount		= 0;	// ポーリングカウント
-	static DWORD				m_dwWrite		= 0;	// 書き込み完了位置
+	static uint32_t				m_uPoll			= 5;	// ポーリング間隔(ms)
+	static uint32_t				m_uCount		= 0;	// ポーリングカウント
+	static uint32_t				m_dwWrite		= 0;	// 書き込み完了位置
 	if(++m_uCount >= m_uPoll) {
 		m_uCount = 0;
 		if(m_bEnable) {
@@ -1029,13 +1133,13 @@ static void processSound(HWND hWnd) {
 						{
 							// OPMに対して、処理要求と速度制御
 							DWORD dwReady = m_pOPMIF->ProcessBuf();
-							m_pOPMIF->GetBuf(m_lpBuf, (int)dwRequest);
+							m_pOPMIF->GetBuf((uint32_t*) m_lpBuf, (int)dwRequest);
 							if (dwReady < dwRequest) {
 								dwRequest = dwReady;
 							}
 
 							// ADPCMに対して、データを要求(加算すること)
-							m_pADPCM->GetBuf(m_lpBuf, (int)dwRequest);
+							m_pADPCM->GetBuf((uint32_t*) m_lpBuf, (int)dwRequest);
 
 							// ADPCMの同期処理
 							if (dwReady > dwRequest) {
@@ -1045,7 +1149,7 @@ static void processSound(HWND hWnd) {
 							}
 
 							// SCSIに対して、データを要求(加算すること)
-							m_pSCSI->GetBuf(m_lpBuf, (int)dwRequest, m_uRate);
+							m_pSCSI->GetBuf((uint32_t*) m_lpBuf, (int)dwRequest, m_uRate);
 						}
 
 						// 次いでロック
@@ -1110,9 +1214,10 @@ static BOOL FASTCALL InitCmdSub(int nDrive, LPCTSTR lpszPath) {
 		::GetFullPathName(lpszPath, _MAX_PATH, szPath, &lpszFile);
 		path.SetPath(szPath);
 
-		Fileio fio;
-		isExist = fio.Open(path, Fileio::ReadOnly);
-		fio.Close();
+//		Fileio fio;
+//		isExist = fio.Open(path, Fileio::ReadOnly);
+//		fio.Close();
+		isExist = TRUE;
 	}
 
 	if(isExist) {
@@ -1145,7 +1250,7 @@ static void OnDraw(HDC hdc) {
 		BOOL bPower;					// 電源
 		Render *pRender;				// レンダラ
 		Render::render_t *pWork;		// レンダラワーク
-        DWORD dwDrawCount;				// 描画回数
+        uint32_t dwDrawCount;			// 描画回数
 
 		// DIBセクション
 		HBITMAP hBitmap;				// DIBセクション
@@ -1189,7 +1294,6 @@ static void OnDraw(HDC hdc) {
 			m_Info.pBits = NULL;
 		}
 
-		// 最小化は特別扱い
 		RECT rect;
 		GetClientRect(hWnd, &rect);
 		int w = rect.right - rect.left;
@@ -1216,7 +1320,7 @@ static void OnDraw(HDC hdc) {
 										(void**)&(m_Info.pBits), NULL, 0);
 			// 成功したら、レンダラに伝える
 			if (m_Info.hBitmap && m_Info.pRender) {
-				m_Info.pRender->SetMixBuf(m_Info.pBits, m_Info.nBMPWidth, m_Info.nBMPHeight);
+				m_Info.pRender->SetMixBuf((uint32_t*)m_Info.pBits, m_Info.nBMPWidth, m_Info.nBMPHeight);
 			}
 //			delete pDC;
 			delete[] p;
@@ -1233,7 +1337,7 @@ static void OnDraw(HDC hdc) {
 		m_Info.pWork = m_Info.pRender->GetWorkAddr();
 		ASSERT(m_Info.pWork);
 		if (m_Info.pBits) {
-			m_Info.pRender->SetMixBuf(m_Info.pBits, m_Info.nBMPWidth, m_Info.nBMPHeight);
+			m_Info.pRender->SetMixBuf((uint32_t*)m_Info.pBits, m_Info.nBMPWidth, m_Info.nBMPHeight);
 		}
 	}
 
@@ -1382,29 +1486,10 @@ static void OnDraw(HDC hdc) {
 
 
 
-/*
 //---------------------------------------------------------------------------
-//
-//	cpudebug.c ワード読み出し (mfc_cpu.cpp)
-//
-//---------------------------------------------------------------------------
-extern "C" WORD cpudebug_fetch(DWORD addr)
-{
-	static Memory* pMemory = 0;
-	if(pMemory == 0) {
-		pMemory = (Memory*)cvm->getDevice(MAKEID('M', 'E', 'M', ' '));
-		ASSERT(pMemory);
-	}
-
-	addr &= 0xfffffe;
-
-	WORD w = (WORD) pMemory->ReadOnly(addr);
-	w <<= 8;
-	w |= (WORD) pMemory->ReadOnly(addr + 1);
-
-	return w;
+static unsigned int GetTime() {
+	return timeGetTime();
 }
-*/
 
 
 
@@ -1448,11 +1533,15 @@ INT WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, INT) {
 	RECT rc = { 0, 0, CW_WIDTH, CW_HEIGHT };
 	AdjustWindowRect(&rc, CW_STYLE, 0);
 
+//	hostFileSystem = new HostFiosSystem();
+
 	mainWindow = CreateWindow(_T("edit"), 0, CW_STYLE, 0, 0, rc.right-rc.left, rc.bottom-rc.top, 0, 0, 0, 0);
 	{
 		// VM初期化
 		cvm = new CVm();
 		cvm->init();
+		cvm->setRtcCallback(rtcCallback);
+//		cvm->setFileSystem(hostFileSystem);
 
 		// 設定適用(OnOptionと同様、VMロックして)
 		{
@@ -1471,12 +1560,6 @@ INT WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, INT) {
 			if(err == 0 && pMemory->GetCG()[0] == 0xff) {
 				err = _T("CG ROM LOADING ERROR (THERE IS NO 'CGROM.DAT')");
 			}
-//			if (err == 0 && !pMemory->CheckIPL()) {
-//				err = _T("IPL ROM VERION ERROR");
-//			}
-//			if (err == 0 && !pMemory->CheckCG()) {
-//				err = _T("CG ROM VERSION ERROR");
-//			}
 			if(err) {
 				MessageBox(mainWindow, err, err, MB_OK);
 				return 0;
@@ -1522,7 +1605,7 @@ INT WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, INT) {
 			if(dwExecTime > dwTime) {
 				requestRefresh = true;
 				dwExecCount = 0;
-				if(dwExecTime > GetTime()) {
+				if(dwExecTime > dwTime) {
 					postSleep = 1;
 				}
 			} else {

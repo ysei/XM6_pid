@@ -49,7 +49,7 @@ IOSC::IOSC(VM *p) : MemDevice(p)
 //	初期化
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL IOSC::Init()
+int FASTCALL IOSC::Init()
 {
 	ASSERT(this);
 
@@ -107,7 +107,7 @@ void FASTCALL IOSC::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL IOSC::Save(Fileio *fio, int /*ver*/)
+int FASTCALL IOSC::Save(Fileio *fio, int /*ver*/)
 {
 	size_t sz;
 
@@ -134,7 +134,7 @@ BOOL FASTCALL IOSC::Save(Fileio *fio, int /*ver*/)
 //	ロード
 //
 //---------------------------------------------------------------------------
-BOOL FASTCALL IOSC::Load(Fileio *fio, int /*ver*/)
+int FASTCALL IOSC::Load(Fileio *fio, int /*ver*/)
 {
 	size_t sz;
 
@@ -174,9 +174,9 @@ void FASTCALL IOSC::ApplyCfg(const Config* /*config*/)
 //	バイト読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL IOSC::ReadByte(DWORD addr)
+uint32_t FASTCALL IOSC::ReadByte(uint32_t addr)
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -246,7 +246,7 @@ DWORD FASTCALL IOSC::ReadByte(DWORD addr)
 //	ワード読み込み
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL IOSC::ReadWord(DWORD addr)
+uint32_t FASTCALL IOSC::ReadWord(uint32_t addr)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -260,7 +260,7 @@ DWORD FASTCALL IOSC::ReadWord(DWORD addr)
 //	バイト書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL IOSC::WriteByte(DWORD addr, DWORD data)
+void FASTCALL IOSC::WriteByte(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -329,14 +329,14 @@ void FASTCALL IOSC::WriteByte(DWORD addr, DWORD data)
 //	ワード書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL IOSC::WriteWord(DWORD addr, DWORD data)
+void FASTCALL IOSC::WriteWord(uint32_t addr, uint32_t data)
 {
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
 	ASSERT((addr & 1) == 0);
 	ASSERT(data < 0x10000);
 
-	WriteByte(addr + 1, (BYTE)data);
+	WriteByte(addr + 1, (uint8_t)data);
 }
 
 //---------------------------------------------------------------------------
@@ -344,9 +344,9 @@ void FASTCALL IOSC::WriteWord(DWORD addr, DWORD data)
 //	読み込みのみ
 //
 //---------------------------------------------------------------------------
-DWORD FASTCALL IOSC::ReadOnly(DWORD addr) const
+uint32_t FASTCALL IOSC::ReadOnly(uint32_t addr) const
 {
-	DWORD data;
+	uint32_t data;
 
 	ASSERT(this);
 	ASSERT((addr >= memdev.first) && (addr <= memdev.last));
@@ -482,7 +482,7 @@ void FASTCALL IOSC::IntChk()
 #if defined(IOSC_LOG)
 	LOG1(Log::Normal, "割り込み要求 ベクタ$%02X", v);
 #endif	// IOSC_LOG
-	cpu->Interrupt(1, (BYTE)v);
+	cpu->Interrupt(1, (uint8_t)v);
 
 	// 記憶
 	iosc.vector = v;
@@ -519,7 +519,7 @@ void FASTCALL IOSC::IntAck()
 //	FDC割り込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL IOSC::IntFDC(BOOL flag)
+void FASTCALL IOSC::IntFDC(int flag)
 {
 	ASSERT(this);
 
@@ -534,7 +534,7 @@ void FASTCALL IOSC::IntFDC(BOOL flag)
 //	FDD割り込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL IOSC::IntFDD(BOOL flag)
+void FASTCALL IOSC::IntFDD(int flag)
 {
 	ASSERT(this);
 
@@ -549,7 +549,7 @@ void FASTCALL IOSC::IntFDD(BOOL flag)
 //	HDC割り込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL IOSC::IntHDC(BOOL flag)
+void FASTCALL IOSC::IntHDC(int flag)
 {
 	ASSERT(this);
 
@@ -564,7 +564,7 @@ void FASTCALL IOSC::IntHDC(BOOL flag)
 //	プリンタ割り込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL IOSC::IntPRT(BOOL flag)
+void FASTCALL IOSC::IntPRT(int flag)
 {
 	ASSERT(this);
 

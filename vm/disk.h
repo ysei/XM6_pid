@@ -23,6 +23,7 @@ class SCSIHD;
 class SCSIMO;
 class SCSICDTrack;
 class SCSICD;
+class Filepath;
 
 //---------------------------------------------------------------------------
 //
@@ -74,34 +75,34 @@ public:
 		int track;						// トラックナンバー
 		int size;						// セクタサイズ(8 or 9)
 		int sectors;					// セクタ数(<=0x100)
-		BYTE *buffer;					// データバッファ
-		BOOL init;						// ロード済みか
-		BOOL changed;					// 変更済みフラグ
-		BOOL *changemap;				// 変更済みマップ
-		BOOL raw;						// RAWモード
+		uint8_t *buffer;					// データバッファ
+		int init;						// ロード済みか
+		int changed;					// 変更済みフラグ
+		int *changemap;				// 変更済みマップ
+		int raw;						// RAWモード
 	} disktrk_t;
 
 public:
 	// 基本ファンクション
-	DiskTrack(int track, int size, int sectors, BOOL raw = FALSE);
+	DiskTrack(int track, int size, int sectors, int raw = FALSE);
 										// コンストラクタ
 	virtual ~DiskTrack();
 										// デストラクタ
-	BOOL FASTCALL Load(const Filepath& path);
+	int FASTCALL Load(const Filepath& path);
 										// ロード
-	BOOL FASTCALL Save(const Filepath& path);
+	int FASTCALL Save(const Filepath& path);
 										// セーブ
 
 	// リード・ライト
-	BOOL FASTCALL Read(BYTE *buf, int sec) const;
+	int FASTCALL Read(uint8_t *buf, int sec) const;
 										// セクタリード
-	BOOL FASTCALL Write(const BYTE *buf, int sec);
+	int FASTCALL Write(const uint8_t *buf, int sec);
 										// セクタライト
 
 	// その他
 	int FASTCALL GetTrack() const		{ return dt.track; }
 										// トラック取得
-	BOOL FASTCALL IsChanged() const		{ return dt.changed; }
+	int FASTCALL IsChanged() const		{ return dt.changed; }
 										// 変更フラグチェック
 
 private:
@@ -121,7 +122,7 @@ public:
 	// 内部データ定義
 	typedef struct {
 		DiskTrack *disktrk;				// 割り当てトラック
-		DWORD serial;					// 最終シリアル
+		uint32_t serial;					// 最終シリアル
 	} cache_t;
 
 	// キャッシュ数
@@ -135,17 +136,17 @@ public:
 										// コンストラクタ
 	virtual ~DiskCache();
 										// デストラクタ
-	void FASTCALL SetRawMode(BOOL raw);
+	void FASTCALL SetRawMode(int raw);
 										// CD-ROM rawモード設定
 
 	// アクセス
-	BOOL FASTCALL Save();
+	int FASTCALL Save();
 										// 全セーブ＆解放
-	BOOL FASTCALL Read(BYTE *buf, int block);
+	int FASTCALL Read(uint8_t *buf, int block);
 										// セクタリード
-	BOOL FASTCALL Write(const BYTE *buf, int block);
+	int FASTCALL Write(const uint8_t *buf, int block);
 										// セクタライト
-	BOOL FASTCALL GetCache(int index, int& track, DWORD& serial) const;
+	int FASTCALL GetCache(int index, int& track, uint32_t& serial) const;
 										// キャッシュ情報取得
 
 private:
@@ -154,7 +155,7 @@ private:
 										// トラックをすべてクリア
 	DiskTrack* FASTCALL Assign(int track);
 										// トラックのロード
-	BOOL FASTCALL Load(int index, int track);
+	int FASTCALL Load(int index, int track);
 										// トラックのロード
 	void FASTCALL Update();
 										// シリアル番号更新
@@ -162,15 +163,16 @@ private:
 	// 内部データ
 	cache_t cache[CacheMax];
 										// キャッシュ管理
-	DWORD serial;
+	uint32_t serial;
 										// 最終アクセスシリアルナンバ
-	Filepath sec_path;
+//	Filepath sec_path;
+	Filepath* pSec_path;
 										// パス
 	int sec_size;
 										// セクタサイズ(8 or 9 or 11)
 	int sec_blocks;
 										// セクタブロック数
-	BOOL cd_raw;
+	int cd_raw;
 										// CD-ROM RAWモード
 };
 
@@ -184,18 +186,18 @@ class Disk
 public:
 	// 内部ワーク
 	typedef struct {
-		DWORD id;						// メディアID
-		BOOL ready;						// 有効なディスク
-		BOOL writep;					// 書き込み禁止
-		BOOL readonly;					// 読み込み専用
-		BOOL removable;					// 取り外し
-		BOOL lock;						// ロック
-		BOOL attn;						// アテンション
-		BOOL reset;						// リセット
+		uint32_t id;						// メディアID
+		int ready;						// 有効なディスク
+		int writep;					// 書き込み禁止
+		int readonly;					// 読み込み専用
+		int removable;					// 取り外し
+		int lock;						// ロック
+		int attn;						// アテンション
+		int reset;						// リセット
 		int size;						// セクタサイズ
 		int blocks;						// 総セクタ数
-		DWORD lun;						// LUN
-		DWORD code;						// ステータスコード
+		uint32_t lun;						// LUN
+		uint32_t code;						// ステータスコード
 		DiskCache *dcache;				// ディスクキャッシュ
 	} disk_t;
 
@@ -207,114 +209,114 @@ public:
 										// デストラクタ
 	virtual void FASTCALL Reset();
 										// デバイスリセット
-	virtual BOOL FASTCALL Save(Fileio *fio, int ver);
+	virtual int FASTCALL Save(Fileio *fio, int ver);
 										// セーブ
-	virtual BOOL FASTCALL Load(Fileio *fio, int ver);
+	virtual int FASTCALL Load(Fileio *fio, int ver);
 										// ロード
 
 	// ID
-	DWORD FASTCALL GetID() const		{ return disk.id; }
+	uint32_t FASTCALL GetID() const		{ return disk.id; }
 										// メディアID取得
-	BOOL FASTCALL IsNULL() const;
+	int FASTCALL IsNULL() const;
 										// NULLチェック
-	BOOL FASTCALL IsSASI() const;
+	int FASTCALL IsSASI() const;
 										// SASIチェック
 
 	// メディア操作
-	virtual BOOL FASTCALL Open(const Filepath& path);
+	virtual int FASTCALL Open(const Filepath& path);
 										// オープン
 	void FASTCALL GetPath(Filepath& path) const;
 										// パス取得
-	void FASTCALL Eject(BOOL force);
+	void FASTCALL Eject(int force);
 										// イジェクト
-	BOOL FASTCALL IsReady() const		{ return disk.ready; }
+	int FASTCALL IsReady() const		{ return disk.ready; }
 										// Readyチェック
-	void FASTCALL WriteP(BOOL flag);
+	void FASTCALL WriteP(int flag);
 										// 書き込み禁止
-	BOOL FASTCALL IsWriteP() const		{ return disk.writep; }
+	int FASTCALL IsWriteP() const		{ return disk.writep; }
 										// 書き込み禁止チェック
-	BOOL FASTCALL IsReadOnly() const	{ return disk.readonly; }
+	int FASTCALL IsReadOnly() const	{ return disk.readonly; }
 										// Read Onlyチェック
-	BOOL FASTCALL IsRemovable() const	{ return disk.removable; }
+	int FASTCALL IsRemovable() const	{ return disk.removable; }
 										// リムーバブルチェック
-	BOOL FASTCALL IsLocked() const		{ return disk.lock; }
+	int FASTCALL IsLocked() const		{ return disk.lock; }
 										// ロックチェック
-	BOOL FASTCALL IsAttn() const		{ return disk.attn; }
+	int FASTCALL IsAttn() const		{ return disk.attn; }
 										// 交換チェック
-	BOOL FASTCALL Flush();
+	int FASTCALL Flush();
 										// キャッシュフラッシュ
 	void FASTCALL GetDisk(disk_t *buffer) const;
 										// 内部ワーク取得
 
 	// プロパティ
-	void FASTCALL SetLUN(DWORD lun)		{ disk.lun = lun; }
+	void FASTCALL SetLUN(uint32_t lun)		{ disk.lun = lun; }
 										// LUNセット
-	DWORD FASTCALL GetLUN()				{ return disk.lun; }
+	uint32_t FASTCALL GetLUN()				{ return disk.lun; }
 										// LUN取得
 
 	// コマンド
-	virtual int FASTCALL Inquiry(const DWORD *cdb, BYTE *buf);
+	virtual int FASTCALL Inquiry(const uint32_t *cdb, uint8_t *buf);
 										// INQUIRYコマンド
-	virtual int FASTCALL RequestSense(const DWORD *cdb, BYTE *buf);
+	virtual int FASTCALL RequestSense(const uint32_t *cdb, uint8_t *buf);
 										// REQUEST SENSEコマンド
-	int FASTCALL SelectCheck(const DWORD *cdb);
+	int FASTCALL SelectCheck(const uint32_t *cdb);
 										// SELECTチェック
-	BOOL FASTCALL ModeSelect(const BYTE *buf, int size);
+	int FASTCALL ModeSelect(const uint8_t *buf, int size);
 										// MODE SELECTコマンド
-	int FASTCALL ModeSense(const DWORD *cdb, BYTE *buf);
+	int FASTCALL ModeSense(const uint32_t *cdb, uint8_t *buf);
 										// MODE SENSEコマンド
-	BOOL FASTCALL TestUnitReady(const DWORD *cdb);
+	int FASTCALL TestUnitReady(const uint32_t *cdb);
 										// TEST UNIT READYコマンド
-	BOOL FASTCALL Rezero(const DWORD *cdb);
+	int FASTCALL Rezero(const uint32_t *cdb);
 										// REZEROコマンド
-	BOOL FASTCALL Format(const DWORD *cdb);
+	int FASTCALL Format(const uint32_t *cdb);
 										// FORMAT UNITコマンド
-	BOOL FASTCALL Reassign(const DWORD *cdb);
+	int FASTCALL Reassign(const uint32_t *cdb);
 										// REASSIGN UNITコマンド
-	virtual int FASTCALL Read(BYTE *buf, int block);
+	virtual int FASTCALL Read(uint8_t *buf, int block);
 										// READコマンド
 	int FASTCALL WriteCheck(int block);
 										// WRITEチェック
-	BOOL FASTCALL Write(const BYTE *buf, int block);
+	int FASTCALL Write(const uint8_t *buf, int block);
 										// WRITEコマンド
-	BOOL FASTCALL Seek(const DWORD *cdb);
+	int FASTCALL Seek(const uint32_t *cdb);
 										// SEEKコマンド
-	BOOL FASTCALL StartStop(const DWORD *cdb);
+	int FASTCALL StartStop(const uint32_t *cdb);
 										// START STOP UNITコマンド
-	BOOL FASTCALL SendDiag(const DWORD *cdb);
+	int FASTCALL SendDiag(const uint32_t *cdb);
 										// SEND DIAGNOSTICコマンド
-	BOOL FASTCALL Removal(const DWORD *cdb);
+	int FASTCALL Removal(const uint32_t *cdb);
 										// PREVENT/ALLOW MEDIUM REMOVALコマンド
-	int FASTCALL ReadCapacity(const DWORD *cdb, BYTE *buf);
+	int FASTCALL ReadCapacity(const uint32_t *cdb, uint8_t *buf);
 										// READ CAPACITYコマンド
-	BOOL FASTCALL Verify(const DWORD *cdb);
+	int FASTCALL Verify(const uint32_t *cdb);
 										// VERIFYコマンド
-	virtual int FASTCALL ReadToc(const DWORD *cdb, BYTE *buf);
+	virtual int FASTCALL ReadToc(const uint32_t *cdb, uint8_t *buf);
 										// READ TOCコマンド
-	virtual BOOL FASTCALL PlayAudio(const DWORD *cdb);
+	virtual int FASTCALL PlayAudio(const uint32_t *cdb);
 										// PLAY AUDIOコマンド
-	virtual BOOL FASTCALL PlayAudioMSF(const DWORD *cdb);
+	virtual int FASTCALL PlayAudioMSF(const uint32_t *cdb);
 										// PLAY AUDIO MSFコマンド
-	virtual BOOL FASTCALL PlayAudioTrack(const DWORD *cdb);
+	virtual int FASTCALL PlayAudioTrack(const uint32_t *cdb);
 										// PLAY AUDIO TRACKコマンド
 	void FASTCALL InvalidCmd()			{ disk.code = DISK_INVALIDCMD; }
 										// サポートしていないコマンド
 
 protected:
 	// サブ処理
-	int FASTCALL AddError(BOOL change, BYTE *buf);
+	int FASTCALL AddError(int change, uint8_t *buf);
 										// エラーページ追加
-	int FASTCALL AddFormat(BOOL change, BYTE *buf);
+	int FASTCALL AddFormat(int change, uint8_t *buf);
 										// フォーマットページ追加
-	int FASTCALL AddOpt(BOOL change, BYTE *buf);
+	int FASTCALL AddOpt(int change, uint8_t *buf);
 										// オプティカルページ追加
-	int FASTCALL AddCache(BOOL change, BYTE *buf);
+	int FASTCALL AddCache(int change, uint8_t *buf);
 										// キャッシュページ追加
-	int FASTCALL AddCDROM(BOOL change, BYTE *buf);
+	int FASTCALL AddCDROM(int change, uint8_t *buf);
 										// CD-ROMページ追加
-	int FASTCALL AddCDDA(BOOL change, BYTE *buf);
+	int FASTCALL AddCDDA(int change, uint8_t *buf);
 										// CD-DAページ追加
-	BOOL FASTCALL CheckReady();
+	int FASTCALL CheckReady();
 										// レディチェック
 
 	// 内部データ
@@ -322,7 +324,8 @@ protected:
 										// ディスク内部データ
 	Device *ctrl;
 										// コントローラデバイス
-	Filepath diskpath;
+//	Filepath diskpath;
+	Filepath* pDiskpath;
 										// パス(GetPath用)
 };
 
@@ -337,7 +340,7 @@ public:
 	// 基本ファンクション
 	SASIHD(Device *dev);
 										// コンストラクタ
-	BOOL FASTCALL Open(const Filepath& path);
+	int FASTCALL Open(const Filepath& path);
 										// オープン
 
 	// メディア操作
@@ -345,7 +348,7 @@ public:
 										// デバイスリセット
 
 	// コマンド
-	int FASTCALL RequestSense(const DWORD *cdb, BYTE *buf);
+	int FASTCALL RequestSense(const uint32_t *cdb, uint8_t *buf);
 										// REQUEST SENSEコマンド
 };
 
@@ -360,11 +363,11 @@ public:
 	// 基本ファンクション
 	SCSIHD(Device *dev);
 										// コンストラクタ
-	BOOL FASTCALL Open(const Filepath& path);
+	int FASTCALL Open(const Filepath& path);
 										// オープン
 
 	// コマンド
-	int FASTCALL Inquiry(const DWORD *cdb, BYTE *buf);
+	int FASTCALL Inquiry(const uint32_t *cdb, uint8_t *buf);
 										// INQUIRYコマンド
 };
 
@@ -379,13 +382,13 @@ public:
 	// 基本ファンクション
 	SCSIMO(Device *dev);
 										// コンストラクタ
-	BOOL FASTCALL Open(const Filepath& path, BOOL attn = TRUE);
+	int FASTCALL Open(const Filepath& path, int attn = TRUE);
 										// オープン
-	BOOL FASTCALL Load(Fileio *fio, int ver);
+	int FASTCALL Load(Fileio *fio, int ver);
 										// ロード
 
 	// コマンド
-	int FASTCALL Inquiry(const DWORD *cdb, BYTE *buf);
+	int FASTCALL Inquiry(const uint32_t *cdb, uint8_t *buf);
 										// INQUIRYコマンド
 };
 
@@ -402,45 +405,46 @@ public:
 										// コンストラクタ
 	virtual ~CDTrack();
 										// デストラクタ
-	BOOL FASTCALL Init(int track, DWORD first, DWORD last);
+	int FASTCALL Init(int track, uint32_t first, uint32_t last);
 										// 初期化
 
 	// プロパティ
-	void FASTCALL SetPath(BOOL cdda, const Filepath& path);
+	void FASTCALL SetPath(int cdda, const Filepath& path);
 										// パス設定
 	void FASTCALL GetPath(Filepath& path) const;
 										// パス取得
-	void FASTCALL AddIndex(int index, DWORD lba);
+	void FASTCALL AddIndex(int index, uint32_t lba);
 										// インデックス追加
-	DWORD FASTCALL GetFirst() const;
+	uint32_t FASTCALL GetFirst() const;
 										// 開始LBA取得
-	DWORD FASTCALL GetLast() const;
+	uint32_t FASTCALL GetLast() const;
 										// 終端LBA取得
-	DWORD FASTCALL GetBlocks() const;
+	uint32_t FASTCALL GetBlocks() const;
 										// ブロック数取得
 	int FASTCALL GetTrackNo() const;
 										// トラック番号取得
-	BOOL FASTCALL IsValid(DWORD lba) const;
+	int FASTCALL IsValid(uint32_t lba) const;
 										// 有効なLBAか
-	BOOL FASTCALL IsAudio() const;
+	int FASTCALL IsAudio() const;
 										// オーディオトラックか
 
 private:
 	SCSICD *cdrom;
 										// 親デバイス
-	BOOL valid;
+	int valid;
 										// 有効なトラック
 	int track_no;
 										// トラック番号
-	DWORD first_lba;
+	uint32_t first_lba;
 										// 開始LBA
-	DWORD last_lba;
+	uint32_t last_lba;
 										// 終了LBA
-	BOOL audio;
+	int audio;
 										// オーディオトラックフラグ
-	BOOL raw;
+	int raw;
 										// RAWデータフラグ
-	Filepath imgpath;
+//	Filepath imgpath;
+	Filepath* pImgpath;
 										// イメージファイルパス
 };
 
@@ -458,41 +462,41 @@ public:
 	virtual ~CDDABuf();
 										// デストラクタ
 #if 0
-	BOOL Init();
+	int Init();
 										// 初期化
-	BOOL FASTCALL Load(const Filepath& path);
+	int FASTCALL Load(const Filepath& path);
 										// ロード
-	BOOL FASTCALL Save(const Filepath& path);
+	int FASTCALL Save(const Filepath& path);
 										// セーブ
 
 	// API
 	void FASTCALL Clear();
 										// バッファクリア
-	BOOL FASTCALL Open(Filepath& path);
+	int FASTCALL Open(Filepath& path);
 										// ファイル指定
-	BOOL FASTCALL GetBuf(DWORD *buffer, int frames);
+	int FASTCALL GetBuf(uint32_t *buffer, int frames);
 										// バッファ取得
-	BOOL FASTCALL IsValid();
+	int FASTCALL IsValid();
 										// 有効チェック
-	BOOL FASTCALL ReadReq();
+	int FASTCALL ReadReq();
 										// 読み込み要求
-	BOOL FASTCALL IsEnd() const;
+	int FASTCALL IsEnd() const;
 										// 終了チェック
 
 private:
 	Filepath wavepath;
 										// Waveパス
-	BOOL valid;
+	int valid;
 										// オープン結果
-	DWORD *buf;
+	uint32_t *buf;
 										// データバッファ
-	DWORD read;
+	uint32_t read;
 										// Readポインタ
-	DWORD write;
+	uint32_t write;
 										// Writeポインタ
-	DWORD num;
+	uint32_t num;
 										// データ有効数
-	DWORD rest;
+	uint32_t rest;
 										// ファイル残りサイズ
 #endif
 };
@@ -516,50 +520,50 @@ public:
 										// コンストラクタ
 	virtual ~SCSICD();
 										// デストラクタ
-	BOOL FASTCALL Open(const Filepath& path, BOOL attn = TRUE);
+	int FASTCALL Open(const Filepath& path, int attn = TRUE);
 										// オープン
-	BOOL FASTCALL Load(Fileio *fio, int ver);
+	int FASTCALL Load(Fileio *fio, int ver);
 										// ロード
 
 	// コマンド
-	int FASTCALL Inquiry(const DWORD *cdb, BYTE *buf);
+	int FASTCALL Inquiry(const uint32_t *cdb, uint8_t *buf);
 										// INQUIRYコマンド
-	int FASTCALL Read(BYTE *buf, int block);
+	int FASTCALL Read(uint8_t *buf, int block);
 										// READコマンド
-	int FASTCALL ReadToc(const DWORD *cdb, BYTE *buf);
+	int FASTCALL ReadToc(const uint32_t *cdb, uint8_t *buf);
 										// READ TOCコマンド
-	BOOL FASTCALL PlayAudio(const DWORD *cdb);
+	int FASTCALL PlayAudio(const uint32_t *cdb);
 										// PLAY AUDIOコマンド
-	BOOL FASTCALL PlayAudioMSF(const DWORD *cdb);
+	int FASTCALL PlayAudioMSF(const uint32_t *cdb);
 										// PLAY AUDIO MSFコマンド
-	BOOL FASTCALL PlayAudioTrack(const DWORD *cdb);
+	int FASTCALL PlayAudioTrack(const uint32_t *cdb);
 										// PLAY AUDIO TRACKコマンド
 
 	// CD-DA
-	BOOL FASTCALL NextFrame();
+	int FASTCALL NextFrame();
 										// フレーム通知
-	void FASTCALL GetBuf(DWORD *buffer, int samples, DWORD rate);
+	void FASTCALL GetBuf(uint32_t *buffer, int samples, uint32_t rate);
 										// CD-DAバッファ取得
 
 	// LBA-MSF変換
-	void FASTCALL LBAtoMSF(DWORD lba, BYTE *msf) const;
+	void FASTCALL LBAtoMSF(uint32_t lba, uint8_t *msf) const;
 										// LBA→MSF変換
-	DWORD FASTCALL MSFtoLBA(const BYTE *msf) const;
+	uint32_t FASTCALL MSFtoLBA(const uint8_t *msf) const;
 										// MSF→LBA変換
 
 private:
 	// オープン
-	BOOL FASTCALL OpenCue(const Filepath& path);
+	int FASTCALL OpenCue(const Filepath& path);
 										// オープン(CUE)
-	BOOL FASTCALL OpenIso(const Filepath& path);
+	int FASTCALL OpenIso(const Filepath& path);
 										// オープン(ISO)
-	BOOL rawfile;
+	int rawfile;
 										// RAWフラグ
 
 	// トラック管理
 	void FASTCALL ClearTrack();
 										// トラッククリア
-	int FASTCALL SearchTrack(DWORD lba) const;
+	int FASTCALL SearchTrack(uint32_t lba) const;
 										// トラック検索
 	CDTrack* track[TrackMax];
 										// トラックオブジェクト
@@ -582,7 +586,7 @@ private:
 										// CD-DAカレントトラック
 	int da_next;
 										// CD-DAネクストトラック
-	BOOL da_req;
+	int da_req;
 										// CD-DAデータ要求
 #endif
 };

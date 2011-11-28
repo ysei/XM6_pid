@@ -9,6 +9,7 @@
 #include "stdafx.h"
 #if 0
 #define _CRT_SECURE_NO_WARNINGS //VC2010//
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,9 +23,9 @@ extern "C" {
 void (*cpudebug_get)(char*, int);
 void (*cpudebug_put)(const char*);
 
-typedef unsigned char BYTE;
-typedef unsigned short WORD;
-//typedef unsigned int DWORD;
+//typedef unsigned char uint8_t;
+//typedef unsigned short uint16_t;
+//typedef unsigned int uint32_t;
 
 static char out_buffer[0x100];
 static int out_count;
@@ -53,13 +54,13 @@ static void cpudebug_printf(const char *fmt, ...) {
 	while(*s) cpudebug_putc(*s++);
 }
 
-#define byte unsigned char
-#define word unsigned short int
-#define dword unsigned int
+#define byte uint8_t
+#define word uint16_t
+#define dword uint32_t
 
-#define int08 signed char
-#define int16 signed short int
-#define int32 signed int
+#define int08 int8_t
+#define int16 int16_t
+#define int32 int32_t
 
 int cpudebug_disabled(void){return 0;}
 
@@ -113,16 +114,16 @@ typedef struct _x68func {
 
 word cpudebug_fetch(dword);
 
-static WORD fetch(void)
+static uint16_t fetch(void)
 {
 	debugpc += 2;
 	isize += 2;
 	return cpudebug_fetch(debugpc - 2);
 }
 
-static DWORD fetchl(void)
+static uint32_t fetchl(void)
 {
-	DWORD t;
+	uint32_t t;
 
 	t = cpudebug_fetch(debugpc);
 	t <<= 16;
@@ -389,7 +390,7 @@ static void m68_bitopdn_x(void){
 
 #define bittest_st(name,dump) static void name(void)\
 {\
-	BYTE s = (BYTE)fetch();\
+	uint8_t s = (uint8_t)fetch();\
 	ea;\
 	if ((inst & 0x3f) < 0x08) sprintf(sdebug, "%s.l  #$%02x,%s", dump, s, eabuffer);\
 	else sprintf(sdebug,"%s.b  #$%02x,%s",dump, s, eabuffer);\

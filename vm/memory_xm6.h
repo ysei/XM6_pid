@@ -20,9 +20,9 @@
 #if defined(__cplusplus)
 extern "C" {
 #endif	// __cplusplus
-void ReadBusErr(DWORD addr);
+void ReadBusErr(uint32_t addr);
 										// 読み込みバスエラー
-void WriteBusErr(DWORD addr);
+void WriteBusErr(uint32_t addr);
 										// 書き込みバスエラー
 #if defined(__cplusplus)
 }
@@ -52,63 +52,63 @@ public:
 		MemDevice* table[0x180];		// ジャンプテーブル
 		int size;						// RAMサイズ(2,4,6,8,10,12)
 		int config;						// RAM設定値(0～5)
-		DWORD length;					// RAM最終バイト+1
-		BYTE *ram;						// メインRAM
-		BYTE *ipl;						// IPL ROM (128KB)
-		BYTE *cg;						// CG ROM(768KB)
-		BYTE *scsi;						// SCSI ROM (8KB)
+		uint32_t length;					// RAM最終バイト+1
+		uint8_t *ram;						// メインRAM
+		uint8_t *ipl;						// IPL ROM (128KB)
+		uint8_t *cg;						// CG ROM(768KB)
+		uint8_t *scsi;						// SCSI ROM (8KB)
 		memtype type;					// メモリ種別(リセット後)
 		memtype now;					// メモリ種別(カレント)
-		BOOL memsw;						// メモリスイッチ自動更新
+		int memsw;						// メモリスイッチ自動更新
 	} memory_t;
 
 public:
 	// 基本ファンクション
 	Memory(VM *p);
 										// コンストラクタ
-	BOOL FASTCALL Init();
+	int FASTCALL Init();
 										// 初期化
 	void FASTCALL Cleanup();
 										// クリーンアップ
 	void FASTCALL Reset();
 										// リセット
-	BOOL FASTCALL Save(Fileio *fio, int ver);
+	int FASTCALL Save(Fileio *fio, int ver);
 										// セーブ
-	BOOL FASTCALL Load(Fileio *fio, int ver);
+	int FASTCALL Load(Fileio *fio, int ver);
 										// ロード
 	void FASTCALL ApplyCfg(const Config *config);
 										// 設定適用
 
 	// メモリデバイス
-	DWORD FASTCALL ReadByte(DWORD addr);
+	uint32_t FASTCALL ReadByte(uint32_t addr);
 										// バイト読み込み
-	DWORD FASTCALL ReadWord(DWORD addr);
+	uint32_t FASTCALL ReadWord(uint32_t addr);
 										// ワード読み込み
-	void FASTCALL WriteByte(DWORD addr, DWORD data);
+	void FASTCALL WriteByte(uint32_t addr, uint32_t data);
 										// バイト書き込み
-	void FASTCALL WriteWord(DWORD addr, DWORD data);
+	void FASTCALL WriteWord(uint32_t addr, uint32_t data);
 										// ワード書き込み
-	DWORD FASTCALL ReadOnly(DWORD addr) const;
+	uint32_t FASTCALL ReadOnly(uint32_t addr) const;
 										// 読み込みのみ
 
 	// 外部API
-	void FASTCALL MakeContext(BOOL reset);
+	void FASTCALL MakeContext(int reset);
 										// メモリコンテキスト作成
-	BOOL FASTCALL CheckIPL() const;
+	int FASTCALL CheckIPL() const;
 										// IPLバージョンチェック
-	BOOL FASTCALL CheckCG() const;
+	int FASTCALL CheckCG() const;
 										// CGチェック
-	const BYTE* FASTCALL GetCG() const;
+	const uint8_t* FASTCALL GetCG() const;
 										// CG取得
-	const BYTE* FASTCALL GetSCSI() const;
+	const uint8_t* FASTCALL GetSCSI() const;
 										// SCSI取得
-	const BYTE* FASTCALL GetIPL() const;
+	const uint8_t* FASTCALL GetIPL() const;
 										// IPL取得
 	memtype FASTCALL GetMemType() const { return mem.now; }
 										// メモリ種別取得
 
 private:
-	BOOL FASTCALL LoadROM(memtype target);
+	int FASTCALL LoadROM(memtype target);
 										// ROMロード
 	void FASTCALL InitTable();
 										// デコードテーブル初期化
