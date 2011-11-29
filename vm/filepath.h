@@ -19,15 +19,6 @@ class Filepath;
 //	定数定義
 //
 //---------------------------------------------------------------------------
-#ifndef _MAX_PATH
-#define	_MAX_PATH			260
-#define	_MAX_DRIVE			3
-#define	_MAX_EXT			256
-#define	_MAX_FNAME			256
-#define	_MAX_DIR			256
-#endif
-#define FILEPATH_MAX		_MAX_PATH
-
 typedef char CHAR;
 typedef const CHAR* LPCSTR;
 
@@ -41,46 +32,6 @@ typedef LPCSTR LPCTSTR;
 #endif
 
 typedef struct _FILETIME FILETIME;
-
-/*
-class TCharBuf {
-public:
-	TCharBuf() : buf(0) {
-	}
-
-	TCharBuf(int n) : buf(0) {
-		buf = new TCHAR [n];
-	}
-
-	~TCharBuf() {
-		if(buf) {
-			delete [] buf;
-			buf = 0;
-		}
-	}
-
-	operator const char*() const {
-		return &buf[0];
-	}
-
-	operator const char*() {
-		return &buf[0];
-	}
-
-	const char& operator[](const int i) const {
-		return buf[i];
-	}
-
-	char& operator[](const int i) {
-		return buf[i];
-	}
-
-protected:
-	TCHAR* buf;
-};
-*/
-
-
 
 //===========================================================================
 //
@@ -119,6 +70,8 @@ public:
 										// ファイル設定(システム)
 	void FASTCALL SetPath(LPCTSTR lpszPath);
 										// ファイル設定(ユーザ)
+	void FASTCALL SetPath(const Filepath& path);
+										// ファイル設定
 	void FASTCALL SetBaseDir();
 										// ベースディレクトリ設定
 	void FASTCALL SetBaseFile();
@@ -126,27 +79,16 @@ public:
 
 	int FASTCALL IsClear() const;
 										// クリアされているか
-	LPCTSTR FASTCALL GetPath() const;
-										// パス名取得
 	const char* FASTCALL GetShort() const;
 										// ショート名取得(const char*)
-	LPCTSTR FASTCALL GetFileExt() const;
-										// ショート名取得(LPCTSTR)
 	int FASTCALL CmpPath(const Filepath& path) const;
 										// パス比較
-
-	static void FASTCALL ClearDefaultDir();
-										// デフォルディレクトリを初期化
-	static void FASTCALL SetDefaultDir(LPCTSTR lpszPath);
-										// デフォルトディレクトリに設定
-	static LPCTSTR FASTCALL GetDefaultDir();
-										// デフォルトディレクトリ取得
-
 	int FASTCALL Save(Fileio *fio, int ver);
 										// セーブ
 	int FASTCALL Load(Fileio *fio, int ver);
 										// ロード
 
+	const void* FASTCALL GetPathVoidPtr() const;
 private:
 	void FASTCALL Split();
 										// パス分割

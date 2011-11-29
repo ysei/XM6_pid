@@ -70,6 +70,32 @@ struct XM6_RTC {
 
 typedef int (__stdcall *XM6_RTC_CALLBACK)(XM6_RTC*);
 
+class XM6_FILEIO_SYSTEM {
+public:
+	enum OpenMode {
+		ReadOnly,						// 読み込みのみ
+		WriteOnly,						// 書き込みのみ
+		ReadWrite,						// 読み書き両方
+		Append							// アペンド
+	};
+
+	XM6_FILEIO_SYSTEM() {}
+	virtual ~XM6_FILEIO_SYSTEM() {}
+
+	virtual int open			(const void* filename, OpenMode mode) = 0;
+	virtual int close			(int fd) = 0;
+
+	virtual int isValid			(int fd) const = 0;
+	virtual int getInvalidFd	() const = 0;
+
+	virtual uint32_t read		(int fd, void* buffer, unsigned int count) = 0;
+	virtual uint32_t write		(int fd, const void* buffer, unsigned int count) = 0;
+	virtual uint32_t seekSet	(int fd, int offset) = 0;
+	virtual uint32_t filelength	(int fd) = 0;
+	virtual uint32_t tell		(int fd) = 0;
+	virtual int		 access		(const void* path, int mode) = 0;
+};
+
 /*
 enum OpenMode {
 	OPEN_MODE_READ_ONLY = 0,
@@ -172,5 +198,7 @@ class JoyDevice;			// ジョイスティックデバイス
 class FileSys;				// ファイルシステム
 class SCSI;					// SCSI MB89352
 class Mercury;				// Mercury-Unit
+
+VM* getCurrentVm();			// どうしても vm にアクセスしたい人むけ
 
 #endif	// xm6_h

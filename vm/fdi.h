@@ -387,9 +387,10 @@ protected:
 										// 論理フォーマット(2DD)
 
 	// イメージ
+public:
 	FDI* FASTCALL GetFDI() const		{ return disk.fdi; }
 										// 親イメージ取得
-
+protected:
 	// トラック
 	void FASTCALL AddTrack(FDITrack *track);
 										// トラック追加
@@ -485,10 +486,10 @@ public:
 	int FASTCALL IsHD() const;
 										// ドライブHD状態取得
 
-private:
+public:
 	// ドライブ
 	FDD* FASTCALL GetFDD() const		{ return fdi.fdd; }
-
+private:
 	// ディスク
 	void FASTCALL AddDisk(FDIDisk *disk);
 										// ディスク追加

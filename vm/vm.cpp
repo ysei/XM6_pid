@@ -46,6 +46,13 @@
 #include "fileio.h"
 #include "vm.h"
 
+static VM* gvm = 0;
+VM* getCurrentVm() {			// どうしても vm にアクセスしたい人むけ
+	return gvm;
+}
+
+
+
 //===========================================================================
 //
 //	仮想マシン
@@ -79,8 +86,12 @@ static const int hex_to_int(const char* p) {
 VM::VM()
 	: pCurrent(0)
 	, xm6_rtc_cb(0)
-//	, xm6_fios(0)
+	, xm6_fios(0)
 {
+	if(gvm == 0){
+		gvm = this;
+	}
+
 	pCurrent = new Filepath;
 
 	// ワーク初期化
@@ -104,6 +115,9 @@ VM::VM()
 }
 
 VM::~VM() {
+	if(gvm == this){
+		gvm = 0;
+	}
 }
 
 //---------------------------------------------------------------------------
@@ -280,7 +294,7 @@ uint32_t FASTCALL VM::Save(const Filepath& path)
 	header[0x0f] = 0x1a;
 
 	// ファイル作成、ヘッダ書き込み
-	if (!fio.Open(path.GetPath(), Fileio::WriteOnly)) {
+	if (!fio.Open(path, Fileio::WriteOnly)) {
 		return 0;
 	}
 	if (!fio.Write(header, 0x10)) {
@@ -349,7 +363,7 @@ uint32_t FASTCALL VM::Load(const Filepath& path)
 	pCurrent->Clear();
 
 	// ファイルオープン、ヘッダ読み込み
-	if (!fio.Open(path.GetPath(), Fileio::ReadOnly)) {
+	if (!fio.Open(path, Fileio::ReadOnly)) {
 		return 0;
 	}
 	if (!fio.Read(buf, 0x10)) {
@@ -730,7 +744,6 @@ int FASTCALL VM::GetHostRtc(XM6_RTC* xm6_rtc) {
 	}
 	return ret;
 }
-/*
 void FASTCALL VM::SetHostFileSystem(XM6_FILEIO_SYSTEM* fios) {
 	ASSERT(this);
 	xm6_fios = fios;
@@ -739,4 +752,3 @@ void FASTCALL VM::SetHostFileSystem(XM6_FILEIO_SYSTEM* fios) {
 XM6_FILEIO_SYSTEM* FASTCALL VM::GetHostFileSystem() {
 	return xm6_fios;
 }
-*/

@@ -36,6 +36,10 @@
 #include <stdio.h>
 #include <time.h>
 
+#include <io.h>			// _open, _close
+#include <fcntl.h>		// _O_BINARY
+#include <sys/stat.h>	// _S_IREAD
+
 
 #include "vm.h"
 #include "memory_xm6.h"
@@ -81,9 +85,17 @@ public:
 		cleanup();
 	}
 
-	void init() {
+	void create() {
 		if(!vm) {
 			vm = new VM;
+		}
+	}
+
+	void destroy() {
+	}
+
+	void init() {
+		if(vm) {
 			vm->Init();
 		}
 	}
@@ -140,13 +152,11 @@ public:
 		}
 	}
 
-/*
 	void setFileSystem(XM6_FILEIO_SYSTEM* fios) {
 		if(vm) {
 			vm->SetHostFileSystem(fios);
 		}
 	}
-*/
 protected:
 	VM*					vm;
 };
@@ -168,6 +178,84 @@ OutputDebugString("rtcCallback\n");
 	return 1;
 }
 
+class HostFiosSystem : public XM6_FILEIO_SYSTEM {
+public:
+	HostFiosSystem() {
+	}
+
+	~HostFiosSystem() {
+	}
+	int open			(const void* filename, OpenMode mode) {
+		const TCHAR* p = (const TCHAR*) filename;
+		if(p[0] == _T('\0')) {
+			return getInvalidFd();
+		} else {
+			int oflag = 0;
+			int pmode = 0;
+			switch(mode) {
+			case ReadOnly:
+				oflag = _O_BINARY | _O_RDONLY;
+				pmode = _S_IREAD;
+				break;
+
+			// 書き込みのみ
+			case WriteOnly:
+				oflag = _O_BINARY | _O_CREAT | _O_WRONLY | _O_TRUNC;
+				pmode = _S_IWRITE;
+				break;
+
+			// 読み書き両方
+			case ReadWrite:
+				// CD-ROMからの読み込みはRWが成功してしまう
+				oflag = _O_BINARY | _O_RDWR;
+				pmode = _S_IREAD | _S_IWRITE;
+				break;
+
+			// アペンド
+			case Append:
+				oflag = _O_BINARY | _O_CREAT | _O_WRONLY | _O_APPEND;
+				pmode = _S_IWRITE;
+				break;
+			}
+			if(oflag && pmode) {
+				return _topen((const TCHAR*) filename, oflag, pmode);
+			} else {
+				return getInvalidFd();
+			}
+		}
+	}
+
+	int close			(int fd) {
+		return _close(fd);
+	}
+
+	int isValid			(int fd) const {
+		return (fd != -1);
+	}
+
+	int getInvalidFd	() const {
+		return -1;
+	}
+
+	uint32_t read		(int fd, void* buffer, unsigned int count) {
+		return (uint32_t) _read(fd, buffer, count);
+	}
+	uint32_t write		(int fd, const void* buffer, unsigned int count) {
+		return (uint32_t) _write(fd, buffer, count);
+	}
+	uint32_t seekSet	(int fd, int offset) {
+		return (uint32_t) _lseek(fd, offset, SEEK_SET);
+	}
+	uint32_t filelength	(int fd) {
+		return (uint32_t) _filelengthi64(fd);
+	}
+	uint32_t tell		(int fd) {
+		return _tell(fd);
+	}
+	int		 access		(const void* path, int mode) {
+		return _taccess((const TCHAR*) path, mode);
+	}
+};
 /*
 class Filepath {
 public:
@@ -1535,13 +1623,16 @@ INT WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, INT) {
 
 //	hostFileSystem = new HostFiosSystem();
 
+	HostFiosSystem* pFios = new HostFiosSystem();
+
 	mainWindow = CreateWindow(_T("edit"), 0, CW_STYLE, 0, 0, rc.right-rc.left, rc.bottom-rc.top, 0, 0, 0, 0);
 	{
 		// VM初期化
 		cvm = new CVm();
-		cvm->init();
+		cvm->create();
 		cvm->setRtcCallback(rtcCallback);
-//		cvm->setFileSystem(hostFileSystem);
+		cvm->setFileSystem(pFios);
+		cvm->init();
 
 		// 設定適用(OnOptionと同様、VMロックして)
 		{

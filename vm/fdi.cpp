@@ -294,6 +294,13 @@ FDITrack::~FDITrack()
 //---------------------------------------------------------------------------
 int FASTCALL FDITrack::Save(const Filepath& path, uint32_t offset)
 {
+//	VM* pVm = 0;
+//	{
+//		FDIDisk*	pFdiDisk	= this->GetDisk();
+//		FDI*		pFdi		= pFdiDisk->GetFDI();
+//		FDD*		pFdd		= pFdi->GetFDD();
+//		pVm			= pFdd->GetVM();
+//	}
 	Fileio fio;
 	FDISector *sector;
 	int changed;

@@ -12,105 +12,10 @@
 #include "xm6.h"
 #include "filepath.h"
 #include "fileio.h"
-#include <stdio.h>
-#include <io.h>
-#include <fcntl.h>
-#include <sys/stat.h>
+#include "vm.h"
 
 #if defined(_WIN32)
 
-
-
-#if defined(UNICODE)
-#define _T(x)	L x
-#else
-#define _T(x)	x
-#endif
-
-
-
-#if defined(UNICODE)
-#define _topen      _wopen
-#else
-#ifdef  _POSIX_
-#define _topen      open
-#define _taccess    access
-#else
-#define _topen      _open
-#define _taccess    _access
-#define _taccess_s  _access_s
-#endif
-#endif
-
-
-//===========================================================================
-//
-//	ファイルI/O
-//
-//===========================================================================
-
-#if 0
-static Vm* vm = 0;
-static XM6_FILEIO_SYSTEM* fios = 0;
-
-Fileio::Fileio()
-	: handle(0)
-{
-	if(vm == 0) {
-		vm = GetVM();
-	}
-	if(fios == 0) {
-		if(vm) {
-			fios = vm->GetHostFileSystem();
-		}
-	}
-	if(fios) {
-		fios->setInvalid(&handle);
-	}
-}
-
-Fileio::~Fileio() {
-	Close();
-}
-
-int FASTCALL Fileio::Open(const Filepath* path, OpenMode mode) {
-	return fios->open(path, mode, &handle);
-}
-
-
-int FASTCALL Fileio::Seek(long offset) {
-	return fios->seek(handle, path, offset);
-}
-									// シーク
-int FASTCALL Fileio::Read(void *buffer, int size) {
-	return fios->read(handle, buffer, size);
-}
-									// 読み込み
-int FASTCALL Fileio::Write(const void *buffer, int size) {
-	return fios->write(handle, buffer, size);
-}
-
-uint32_t FASTCALL Fileio::GetFileSize() const {
-	uint32_t size = 0;
-	fios->getFileSize(handle, buffer, &size);
-	return size;
-}
-
-uint32_t FASTCALL Fileio::GetFilePos() const {
-	uint32_t size = 0;
-	fios->getFilePos(handle, buffer, &size);
-	return size;
-}
-
-void FASTCALL Fileio::Close() {
-	fios->close(handle);
-	fios->setInvalid(&handle);
-}
-
-int FASTCALL Fileio::IsValid() const {
-	return fios->isValid(handle);
-}
-#else
 //---------------------------------------------------------------------------
 //
 //	コンストラクタ
@@ -119,7 +24,9 @@ int FASTCALL Fileio::IsValid() const {
 Fileio::Fileio()
 {
 	// ワーク初期化
-	handle = -1;
+	VM* vm = getCurrentVm();
+	XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
+	handle = fios->getInvalidFd();
 }
 
 //---------------------------------------------------------------------------
@@ -129,8 +36,6 @@ Fileio::Fileio()
 //---------------------------------------------------------------------------
 Fileio::~Fileio()
 {
-	ASSERT(handle == -1);
-
 	// Releaseでの安全策
 	Close();
 }
@@ -198,70 +103,49 @@ int FASTCALL Fileio::Save(const Filepath& path, void *buffer, int size)
 //	オープン
 //
 //---------------------------------------------------------------------------
-int FASTCALL Fileio::Open(LPCTSTR fname, OpenMode mode)
-{
-	ASSERT(this);
-	ASSERT(fname);
-	ASSERT(handle < 0);
-
-	// ヌル文字列からの読み込みは必ず失敗させる
-	if (fname[0] == _T('\0')) {
-		handle = -1;
-		return FALSE;
-	}
-
-	// モード別
-	switch (mode) {
-		// 読み込みのみ
-		case ReadOnly:
-			handle = _topen(fname, _O_BINARY | _O_RDONLY);
-			break;
-
-		// 書き込みのみ
-		case WriteOnly:
-			handle = _topen(fname, _O_BINARY | _O_CREAT | _O_WRONLY | _O_TRUNC,
-						_S_IWRITE);
-			break;
-
-		// 読み書き両方
-		case ReadWrite:
-			// CD-ROMからの読み込みはRWが成功してしまう
-			if (_taccess(fname, 0x06) != 0) {
-				return FALSE;
-			}
-			handle = _topen(fname, _O_BINARY | _O_RDWR);
-			break;
-
-		// アペンド
-		case Append:
-			handle = _topen(fname, _O_BINARY | _O_CREAT | _O_WRONLY | _O_APPEND,
-						_S_IWRITE);
-			break;
-
-		// それ以外
-		default:
-			ASSERT(FALSE);
-			break;
-	}
-
-	// 結果評価
-	if (handle == -1) {
-		return FALSE;
-	}
-	ASSERT(handle >= 0);
-	return TRUE;
-}
-
-//---------------------------------------------------------------------------
-//
-//	オープン
-//
-//---------------------------------------------------------------------------
 int FASTCALL Fileio::Open(const Filepath& path, OpenMode mode)
 {
 	ASSERT(this);
 
-	return Open(path.GetPath(), mode);
+	VM* vm = getCurrentVm();
+	XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
+
+//	const void* fname = path.GetPath();
+	const void* fname = path.GetPathVoidPtr();
+	// モード別
+	switch (mode) {
+	// 読み込みのみ
+	case ReadOnly:
+		handle = fios->open(fname, XM6_FILEIO_SYSTEM::ReadOnly);
+		break;
+
+	// 書き込みのみ
+	case WriteOnly:
+		handle = fios->open(fname, XM6_FILEIO_SYSTEM::WriteOnly);
+		break;
+
+	// 読み書き両方
+	case ReadWrite:
+		// CD-ROMからの読み込みはRWが成功してしまう
+		if (fios->access(fname, 0x06) == 0) {
+			handle = fios->open(fname, XM6_FILEIO_SYSTEM::ReadWrite);
+		}
+		break;
+
+	// アペンド
+	case Append:
+		handle = fios->open(fname, XM6_FILEIO_SYSTEM::Append);
+		break;
+
+	// それ以外
+	default:
+		handle = fios->getInvalidFd();
+		ASSERT(FALSE);
+		break;
+	}
+
+	// 結果評価
+	return fios->isValid(handle);
 }
 
 //---------------------------------------------------------------------------
@@ -279,7 +163,9 @@ int FASTCALL Fileio::Read(void *buffer, int size)
 	ASSERT(handle >= 0);
 
 	// 読み込み
-	count = _read(handle, buffer, size);
+	VM* vm = getCurrentVm();
+	XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
+	count = fios->read(handle, buffer, size);
 	if (count != size) {
 		return FALSE;
 	}
@@ -302,7 +188,9 @@ int FASTCALL Fileio::Write(const void *buffer, int size)
 	ASSERT(handle >= 0);
 
 	// 読み込み
-	count = _write(handle, buffer, size);
+	VM* vm = getCurrentVm();
+	XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
+	count = fios->write(handle, buffer, size);
 	if (count != size) {
 		return FALSE;
 	}
@@ -321,10 +209,11 @@ int FASTCALL Fileio::Seek(long offset)
 	ASSERT(handle >= 0);
 	ASSERT(offset >= 0);
 
-	if (_lseek(handle, offset, SEEK_SET) != offset) {
+	VM* vm = getCurrentVm();
+	XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
+	if(fios->seekSet(handle, offset) != (uint32_t) offset) {
 		return FALSE;
 	}
-
 	return TRUE;
 }
 
@@ -335,28 +224,12 @@ int FASTCALL Fileio::Seek(long offset)
 //---------------------------------------------------------------------------
 uint32_t FASTCALL Fileio::GetFileSize() const
 {
-#if defined(_MSC_VER)
-	__int64 len;
-
 	ASSERT(this);
 	ASSERT(handle >= 0);
+	VM* vm = getCurrentVm();
+	XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
 
-	// ファイルサイズを64bitで取得
-	len = _filelengthi64(handle);
-
-	// 上位があれば、0xffffffffとして返す
-	if (len >= 0x100000000i64) {
-		return 0xffffffff;
-	}
-
-	// 下位のみ
-	return (uint32_t)len;
-#else
-	ASSERT(this);
-	ASSERT(handle >= 0);
-
-	return (uint32_t)filelength(handle);
-#endif	// _MSC_VER
+	return fios->filelength(handle);
 }
 
 //---------------------------------------------------------------------------
@@ -370,7 +243,9 @@ uint32_t FASTCALL Fileio::GetFilePos() const
 	ASSERT(handle >= 0);
 
 	// ファイル位置を32bitで取得
-	return _tell(handle);
+	VM* vm = getCurrentVm();
+	XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
+	return fios->tell(handle);
 }
 
 //---------------------------------------------------------------------------
@@ -382,10 +257,11 @@ void FASTCALL Fileio::Close()
 {
 	ASSERT(this);
 
-	if (handle != -1) {
-		_close(handle);
-		handle = -1;
+	VM* vm = getCurrentVm();
+	XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
+	if(fios->isValid(handle)) {
+		fios->close(handle);
+		handle = fios->getInvalidFd();
 	}
 }
-#endif
 #endif	// _WIN32

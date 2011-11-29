@@ -69,7 +69,7 @@ static TCHAR FileExt[_MAX_FNAME + _MAX_DIR];	// ショート名(TCHAR)
 //	デフォルトディレクトリ
 //
 //---------------------------------------------------------------------------
-static TCHAR DefaultDir[_MAX_PATH];				// デフォルトディレクトリ
+//static TCHAR DefaultDir[_MAX_PATH];				// デフォルトディレクトリ
 }
 
 struct Filepath::FilepathBuf {
@@ -121,6 +121,19 @@ Filepath::~Filepath()
 	}
 }
 
+void FASTCALL Filepath::SetPath(const Filepath& path) {
+	// パス設定(内部でSplitされる)
+	// ファイル名コピー
+	_tcscpy(pfb->m_szPath, path.pfb->m_szPath);
+
+	// 日付及び更新情報を取得
+	pfb->m_bUpdate = FALSE;
+	if (path.IsUpdate()) {
+		pfb->m_bUpdate = TRUE;
+		path.GetUpdateTime(&pfb->m_SavedTime, &pfb->m_CurrentTime);
+	}
+}
+
 //---------------------------------------------------------------------------
 //
 //	代入演算子
@@ -128,6 +141,7 @@ Filepath::~Filepath()
 //---------------------------------------------------------------------------
 Filepath& Filepath::operator=(const Filepath& path)
 {
+#if 0
 	// パス設定(内部でSplitされる)
 	SetPath(path.GetPath());
 
@@ -137,7 +151,9 @@ Filepath& Filepath::operator=(const Filepath& path)
 		pfb->m_bUpdate = TRUE;
 		path.GetUpdateTime(&pfb->m_SavedTime, &pfb->m_CurrentTime);
 	}
-
+#else
+	SetPath(path);
+#endif
 	return *this;
 }
 
@@ -364,25 +380,6 @@ const char* FASTCALL Filepath::GetShort() const
 	// const charとして返す
 	return (const char*)ShortName;
 }
-
-//---------------------------------------------------------------------------
-//
-//	ファイル名＋拡張子取得
-//	※返されるポインタは一時的なもの。すぐコピーすること
-//
-//---------------------------------------------------------------------------
-LPCTSTR FASTCALL Filepath::GetFileExt() const
-{
-	ASSERT(this);
-
-	// 固定バッファへ合成
-	_tcscpy(FileExt, pfb->m_szFile);
-	_tcscat(FileExt, pfb->m_szExt);
-
-	// LPCTSTRとして返す
-	return (LPCTSTR)FileExt;
-}
-
 //---------------------------------------------------------------------------
 //
 //	パス比較
@@ -391,53 +388,17 @@ LPCTSTR FASTCALL Filepath::GetFileExt() const
 int FASTCALL Filepath::CmpPath(const Filepath& path) const
 {
 	// パスが完全一致していればTRUE
+#if 0
 	if (_tcscmp(path.GetPath(), GetPath()) == 0) {
 		return TRUE;
 	}
-
+#else
+	if (_tcscmp(path.pfb->m_szPath, pfb->m_szPath) == 0) {
+		return TRUE;
+	}
+#endif
 	return FALSE;
 }
-
-//---------------------------------------------------------------------------
-//
-//	デフォルトディレクトリ初期化
-//
-//---------------------------------------------------------------------------
-void FASTCALL Filepath::ClearDefaultDir()
-{
-	DefaultDir[0] = _T('\0');
-}
-
-//---------------------------------------------------------------------------
-//
-//	デフォルトディレクトリ設定
-//
-//---------------------------------------------------------------------------
-void FASTCALL Filepath::SetDefaultDir(LPCTSTR lpszPath)
-{
-	TCHAR szDrive[_MAX_DRIVE];
-	TCHAR szDir[_MAX_DIR];
-
-	ASSERT(lpszPath);
-
-	// 与えられたパスから、ドライブとディレクトリを生成
-	_tsplitpath(lpszPath, szDrive, szDir, NULL, NULL);
-
-	// ドライブとディレクトリをコピー
-	_tcscpy(DefaultDir, szDrive);
-	_tcscat(DefaultDir, szDir);
-}
-
-//---------------------------------------------------------------------------
-//
-//	デフォルトディレクトリ取得
-//
-//---------------------------------------------------------------------------
-LPCTSTR FASTCALL Filepath::GetDefaultDir()
-{
-	return (LPCTSTR)DefaultDir;
-}
-
 //---------------------------------------------------------------------------
 //
 //	セーブ
@@ -610,6 +571,7 @@ TCHAR Filepath::FileExt[_MAX_FNAME + _MAX_DIR];
 TCHAR Filepath::DefaultDir[_MAX_PATH];
 */
 
+/*
 //---------------------------------------------------------------------------
 //
 // パス名取得
@@ -618,5 +580,9 @@ TCHAR Filepath::DefaultDir[_MAX_PATH];
 LPCTSTR FASTCALL Filepath::GetPath() const {
 	return pfb->m_szPath;
 }
+*/
 
+const void* FASTCALL Filepath::GetPathVoidPtr() const {
+	return pfb->m_szPath;
+}
 #endif	// WIN32
