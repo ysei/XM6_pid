@@ -12,11 +12,13 @@
 
 #include "os.h"
 #include "xm6.h"
+#include "vm.h"
 #include "filepath.h"
 #include "fileio.h"
 
 #include <windows.h>
 #include <tchar.h>
+#include <stdio.h>
 
 #ifndef _T
 #if defined(UNICODE)
@@ -26,70 +28,32 @@
 #endif
 #endif
 
+static bool chk(const void* p) {
+	int nbu = * (const int*) (((char*)p) - 32 + 0x14);
+	return nbu >= 0;
+}
+
+#define	TR()	
+
+/*
+#define	TR()	\
+		{		\
+			char buf[256];	\
+			sprintf(buf, __FUNCTION__" : this=%p, pfb=%p, bbb=%p\n", this, pfb, bbb);	\
+			OutputDebugString(buf);	\
+		}
+*/
+
 //===========================================================================
 //
 //	ファイルパス
 //
 //===========================================================================
-namespace {
-//---------------------------------------------------------------------------
-//
-//	システムファイルテーブル
-//
-//---------------------------------------------------------------------------
-static LPCTSTR SystemFile[] = {					// システムファイル
-	_T("IPLROM.DAT"),
-	_T("IPLROMXV.DAT"),
-	_T("IPLROMCO.DAT"),
-	_T("IPLROM30.DAT"),
-	_T("ROM30.DAT"),
-	_T("CGROM.DAT"),
-	_T("CGROM.TMP"),
-	_T("SCSIINROM.DAT"),
-	_T("SCSIEXROM.DAT"),
-	_T("SRAM.DAT")
-};
-
-//---------------------------------------------------------------------------
-//
-//	ショート名
-//
-//---------------------------------------------------------------------------
-static char ShortName[_MAX_FNAME + _MAX_DIR];	// ショート名(char)
-
-//---------------------------------------------------------------------------
-//
-//	ファイル名＋拡張子
-//
-//---------------------------------------------------------------------------
-static TCHAR FileExt[_MAX_FNAME + _MAX_DIR];	// ショート名(TCHAR)
-
-//---------------------------------------------------------------------------
-//
-//	デフォルトディレクトリ
-//
-//---------------------------------------------------------------------------
-//static TCHAR DefaultDir[_MAX_PATH];				// デフォルトディレクトリ
-}
-
+/*
 struct Filepath::FilepathBuf {
-	TCHAR m_szPath[_MAX_PATH];
-										// ファイルパス
-	TCHAR m_szDrive[_MAX_DRIVE];
-										// ドライブ
-	TCHAR m_szDir[_MAX_DIR];
-										// ディレクトリ
-	TCHAR m_szFile[_MAX_FNAME];
-										// ファイル
-	TCHAR m_szExt[_MAX_EXT];
-										// 拡張子
-	int m_bUpdate;
-										// セーブ後の更新あり
-	FILETIME m_SavedTime;
-										// セーブ時の日付
-	FILETIME m_CurrentTime;
-										// 現在の日付
+	XM6_pid::FiosPath	path;
 };
+*/
 
 //---------------------------------------------------------------------------
 //
@@ -97,15 +61,22 @@ struct Filepath::FilepathBuf {
 //
 //---------------------------------------------------------------------------
 Filepath::Filepath()
-	: pfb(0)
+//	: pfb(0)
+//	, bbb(0)
 {
-	pfb = new FilepathBuf;
+//	pfb = new FilepathBuf;
+//	pfb->path.path[0] = 0;
+//	bbb = pfb;
+//	{
+//		char buf[256];
+//		sprintf(buf, "Filepath() : this=%p, pfb=%p, bbb=%p\n", this, pfb, bbb);
+//		OutputDebugString(buf);
+//	}
 
 	// クリア
 	Clear();
 
-	// 更新なし
-	pfb->m_bUpdate = FALSE;
+//	ASSERT(chk(pfb) && pfb == bbb);
 }
 
 //---------------------------------------------------------------------------
@@ -115,46 +86,35 @@ Filepath::Filepath()
 //---------------------------------------------------------------------------
 Filepath::~Filepath()
 {
-	if(pfb) {
-		delete pfb;
-		pfb = 0;
-	}
+	ASSERT(* (const unsigned int*) this != 0xfeeefeee);
+//	ASSERT(pfb != 0);
+//	ASSERT(pfb == bbb);
+
+//	if(pfb) {
+//		unsigned int nbu = * (const unsigned int*) (((char*)pfb) - 32 + 0x14);
+//		{
+//			char buf[256];
+//			sprintf(buf, "~Filepath() : nBlockUse=%08x\n", nbu);
+//			OutputDebugString(buf);
+//		}
+//		TR();
+//		delete pfb;
+//		pfb = 0;
+//		bbb = 0;
+//	}
 }
 
 void FASTCALL Filepath::SetPath(const Filepath& path) {
-	// パス設定(内部でSplitされる)
-	// ファイル名コピー
-	_tcscpy(pfb->m_szPath, path.pfb->m_szPath);
-
-	// 日付及び更新情報を取得
-	pfb->m_bUpdate = FALSE;
-	if (path.IsUpdate()) {
-		pfb->m_bUpdate = TRUE;
-		path.GetUpdateTime(&pfb->m_SavedTime, &pfb->m_CurrentTime);
-	}
+//	_tcscpy(pfb->path.path, path.pfb->path.path);
+	_tcscpy(ffb.path.path, path.ffb.path.path);
 }
 
-//---------------------------------------------------------------------------
-//
-//	代入演算子
-//
-//---------------------------------------------------------------------------
-Filepath& Filepath::operator=(const Filepath& path)
-{
-#if 0
-	// パス設定(内部でSplitされる)
-	SetPath(path.GetPath());
+const XM6_pid::FiosPath* FASTCALL Filepath::getFiosPath() const {
+	return &ffb.path;
+}
 
-	// 日付及び更新情報を取得
-	pfb->m_bUpdate = FALSE;
-	if (path.IsUpdate()) {
-		pfb->m_bUpdate = TRUE;
-		path.GetUpdateTime(&pfb->m_SavedTime, &pfb->m_CurrentTime);
-	}
-#else
-	SetPath(path);
-#endif
-	return *this;
+XM6_pid::FiosPath* FASTCALL Filepath::getFiosPath() {
+	return &ffb.path;
 }
 
 //---------------------------------------------------------------------------
@@ -166,12 +126,12 @@ void FASTCALL Filepath::Clear()
 {
 	ASSERT(this);
 
+//	ASSERT(chk(pfb) && pfb == bbb);
 	// パスおよび各部分をクリア
-	pfb->m_szPath[0] = _T('\0');
-	pfb->m_szDrive[0] = _T('\0');
-	pfb->m_szDir[0] = _T('\0');
-	pfb->m_szFile[0] = _T('\0');
-	pfb->m_szExt[0] = _T('\0');
+//	ffb.path.path[0] = _T('\0');
+	ffb.path.clear();
+//	ASSERT(chk(pfb) && pfb == bbb);
+	TR();
 }
 
 //---------------------------------------------------------------------------
@@ -179,23 +139,21 @@ void FASTCALL Filepath::Clear()
 //	ファイル設定(システム)
 //
 //---------------------------------------------------------------------------
-void FASTCALL Filepath::SysFile(SysFileType sys)
+void FASTCALL Filepath::SysFile(XM6_pid::SysFileType sys)
 {
-	int nFile;
-
 	ASSERT(this);
+//	ASSERT(chk(pfb) && pfb == bbb);
 
-	// キャスト
-	nFile = (int)sys;
-
-	// ファイル名コピー
-	_tcscpy(pfb->m_szPath, SystemFile[nFile]);
-
-	// 分離
-	Split();
-
-	// ベースディレクトリ設定
-	SetBaseDir();
+	VM* vm = getCurrentVm();
+	XM6_pid::XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
+	const XM6_pid::FiosPath* pFiosPath = 0;
+	if(fios->getSystemFilePath(sys, &pFiosPath)) {
+		ffb.path.set(pFiosPath);
+	} else {
+		ffb.path.clear();
+	}
+//	ASSERT(chk(pfb) && pfb == bbb);
+	TR();
 }
 
 //---------------------------------------------------------------------------
@@ -203,145 +161,15 @@ void FASTCALL Filepath::SysFile(SysFileType sys)
 //	ファイル設定(ユーザ)
 //
 //---------------------------------------------------------------------------
-void FASTCALL Filepath::SetPath(LPCTSTR lpszPath)
-{
+void FASTCALL Filepath::SetPath(const XM6_pid::FiosPath* pPath) {
 	ASSERT(this);
-	ASSERT(lpszPath);
-	ASSERT(_tcslen(lpszPath) < _MAX_PATH);
+	ASSERT(pPath);
+//	ASSERT(chk(pfb) && pfb == bbb);
 
 	// パス名コピー
-	_tcscpy(pfb->m_szPath, lpszPath);
-
-	// 分離
-	Split();
-
-	// ドライブ又はディレクトリが入っていればOK
-	if (_tcslen(pfb->m_szPath) > 0) {
-		if (_tcslen(pfb->m_szDrive) == 0) {
-			if (_tcslen(pfb->m_szDir) == 0) {
-				// カレントディレクトリ設定
-				SetCurDir();
-			}
-		}
-	}
-}
-
-//---------------------------------------------------------------------------
-//
-//	パス分離
-//
-//---------------------------------------------------------------------------
-void FASTCALL Filepath::Split()
-{
-	ASSERT(this);
-
-	// パーツを初期化
-	pfb->m_szDrive[0] = _T('\0');
-	pfb->m_szDir[0] = _T('\0');
-	pfb->m_szFile[0] = _T('\0');
-	pfb->m_szExt[0] = _T('\0');
-
-	// 分離
-	_tsplitpath(pfb->m_szPath, pfb->m_szDrive, pfb->m_szDir, pfb->m_szFile, pfb->m_szExt);
-}
-
-//---------------------------------------------------------------------------
-//
-//	パス合成
-//
-//---------------------------------------------------------------------------
-void FASTCALL Filepath::Make()
-{
-	ASSERT(this);
-
-	// 合成
-	_tmakepath(pfb->m_szPath, pfb->m_szDrive, pfb->m_szDir, pfb->m_szFile, pfb->m_szExt);
-}
-
-//---------------------------------------------------------------------------
-//
-//	ベースディレクトリ設定
-//
-//---------------------------------------------------------------------------
-void FASTCALL Filepath::SetBaseDir()
-{
-	TCHAR szModule[_MAX_PATH];
-
-	ASSERT(this);
-
-	// モジュールのパス名を得る
-	::GetModuleFileName(NULL, szModule, _MAX_PATH);
-
-	// 分離(ファイル名と拡張子は書き込まない)
-	_tsplitpath(szModule, pfb->m_szDrive, pfb->m_szDir, NULL, NULL);
-
-	// 合成
-	Make();
-}
-
-//---------------------------------------------------------------------------
-//
-//	ベースファイル名設定
-//
-//---------------------------------------------------------------------------
-void FASTCALL Filepath::SetBaseFile()
-{
-	TCHAR szModule[_MAX_PATH];
-
-	ASSERT(this);
-	ASSERT(_tcslen(pfb->m_szPath) > 0);
-
-	// モジュールのパス名を得る
-	::GetModuleFileName(NULL, szModule, _MAX_PATH);
-
-	// 分離(拡張子は書き込まない)
-	_tsplitpath(szModule, pfb->m_szDrive, pfb->m_szDir, pfb->m_szFile, NULL);
-
-	// 合成
-	Make();
-}
-
-//---------------------------------------------------------------------------
-//
-//	カレントディレクトリ設定
-//
-//---------------------------------------------------------------------------
-void FASTCALL Filepath::SetCurDir()
-{
-	TCHAR szCurDir[_MAX_PATH];
-
-	ASSERT(this);
-	ASSERT(_tcslen(pfb->m_szPath) > 0);
-
-	// カレントディレクトリ取得
-	::GetCurrentDirectory(_MAX_PATH, szCurDir);
-
-	// 分離(ファイル名と拡張子は無し)
-	_tsplitpath(szCurDir, pfb->m_szDrive, pfb->m_szDir, NULL, NULL);
-
-	// 合成
-	Make();
-}
-
-//---------------------------------------------------------------------------
-//
-//	クリアされているか
-//
-//---------------------------------------------------------------------------
-int FASTCALL Filepath::IsClear() const
-{
-	// Clear()の逆
-	if ((pfb->m_szPath[0] == _T('\0')) &&
-		(pfb->m_szDrive[0] == _T('\0')) &&
-		(pfb->m_szDir[0] == _T('\0')) &&
-		(pfb->m_szFile[0] == _T('\0')) &&
-		(pfb->m_szExt[0] == _T('\0'))) {
-		// 確かに、クリアされている
-		return TRUE;
-	}
-
-	// クリアされていない
-	return FALSE;
+	ffb.path.set(pPath);
+//	ASSERT(chk(pfb) && pfb == bbb);
+	TR();
 }
 
 //---------------------------------------------------------------------------
@@ -354,32 +182,36 @@ int FASTCALL Filepath::IsClear() const
 const char* FASTCALL Filepath::GetShort() const
 {
 	ASSERT(this);
+//	ASSERT(chk(pfb) && pfb == bbb);
 
-#if 0
-	// TCHAR文字列からchar文字列へ変換
-	char *lpszFile = T2A((LPTSTR)&pfb->m_szFile[0]);
-	char *lpszExt = T2A((LPTSTR)&pfb->m_szExt[0]);
+#if 1
+//	const TCHAR* p = &pfb->m_szPath[0];
+	const TCHAR* p = &ffb.path.path[0];
+	const TCHAR* ret = 0;
+	while(*p != 0) {
+		if(*p == _T('\\')) {
+			ret = p;
+		}
+		p += 1;
+	}
 
-	// 固定バッファへ合成
-	strcpy(ShortName, lpszFile);
-	strcat(ShortName, lpszExt);
+	if(ret == 0) {
+//		ret = &pfb->m_szPath[0];
+		ret = &ffb.path.path[0];
+	} else {
+		ret = ret + 1;
+	}
+
+//	ASSERT(chk(pfb) && pfb == bbb);
+	OutputDebugString(ret);
+	TR();
+	return ret;
 #else
-	TCHAR buf[256+1];
-	_tcscpy(buf, &pfb->m_szFile[0]);
-	_tcscpy(buf, &pfb->m_szExt[0]);
-
-#if !defined(_UNICODE)
-	strcpy(ShortName, buf);
-#else
-#error	not implemented
+	TR();
+	return ffb.path.getShort();
 #endif
-#endif
-	// strlenで調べたとき、最大59になるように細工
-	ShortName[59] = '\0';
-
-	// const charとして返す
-	return (const char*)ShortName;
 }
+
 //---------------------------------------------------------------------------
 //
 //	パス比較
@@ -387,16 +219,16 @@ const char* FASTCALL Filepath::GetShort() const
 //---------------------------------------------------------------------------
 int FASTCALL Filepath::CmpPath(const Filepath& path) const
 {
+//	ASSERT(chk(pfb) && pfb == bbb);
 	// パスが完全一致していればTRUE
-#if 0
-	if (_tcscmp(path.GetPath(), GetPath()) == 0) {
+//	if (_tcscmp(path.pfb->m_szPath, pfb->m_szPath) == 0) {
+	if (_tcscmp(path.ffb.path.path, ffb.path.path) == 0) {
+//	ASSERT(chk(pfb) && pfb == bbb);
+		TR();
 		return TRUE;
 	}
-#else
-	if (_tcscmp(path.pfb->m_szPath, pfb->m_szPath) == 0) {
-		return TRUE;
-	}
-#endif
+//	ASSERT(chk(pfb) && pfb == bbb);
+	TR();
 	return FALSE;
 }
 //---------------------------------------------------------------------------
@@ -404,45 +236,25 @@ int FASTCALL Filepath::CmpPath(const Filepath& path) const
 //	セーブ
 //
 //---------------------------------------------------------------------------
-int FASTCALL Filepath::Save(Fileio *fio, int /*ver*/)
+int FASTCALL Filepath::Save(Fileio *fio, int) const
 {
-	TCHAR szPath[_MAX_PATH];
-	FILETIME ft;
-
 	ASSERT(this);
 	ASSERT(fio);
-
-	// ゼロクリアして、ゴミを消したものを作る
-	memset(szPath, 0, sizeof(szPath));
-	_tcscpy(szPath, pfb->m_szPath);
+//	ASSERT(chk(pfb) && pfb == bbb);
 
 	// ファイルパスを保存
-	if (!fio->Write(szPath, sizeof(szPath))) {
+	const void* srcPtr = 0;
+	int srcBytes = 0;
+	getFiosPath()->getSaveInfo(srcPtr, srcBytes);
+
+	if(!fio->Write(srcPtr, srcBytes)) {
+//	ASSERT(chk(pfb) && pfb == bbb);
+		TR();
 		return FALSE;
 	}
 
-	// ファイル日付を取得(2038年問題を避けるため、Win32より取得)
-	memset(&ft, 0, sizeof(ft));
-#if 0
-	CFile file;
-	if (file.Open(szPath, CFile::modeRead)) {
-		::GetFileTime((HANDLE)file.m_hFile, NULL, NULL, &ft);
-		file.Close();
-	}
-#else
-	{
-		HANDLE h = CreateFile(szPath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-		if(h != INVALID_HANDLE_VALUE) {
-			GetFileTime(h, 0, 0, &ft);
-			CloseHandle(h);
-		}
-	}
-#endif
-	// 最終書き込み日付を保存
-	if (!fio->Write(&ft, sizeof(ft))) {
-		return FALSE;
-	}
-
+//	ASSERT(chk(pfb) && pfb == bbb);
+	TR();
 	return TRUE;
 }
 
@@ -451,138 +263,25 @@ int FASTCALL Filepath::Save(Fileio *fio, int /*ver*/)
 //	ロード
 //
 //---------------------------------------------------------------------------
-int FASTCALL Filepath::Load(Fileio *fio, int /*ver*/)
+int FASTCALL Filepath::Load(Fileio *fio, int)
 {
-	TCHAR szPath[_MAX_PATH];
 	ASSERT(this);
 	ASSERT(fio);
+//	ASSERT(chk(pfb) && pfb == bbb);
 
 	// フルパスを読み込み
-	if (!fio->Read(szPath, sizeof(szPath))) {
+	void* dstPtr = 0;
+	int dstBytes = 0;
+	getFiosPath()->getLoadInfo(dstPtr, dstBytes);
+
+	if(!fio->Write(dstPtr, dstBytes)) {
+//	ASSERT(chk(pfb) && pfb == bbb);
+		TR();
 		return FALSE;
 	}
 
-	// セット
-	SetPath(szPath);
-
-	// 最終書き込み日付を読み込む
-	if (!fio->Read(&pfb->m_SavedTime, sizeof(pfb->m_SavedTime))) {
-		return FALSE;
-	}
-
-	// ファイル日付を取得(2038年問題を避けるため、Win32より取得)
-#if 0
-	CFile file;
-	if (!file.Open(szPath, CFile::modeRead)) {
-		// ファイルが存在しなくても、エラーとはしない
-		return TRUE;
-	}
-	if (!::GetFileTime((HANDLE)file.m_hFile, NULL, NULL, &pfb->m_CurrentTime)) {
-		return FALSE;
-	}
-	file.Close();
-#else
-	{
-		HANDLE h = CreateFile(szPath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-		if(h == INVALID_HANDLE_VALUE) {
-			return TRUE;
-		} else if(! GetFileTime(h, 0, 0, &pfb->m_CurrentTime)) {
-			CloseHandle(h);
-			return FALSE;
-		}
-		CloseHandle(h);
-	}
-#endif
-	// ftの方が新しかった場合、更新フラグUp
-	if (::CompareFileTime(&pfb->m_CurrentTime, &pfb->m_SavedTime) <= 0) {
-		pfb->m_bUpdate = FALSE;
-	}
-	else {
-		pfb->m_bUpdate = TRUE;
-	}
-
+//	ASSERT(chk(pfb) && pfb == bbb);
+	TR();
 	return TRUE;
-}
-
-//---------------------------------------------------------------------------
-//
-//	セーブ後に更新されたか
-//
-//---------------------------------------------------------------------------
-int FASTCALL Filepath::IsUpdate() const
-{
-	ASSERT(this);
-
-	return pfb->m_bUpdate;
-}
-
-//---------------------------------------------------------------------------
-//
-//	セーブ時間情報を取得
-//
-//---------------------------------------------------------------------------
-void FASTCALL Filepath::GetUpdateTime(FILETIME *pSaved, FILETIME *pCurrent) const
-{
-	ASSERT(this);
-	ASSERT(pfb->m_bUpdate);
-
-	// 時間情報を渡す
-	*pSaved = pfb->m_SavedTime;
-	*pCurrent = pfb->m_CurrentTime;
-}
-/*
-//---------------------------------------------------------------------------
-//
-//	システムファイルテーブル
-//
-//---------------------------------------------------------------------------
-LPCTSTR Filepath::SystemFile[] = {
-	_T("IPLROM.DAT"),
-	_T("IPLROMXV.DAT"),
-	_T("IPLROMCO.DAT"),
-	_T("IPLROM30.DAT"),
-	_T("ROM30.DAT"),
-	_T("CGROM.DAT"),
-	_T("CGROM.TMP"),
-	_T("SCSIINROM.DAT"),
-	_T("SCSIEXROM.DAT"),
-	_T("SRAM.DAT")
-};
-
-//---------------------------------------------------------------------------
-//
-//	ショート名
-//
-//---------------------------------------------------------------------------
-char Filepath::ShortName[_MAX_FNAME + _MAX_DIR];
-
-//---------------------------------------------------------------------------
-//
-//	ファイル名＋拡張子
-//
-//---------------------------------------------------------------------------
-TCHAR Filepath::FileExt[_MAX_FNAME + _MAX_DIR];
-
-//---------------------------------------------------------------------------
-//
-//	デフォルトディレクトリ
-//
-//---------------------------------------------------------------------------
-TCHAR Filepath::DefaultDir[_MAX_PATH];
-*/
-
-/*
-//---------------------------------------------------------------------------
-//
-// パス名取得
-//
-//---------------------------------------------------------------------------
-LPCTSTR FASTCALL Filepath::GetPath() const {
-	return pfb->m_szPath;
-}
-*/
-
-const void* FASTCALL Filepath::GetPathVoidPtr() const {
-	return pfb->m_szPath;
 }
 #endif	// WIN32

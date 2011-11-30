@@ -525,7 +525,7 @@ void FASTCALL SCSI::ApplyCfg(const Config *config)
 
 	// SCSIファイル名
 	for (i=0; i<HDMax; i++) {
-		scsihd[i].SetPath(config->scsi_file[i]);
+		scsihd[i].SetPath(&config->scsi_file[i]);
 	}
 
 	// ディスク再構築

@@ -71,8 +71,7 @@ int FASTCALL SRAM::Init()
 	memset(sram, 0xff, sizeof(sram));
 
 	// パス作成、読み込み
-	sram_path.SysFile(Filepath::SRAM);
-//	sram_path = getSystemFilepath(XM6_SYSTEM_FILEPATH_SRAM);
+	sram_path.SysFile(XM6_pid::SYS_FILE_TYPE_SRAM);
 	fio.Load(sram_path, sram, sizeof(sram));
 
 	// エンディアン反転

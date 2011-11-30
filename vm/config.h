@@ -19,6 +19,8 @@
 //===========================================================================
 class Config200 {
 public:
+	typedef XM6_pid::FiosPath Path;
+
 	enum {
 		FILE_PATH_MAX	= 260,
 	};
@@ -67,19 +69,19 @@ public:
 	// SASI
 	int sasi_drives;					// SASIドライブ数
 	int sasi_sramsync;					// SASIメモリスイッチ自動更新
-	TCHAR sasi_file[16][FILE_PATH_MAX];	// SASIイメージファイル
+	Path	sasi_file[16];	// SASIイメージファイル
 
 	// SxSI
 	int sxsi_drives;					// SxSIドライブ数
 	int sxsi_mofirst;					// MOドライブ優先割り当て
-	TCHAR sxsi_file[6][FILE_PATH_MAX];	// SxSIイメージファイル
+	Path	sxsi_file[6];	// SxSIイメージファイル
 
 	// ポート
 	int port_com;						// COMxポート
-	TCHAR port_recvlog[FILE_PATH_MAX];	// シリアル受信ログ
+	Path	port_recvlog;	// シリアル受信ログ
 	int port_384;						// シリアル38400bps固定
 	int port_lpt;						// LPTxポート
-	TCHAR port_sendlog[FILE_PATH_MAX];	// パラレル送信ログ
+	Path	port_sendlog;	// パラレル送信ログ
 
 	// MIDI
 	int midi_bid;						// MIDIボードID
@@ -125,7 +127,7 @@ public:
 	int scsi_drives;					// SCSIドライブ数
 	int scsi_sramsync;					// SCSIメモリスイッチ自動更新
 	int scsi_mofirst;					// MOドライブ優先割り当て
-	TCHAR scsi_file[5][FILE_PATH_MAX];	// SCSIイメージファイル
+	Path	scsi_file[5];	// SCSIイメージファイル
 };
 
 //===========================================================================
@@ -149,7 +151,7 @@ public:
 	int resume_xm6;					// ステート有効フラグ
 	int resume_screen;					// 画面モードレジューム
 	int resume_dir;					// デフォルトディレクトリレジューム
-	TCHAR resume_path[FILE_PATH_MAX];	// デフォルトディレクトリ
+	Path	resume_path;	// デフォルトディレクトリ
 
 	// 描画
 	int caption_info;					// キャプション情報表示
@@ -171,7 +173,7 @@ public:
 	int host_resume;					// ベースパス状態復元有効 FALSEだと毎回スキャンする
 	uint32_t host_drives;					// 有効なドライブ数
 	uint32_t host_flag[10];				// 動作フラグ (class CWinFileDrv 参照)
-	TCHAR host_path[10][FILE_PATH_MAX];		// ベースパス
+	Path	host_path[10];		// ベースパス
 };
 
 #endif	// config_h

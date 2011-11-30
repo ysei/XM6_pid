@@ -25,7 +25,7 @@ Fileio::Fileio()
 {
 	// ワーク初期化
 	VM* vm = getCurrentVm();
-	XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
+	XM6_pid::XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
 	handle = fios->getInvalidFd();
 }
 
@@ -108,33 +108,35 @@ int FASTCALL Fileio::Open(const Filepath& path, OpenMode mode)
 	ASSERT(this);
 
 	VM* vm = getCurrentVm();
-	XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
+	XM6_pid::XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
 
 //	const void* fname = path.GetPath();
-	const void* fname = path.GetPathVoidPtr();
+//	const void* fname = path.GetPathVoidPtr();
+	const XM6_pid::FiosPath* fpath = path.getFiosPath();
 	// モード別
 	switch (mode) {
 	// 読み込みのみ
 	case ReadOnly:
-		handle = fios->open(fname, XM6_FILEIO_SYSTEM::ReadOnly);
+//		handle = fios->open(fname, XM6_pid::XM6_FILEIO_SYSTEM::ReadOnly);
+		handle = fios->open(fpath, XM6_pid::XM6_FILEIO_SYSTEM::ReadOnly);
 		break;
 
 	// 書き込みのみ
 	case WriteOnly:
-		handle = fios->open(fname, XM6_FILEIO_SYSTEM::WriteOnly);
+		handle = fios->open(fpath, XM6_pid::XM6_FILEIO_SYSTEM::WriteOnly);
 		break;
 
 	// 読み書き両方
 	case ReadWrite:
 		// CD-ROMからの読み込みはRWが成功してしまう
-		if (fios->access(fname, 0x06) == 0) {
-			handle = fios->open(fname, XM6_FILEIO_SYSTEM::ReadWrite);
+		if (fios->access(fpath, 0x06) == 0) {
+			handle = fios->open(fpath, XM6_pid::XM6_FILEIO_SYSTEM::ReadWrite);
 		}
 		break;
 
 	// アペンド
 	case Append:
-		handle = fios->open(fname, XM6_FILEIO_SYSTEM::Append);
+		handle = fios->open(fpath, XM6_pid::XM6_FILEIO_SYSTEM::Append);
 		break;
 
 	// それ以外
@@ -164,7 +166,7 @@ int FASTCALL Fileio::Read(void *buffer, int size)
 
 	// 読み込み
 	VM* vm = getCurrentVm();
-	XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
+	XM6_pid::XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
 	count = fios->read(handle, buffer, size);
 	if (count != size) {
 		return FALSE;
@@ -189,7 +191,7 @@ int FASTCALL Fileio::Write(const void *buffer, int size)
 
 	// 読み込み
 	VM* vm = getCurrentVm();
-	XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
+	XM6_pid::XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
 	count = fios->write(handle, buffer, size);
 	if (count != size) {
 		return FALSE;
@@ -210,7 +212,7 @@ int FASTCALL Fileio::Seek(long offset)
 	ASSERT(offset >= 0);
 
 	VM* vm = getCurrentVm();
-	XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
+	XM6_pid::XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
 	if(fios->seekSet(handle, offset) != (uint32_t) offset) {
 		return FALSE;
 	}
@@ -227,7 +229,7 @@ uint32_t FASTCALL Fileio::GetFileSize() const
 	ASSERT(this);
 	ASSERT(handle >= 0);
 	VM* vm = getCurrentVm();
-	XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
+	XM6_pid::XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
 
 	return fios->filelength(handle);
 }
@@ -244,7 +246,7 @@ uint32_t FASTCALL Fileio::GetFilePos() const
 
 	// ファイル位置を32bitで取得
 	VM* vm = getCurrentVm();
-	XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
+	XM6_pid::XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
 	return fios->tell(handle);
 }
 
@@ -258,7 +260,7 @@ void FASTCALL Fileio::Close()
 	ASSERT(this);
 
 	VM* vm = getCurrentVm();
-	XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
+	XM6_pid::XM6_FILEIO_SYSTEM* fios = vm->GetHostFileSystem();
 	if(fios->isValid(handle)) {
 		fios->close(handle);
 		handle = fios->getInvalidFd();

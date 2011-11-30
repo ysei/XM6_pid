@@ -731,12 +731,12 @@ void FASTCALL VM::GetVersion(uint32_t& major, uint32_t& minor)
 //
 //
 //---------------------------------------------------------------------------
-void FASTCALL VM::SetHostRtcCallback(XM6_RTC_CALLBACK cb) {
+void FASTCALL VM::SetHostRtcCallback(XM6_pid::XM6_RTC_CALLBACK cb) {
 	ASSERT(this);
 	xm6_rtc_cb = cb;
 }
 
-int FASTCALL VM::GetHostRtc(XM6_RTC* xm6_rtc) {
+int FASTCALL VM::GetHostRtc(XM6_pid::XM6_RTC* xm6_rtc) {
 	ASSERT(this);
 	int ret = 0;
 	if(xm6_rtc_cb) {
@@ -744,11 +744,11 @@ int FASTCALL VM::GetHostRtc(XM6_RTC* xm6_rtc) {
 	}
 	return ret;
 }
-void FASTCALL VM::SetHostFileSystem(XM6_FILEIO_SYSTEM* fios) {
+void FASTCALL VM::SetHostFileSystem(XM6_pid::XM6_FILEIO_SYSTEM* fios) {
 	ASSERT(this);
 	xm6_fios = fios;
 }
 
-XM6_FILEIO_SYSTEM* FASTCALL VM::GetHostFileSystem() {
+XM6_pid::XM6_FILEIO_SYSTEM* FASTCALL VM::GetHostFileSystem() {
 	return xm6_fios;
 }

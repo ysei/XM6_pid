@@ -85,11 +85,11 @@ public:
 	Log log;
 										// ログ
 #endif
-	void FASTCALL SetHostRtcCallback(XM6_RTC_CALLBACK cb);
-	int FASTCALL GetHostRtc(XM6_RTC* xm6_rtc);	// take a current time from host
+	void FASTCALL SetHostRtcCallback(XM6_pid::XM6_RTC_CALLBACK cb);
+	int FASTCALL GetHostRtc(XM6_pid::XM6_RTC* xm6_rtc);	// take a current time from host
 
-	void FASTCALL SetHostFileSystem(XM6_FILEIO_SYSTEM* fios);
-	XM6_FILEIO_SYSTEM* FASTCALL GetHostFileSystem();
+	void FASTCALL SetHostFileSystem(XM6_pid::XM6_FILEIO_SYSTEM* fios);
+	XM6_pid::XM6_FILEIO_SYSTEM* FASTCALL GetHostFileSystem();
 
 private:
 	int status;
@@ -119,8 +119,8 @@ private:
 	Filepath* pCurrent;
 										// カレントデータ
 
-	XM6_RTC_CALLBACK	xm6_rtc_cb;
-	XM6_FILEIO_SYSTEM*	xm6_fios;
+	XM6_pid::XM6_RTC_CALLBACK	xm6_rtc_cb;
+	XM6_pid::XM6_FILEIO_SYSTEM*	xm6_fios;
 };
 
 #endif	// vm_h

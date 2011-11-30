@@ -1135,7 +1135,7 @@ void FASTCALL RTC::Adjust(int alarm)
 
 	int leap;
 
-	XM6_RTC t;
+	XM6_pid::XM6_RTC t;
 	if(vm->GetHostRtc(&t)) {
 		rtc.year	= (t.year + 20) % 100;
 		rtc.month	= t.mon + 1;

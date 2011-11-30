@@ -3900,6 +3900,12 @@ FDITrack* FASTCALL FDIDisk::Search(int track) const
 	return NULL;
 }
 
+void FDIDisk::setDiskNameByFilepath(const Filepath* filepath) {
+	if(filepath) {
+		strcpy(disk.name, filepath->GetShort());
+	}
+}
+
 //===========================================================================
 //
 //	FDI
@@ -4821,7 +4827,7 @@ int FASTCALL FDIDisk2HD::Open(const Filepath& path, uint32_t offset)
 	disk.offset = offset;
 
 	// ディスク名はファイル名＋拡張子とする
-	strcpy(disk.name, path.GetShort());
+	setDiskNameByFilepath(&path);
 
 	// トラックを作成(0～76シリンダまで、77*2トラック)
 	for (i=0; i<154; i++) {
@@ -4920,7 +4926,7 @@ int FASTCALL FDIDisk2HD::Create(const Filepath& path, const option_t *opt)
 	disk.offset = 0;
 
 	// ディスク名はファイル名＋拡張子とする
-	strcpy(disk.name, path.GetShort());
+	setDiskNameByFilepath(&path);
 
 	// 0～153に限り、トラックを作成して物理フォーマット
 	for (i=0; i<154; i++) {
@@ -5283,7 +5289,7 @@ int FASTCALL FDIDiskDIM::Open(const Filepath& path, uint32_t offset)
 	}
 	else {
 		// ディスク名はファイル名＋拡張子とする
-		strcpy(disk.name, path.GetShort());
+		setDiskNameByFilepath(&path);
 	}
 
 	// トラックを作成(0～81シリンダまで、82*2トラック)
@@ -5607,7 +5613,7 @@ int FASTCALL FDIDiskDIM::Create(const Filepath& path, const option_t *opt)
 	disk.offset = 0;
 
 	// ディスク名はファイル名＋拡張子とする
-	strcpy(disk.name, path.GetShort());
+	setDiskNameByFilepath(&path);
 
 	// トラックを作成して物理フォーマット
 	for (i=0; i<164; i++) {
@@ -6171,10 +6177,10 @@ int FASTCALL FDIDiskD68::Open(const Filepath& path, uint32_t offset)
 	// ただしシングルディスクで、NULLかDefaultならファイル名+拡張子
 	if (!GetFDI()->IsMulti()) {
 		if (strcmp(disk.name, "Default") == 0) {
-			strcpy(disk.name, path.GetShort());
+			setDiskNameByFilepath(&path);
 		}
 		if (strlen(disk.name) == 0) {
-			strcpy(disk.name, path.GetShort());
+			setDiskNameByFilepath(&path);
 		}
 	}
 
@@ -7024,7 +7030,7 @@ int FASTCALL FDIDiskBAD::Open(const Filepath& path, uint32_t offset)
 	disk.offset = offset;
 
 	// ディスク名はファイル名＋拡張子とする
-	strcpy(disk.name, path.GetShort());
+	setDiskNameByFilepath(&path);
 
 	// トラックを作成(0～76シリンダまで、77*2トラック)
 	for (i=0; i<154; i++) {
@@ -7306,7 +7312,7 @@ int FASTCALL FDIDisk2DD::Open(const Filepath& path, uint32_t offset)
 	disk.offset = offset;
 
 	// ディスク名はファイル名＋拡張子とする
-	strcpy(disk.name, path.GetShort());
+	setDiskNameByFilepath(&path);
 
 	// トラックを作成(0～79シリンダまで、80*2トラック)
 	for (i=0; i<160; i++) {
@@ -7405,7 +7411,7 @@ int FASTCALL FDIDisk2DD::Create(const Filepath& path, const option_t *opt)
 	disk.offset = 0;
 
 	// ディスク名はファイル名＋拡張子とする
-	strcpy(disk.name, path.GetShort());
+	setDiskNameByFilepath(&path);
 
 	// 0～159に限り、トラックを作成して物理フォーマット
 	for (i=0; i<160; i++) {
@@ -7657,7 +7663,7 @@ int FASTCALL FDIDisk2HQ::Open(const Filepath& path, uint32_t offset)
 	disk.offset = offset;
 
 	// ディスク名はファイル名＋拡張子とする
-	strcpy(disk.name, path.GetShort());
+	setDiskNameByFilepath(&path);
 
 	// トラックを作成(0～79シリンダまで、80*2トラック)
 	for (i=0; i<160; i++) {
@@ -7756,7 +7762,7 @@ int FASTCALL FDIDisk2HQ::Create(const Filepath& path, const option_t *opt)
 	disk.offset = 0;
 
 	// ディスク名はファイル名＋拡張子とする
-	strcpy(disk.name, path.GetShort());
+	setDiskNameByFilepath(&path);
 
 	// 0～159に限り、トラックを作成して物理フォーマット
 	for (i=0; i<160; i++) {

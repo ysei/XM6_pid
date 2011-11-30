@@ -70,6 +70,13 @@ typedef char TCHAR;
 typedef LPCSTR LPCTSTR;
 #endif
 
+namespace XM6_pid {
+void memset(void* dst, int c, int length);
+void t_strcpy(void* dst, const void* src);
+}
+
+using namespace XM6_pid;
+
 
 //---------------------------------------------------------------------------
 //
@@ -181,10 +188,17 @@ OutputDebugString("rtcCallback\n");
 class HostFiosSystem : public XM6_FILEIO_SYSTEM {
 public:
 	HostFiosSystem() {
+		memset(&sptr[0], 0, sizeof(sptr));
+		memset(&pSysPath[0], 0, sizeof(pSysPath));
 	}
 
 	~HostFiosSystem() {
 	}
+
+	int open(const FiosPath* fiosPath, OpenMode mode) {
+		return open((const void*) &fiosPath->path[0], mode);
+	}
+
 	int open			(const void* filename, OpenMode mode) {
 		const TCHAR* p = (const TCHAR*) filename;
 		if(p[0] == _T('\0')) {
@@ -252,153 +266,79 @@ public:
 	uint32_t tell		(int fd) {
 		return _tell(fd);
 	}
+
+	int access(const FiosPath* fiosPath, int mode) {
+		return access((const void*) &fiosPath->path[0], mode);
+	}
+
 	int		 access		(const void* path, int mode) {
 		return _taccess((const TCHAR*) path, mode);
 	}
-};
-/*
-class Filepath {
-public:
-	Filepath() {
-	}
 
-	~Filepath() {
-	}
+	TCHAR* sptr[XM6_pid::SYS_FILE_TYPE_MAX];
+	XM6_pid::FiosPath* pSysPath[XM6_pid::SYS_FILE_TYPE_MAX];
 
-	const char* getFilename() const {
-		return &filename[0];
-	}
-
-	char	filename[260];
-};
-
-class HostFiosSystem : public XM6_FILEIO_SYSTEM {
-public:
-	typedef FILE* HNDL;
-
-	HostFiosSystem() {
-	}
-
-	~HostFiosSystem() {
-	}
-
-	int open		(const Filepath* path, OpenMode openMode, XM6_FILE_HANDLE* out) {
-		const char* filename = &path->getFilename();
-		const char* mode = 0;
-		switch(openMode) {
-		default:
-		case OPEN_MODE_READ_ONLY:
-			mode = "rb";
-			break;
-		case OPEN_MODE_WRITE_ONLY:
-			mode = "r+";
-			break;
-		case OPEN_MODE_READ_WRITE:
-			mode = "r+";
-			break;
-		case OPEN_MODE_APPEND,
-			mode = "ab";
-			break;
+	int getSystemFile(SysFileType sysFileType, const void** pSysFilePath) {
+		const TCHAR* p = 0;
+		switch(sysFileType) {
+		case XM6_pid::SYS_FILE_TYPE_IPL:		p = _T("IPLROM.DAT");		break;	// IPL(version 1.00)
+		case XM6_pid::SYS_FILE_TYPE_IPLXVI:		p = _T("IPLROMXV.DAT");		break;	// IPL(version 1.10)
+		case XM6_pid::SYS_FILE_TYPE_IPLCompact:	p = _T("IPLROMCO.DAT");		break;	// IPL(version 1.20)
+		case XM6_pid::SYS_FILE_TYPE_IPL030:		p = _T("IPLROM30.DAT");		break;	// IPL(version 1.30)後半
+		case XM6_pid::SYS_FILE_TYPE_ROM030:		p = _T("ROM30.DAT");		break;	// IPL(version 1.30)前半
+		case XM6_pid::SYS_FILE_TYPE_CG:			p = _T("CGROM.DAT");		break;	// CG
+		case XM6_pid::SYS_FILE_TYPE_CGTMP:		p = _T("CGROM.TMP");		break;	// CG(Win合成)
+		case XM6_pid::SYS_FILE_TYPE_SCSIInt:	p = _T("SCSIINROM.DAT");	break;	// SCSI(内蔵)
+		case XM6_pid::SYS_FILE_TYPE_SCSIExt:	p = _T("SCSIEXROM.DAT");	break;	// SCSI(外付)
+		case XM6_pid::SYS_FILE_TYPE_SRAM:		p = _T("SRAM.DAT");			break;	// SRAM
+		default:								p = 0;						break;
 		}
-		FILE* fp = fopen(filename, mode);
-		if(fp) {
-			if(out) {
-				*out = fp;
+
+		if(p) {
+			TCHAR*& sp = sptr[sysFileType];
+			if(sp == 0) {
+				TCHAR szModule[_MAX_PATH];
+
+				// モジュールのパス名を得る
+				::GetModuleFileName(NULL, szModule, _MAX_PATH);
+
+				// 分離(ファイル名と拡張子は書き込まない)
+				TCHAR szDrive[_MAX_DRIVE];					// ドライブ
+				TCHAR szDir[_MAX_DIR];						// ディレクトリ
+				_tsplitpath(szModule, szDrive, szDir, NULL, NULL);
+
+				sp = new TCHAR [_MAX_PATH];
+				_stprintf(sp, "%s%s%s", szDrive, szDir, p);
 			}
-			ret = 1;
-		} else {
-			if(out) {
-				*out = 0;
+			p = sp;
+		}
+		if(pSysFilePath) {
+			*pSysFilePath = p;
+		}
+		return p != 0;
+	}
+
+	int getSystemFilePath(SysFileType sysFileType, const FiosPath** ppSysFilePath) {
+		const XM6_pid::FiosPath* p = 0;
+		if(getSystemFile(sysFileType, 0)) {
+			p = pSysPath[sysFileType];
+			if(p == 0) {
+				FiosPath* f = new XM6_pid::FiosPath();
+				memset(&f->path[0], 0, sizeof(f->path));
+				t_strcpy(&f->path[0], sptr[sysFileType]);
+
+				pSysPath[sysFileType] = f;
+				p = f;
 			}
-		}
-		return 1;
-	}
 
-	int	close		(XM6_FILE_HANDLE fh) {
-		int ret = 0;
-		if(isValid(fh)) {
-			HNDL h = (HNDL) fh;
-			fclose(h);
-			ret = 1;
-		}
-		return ret;
-	}
-
-	int	seek		(XM6_FILE_HANDLE fh, uint32_t offset) {
-		int ret = 0;
-		if(isValid(fh)) {
-			HNDL h = (HNDL) fh;
-			fseek(h, SEEK_SET, offset);
-			ret = 1;
-		}
-		return ret;
-	}
-
-	int	read		(XM6_FILE_HANDLE fh, void* buffer, uint32_t size) {
-		int ret = 0;
-		if(isValid(fh)) {
-			HNDL h = (HNDL) fh;
-			fread(buffer, 1, size, h);
-			ret = 1;
-		}
-		return ret;
-	}
-
-	int	write		(XM6_FILE_HANDLE fh, const void* buffer, uint32_t size) {
-		int ret = 0;
-		if(isValid(fh)) {
-			HNDL h = (HNDL) fh;
-			fwrite(buffer, 1, size, h);
-			ret = 1;
-		}
-		return ret;
-	}
-
-	int	getFileSize	(XM6_FILE_HANDLE fh, uint32_t* size) {
-		int ret = 0;
-		if(isValid(fh)) {
-			HNDL h = (HNDL) fh;
-			fpos_t pos;
-
-			fgetpos(h, &pos);
-			fseek(h, 0, SEEK_END);
-			if(size) {
-				*size = ftell(h);
-			}
-			fsetpos(h, &pos);
-			ret = 1;
-			ret = 1;
-		} else {
-			if(size) {
-				*size = 0;
+			if(ppSysFilePath) {
+				*ppSysFilePath = p;
 			}
 		}
-		return ret;
-	}
-
-	int	getFilePos	(XM6_FILE_HANDLE fh, uint32_t* pos) {
-		int ret = 0;
-		if(isValid(fh)) {
-			HNDL h = (HNDL) fh;
-			if(pos) {
-				*pos = ftell(h);
-			}
-			ret = 1;
-		}
-		return ret;
-	}
-
-	int	isValid		(XM6_FILE_HANDLE fh) {
-		HNDL h = (HNDL) fh;
-		return h != 0;
-	}
-
-	int setInvalid	(XM6_FILE_HANDLE* out) {
-		*out = 0;
-		return 1;
+		return p != 0;
 	}
 };
-*/
+
 
 
 //---------------------------------------------------------------------------
@@ -563,7 +503,8 @@ static void configGetConfig(Config* c) {
 	c->scsi_drives			= 0;		// SCSIドライブ数
 	c->scsi_sramsync		= 1;		// SCSIメモリスイッチ自動更新
 	c->scsi_mofirst			= 0;		// MOドライブ優先割り当て
-	memset(&c->scsi_file[0][0], 0, sizeof(c->scsi_file));	// SCSIイメージファイル
+//	memset(&c->scsi_file[0][0], 0, sizeof(c->scsi_file));	// SCSIイメージファイル
+	memset(&c->scsi_file, 0, sizeof(c->scsi_file));	// SCSIイメージファイル
 
 	//	Config
 	// レジューム
@@ -583,7 +524,7 @@ static void configGetConfig(Config* c) {
 	c->resume_xm6			= 0;		// ステート有効フラグ
 	c->resume_screen		= 0;		// 画面モードレジューム
 	c->resume_dir			= 0;		// デフォルトディレクトリレジューム
-	XM6_pid::t_strcpy(c->resume_path, _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\"));
+	XM6_pid::t_strcpy(c->resume_path.path, _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\"));
 
 	// 描画
 	c->caption_info			= 1;		// キャプション情報表示
@@ -605,7 +546,8 @@ static void configGetConfig(Config* c) {
 	c->host_resume			= FALSE;	// ベースパス状態復元有効 FALSEだと毎回スキャンする
 	c->host_drives			= 0;		// 有効なドライブ数
 	XM6_pid::memset(&c->host_flag[0], 0, sizeof(c->host_flag));		// 動作フラグ (class CWinFileDrv 参照)
-	XM6_pid::memset(&c->host_path[0][0], 0, sizeof(c->host_path));		// ベースパス
+//	XM6_pid::memset(&c->host_path[0][0], 0, sizeof(c->host_path));		// ベースパス
+	XM6_pid::memset(&c->host_path, 0, sizeof(c->host_path));		// ベースパス
 }
 
 
@@ -1297,10 +1239,12 @@ static BOOL FASTCALL InitCmdSub(int nDrive, LPCTSTR lpszPath) {
 	Filepath path;
 	BOOL isExist = FALSE;
 	{
-		TCHAR szPath[_MAX_PATH] = { 0 };
+//		TCHAR szPath[_MAX_PATH] = { 0 };
+//		::GetFullPathName(lpszPath, _MAX_PATH, szPath, &lpszFile);
+		XM6_pid::FiosPath fpath = { 0 };
 		LPTSTR lpszFile;
-		::GetFullPathName(lpszPath, _MAX_PATH, szPath, &lpszFile);
-		path.SetPath(szPath);
+		::GetFullPathName(lpszPath, _MAX_PATH, fpath.path, &lpszFile);
+		path.SetPath(&fpath);
 
 //		Fileio fio;
 //		isExist = fio.Open(path, Fileio::ReadOnly);

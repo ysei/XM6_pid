@@ -240,16 +240,16 @@ int FASTCALL Memory::LoadROM(memtype target)
 		case SASI:
 		case SCSIInt:
 		case SCSIExt:
-			path.SysFile(Filepath::IPL);
+			path.SysFile(XM6_pid::SYS_FILE_TYPE_IPL);
 			break;
 		case XVI:
-			path.SysFile(Filepath::IPLXVI);
+			path.SysFile(XM6_pid::SYS_FILE_TYPE_IPLXVI);
 			break;
 		case Compact:
-			path.SysFile(Filepath::IPLCompact);
+			path.SysFile(XM6_pid::SYS_FILE_TYPE_IPLCompact);
 			break;
 		case X68030:
-			path.SysFile(Filepath::IPL030);
+			path.SysFile(XM6_pid::SYS_FILE_TYPE_IPL030);
 			break;
 		default:
 			ASSERT(FALSE);
@@ -269,10 +269,10 @@ int FASTCALL Memory::LoadROM(memtype target)
 	}
 
 	// CG
-	path.SysFile(Filepath::CG);
+	path.SysFile(XM6_pid::SYS_FILE_TYPE_CG);
 	if (!fio.Load(path, mem.cg, 0xc0000)) {
 		// ファイルがなければ、CGTMPでリトライ
-		path.SysFile(Filepath::CGTMP);
+		path.SysFile(XM6_pid::SYS_FILE_TYPE_CGTMP);
 		if (!fio.Load(path, mem.cg, 0xc0000)) {
 			return FALSE;
 		}
@@ -294,16 +294,16 @@ int FASTCALL Memory::LoadROM(memtype target)
 		case SCSIInt:
 		case XVI:
 		case Compact:
-			path.SysFile(Filepath::SCSIInt);
+			path.SysFile(XM6_pid::SYS_FILE_TYPE_SCSIInt);
 			scsi_req = TRUE;
 			break;
 		case X68030:
-			path.SysFile(Filepath::ROM030);
+			path.SysFile(XM6_pid::SYS_FILE_TYPE_ROM030);
 			scsi_req = TRUE;
 			break;
 		// 外付
 		case SCSIExt:
-			path.SysFile(Filepath::SCSIExt);
+			path.SysFile(XM6_pid::SYS_FILE_TYPE_SCSIExt);
 			scsi_req = TRUE;
 			break;
 		// SASI(ROM必要なし)

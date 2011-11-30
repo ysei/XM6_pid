@@ -410,7 +410,7 @@ void FASTCALL SASI::ApplyCfg(const Config *config)
 
 	// SASIファイル名
 	for (i=0; i<SASIMax; i++) {
-		sasihd[i].SetPath(config->sasi_file[i]);
+		sasihd[i].SetPath(&config->sasi_file[i]);
 	}
 
 	// パリティ回路付加
@@ -421,7 +421,7 @@ void FASTCALL SASI::ApplyCfg(const Config *config)
 
 	// SCSIファイル名
 	for (i=0; i<SCSIMax; i++) {
-		scsihd[i].SetPath(config->sxsi_file[i]);
+		scsihd[i].SetPath(&config->sxsi_file[i]);
 	}
 
 	// MO優先フラグ

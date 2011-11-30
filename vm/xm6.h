@@ -58,88 +58,91 @@
 
 //#define	XM6_USE_EVENT_DESC
 
-struct XM6_RTC {
-	int32_t	sec;		// [0,61]
-	int32_t	min;		// [0,59]
-	int32_t	hour;		// [0,23]
-	int32_t	mday;		// [1,31]
-	int32_t	mon;		// [0,11]
-	int32_t	year;		// [0,119]	years since 1900
-	int32_t	wday;		// [0,6]
-};
-
-typedef int (__stdcall *XM6_RTC_CALLBACK)(XM6_RTC*);
-
-class XM6_FILEIO_SYSTEM {
-public:
-	enum OpenMode {
-		ReadOnly,						// 読み込みのみ
-		WriteOnly,						// 書き込みのみ
-		ReadWrite,						// 読み書き両方
-		Append							// アペンド
+namespace XM6_pid {
+	// システムファイル種別
+	enum SysFileType {
+		SYS_FILE_TYPE_IPL = 0,		// IPL(version 1.00)
+		SYS_FILE_TYPE_IPLXVI,		// IPL(version 1.10)
+		SYS_FILE_TYPE_IPLCompact,	// IPL(version 1.20)
+		SYS_FILE_TYPE_IPL030,		// IPL(version 1.30)後半
+		SYS_FILE_TYPE_ROM030,		// IPL(version 1.30)前半
+		SYS_FILE_TYPE_CG,			// CG
+		SYS_FILE_TYPE_CGTMP,		// CG(Win合成)
+		SYS_FILE_TYPE_SCSIInt,		// SCSI(内蔵)
+		SYS_FILE_TYPE_SCSIExt,		// SCSI(外付)
+		SYS_FILE_TYPE_SRAM,			// SRAM
+		SYS_FILE_TYPE_MAX
 	};
 
-	XM6_FILEIO_SYSTEM() {}
-	virtual ~XM6_FILEIO_SYSTEM() {}
+	struct XM6_RTC {
+		int32_t	sec;		// [0,61]
+		int32_t	min;		// [0,59]
+		int32_t	hour;		// [0,23]
+		int32_t	mday;		// [1,31]
+		int32_t	mon;		// [0,11]
+		int32_t	year;		// [0,119]	years since 1900
+		int32_t	wday;		// [0,6]
+	};
 
-	virtual int open			(const void* filename, OpenMode mode) = 0;
-	virtual int close			(int fd) = 0;
+	typedef int (__stdcall *XM6_RTC_CALLBACK)(XM6_RTC*);
 
-	virtual int isValid			(int fd) const = 0;
-	virtual int getInvalidFd	() const = 0;
+//	struct FiosPath;
+	struct FiosPath {
+		enum {
+			PATH_MAX	= 260,
+		};
+		char	path[PATH_MAX];
 
-	virtual uint32_t read		(int fd, void* buffer, unsigned int count) = 0;
-	virtual uint32_t write		(int fd, const void* buffer, unsigned int count) = 0;
-	virtual uint32_t seekSet	(int fd, int offset) = 0;
-	virtual uint32_t filelength	(int fd) = 0;
-	virtual uint32_t tell		(int fd) = 0;
-	virtual int		 access		(const void* path, int mode) = 0;
-};
+		int getSaveInfo(const void*& srcPtr, int& srcMaxBytes) const {
+			srcPtr = (const void*) &path[0];
+			srcMaxBytes = sizeof(PATH_MAX);
+			return 1;
+		}
 
-/*
-enum OpenMode {
-	OPEN_MODE_READ_ONLY = 0,
-	OPEN_MODE_WRITE_ONLY,
-	OPEN_MODE_READ_WRITE,
-	OPEN_MODE_APPEND,
-	OPEN_MODE_MAX,
-};
+		int getLoadInfo(void*& dstPtr, int& dstMaxBytes) {
+			dstPtr = (void*) &path[0];
+			dstMaxBytes = sizeof(PATH_MAX);
+			return 1;
+		}
 
-typedef enum XM6_SYSTEM_FILEPATH_TYPE {
-	XM6_SYSTEM_FILEPATH_IPL,							// IPL(version 1.00)
-	XM6_SYSTEM_FILEPATH_IPLXVI,							// IPL(version 1.10)
-	XM6_SYSTEM_FILEPATH_IPLCompact,						// IPL(version 1.20)
-	XM6_SYSTEM_FILEPATH_IPL030,							// IPL(version 1.30)後半
-	XM6_SYSTEM_FILEPATH_ROM030,							// IPL(version 1.30)前半
-	XM6_SYSTEM_FILEPATH_CG,								// CG
-	XM6_SYSTEM_FILEPATH_CGTMP,							// CG(Win合成)
-	XM6_SYSTEM_FILEPATH_SCSIInt,						// SCSI(内蔵)
-	XM6_SYSTEM_FILEPATH_SCSIExt,						// SCSI(外付)
-	XM6_SYSTEM_FILEPATH_SRAM							// SRAM
-} XM6_SYSTEM_FILEPATH_TYPE;
+		void clear() {
+		//	path[0] = 0;
+			memset(path, 0, sizeof(path));
+		}
 
-typedef int XM6_FILE_HANDLE;
+		void set(const FiosPath* p) {
+			memcpy(path, p->path, sizeof(path));
+		}
+	};
 
-class Filepath;
+	class XM6_FILEIO_SYSTEM {
+	public:
+		enum OpenMode {
+			ReadOnly,						// 読み込みのみ
+			WriteOnly,						// 書き込みのみ
+			ReadWrite,						// 読み書き両方
+			Append							// アペンド
+		};
 
-class XM6_FILEIO_SYSTEM {
-public:
-	XM6_FILEIO_SYSTEM() {}
-	virtual ~XM6_FILEIO_SYSTEM() = 0;
+		XM6_FILEIO_SYSTEM() {}
+		virtual ~XM6_FILEIO_SYSTEM() {}
 
-	virtual int open		(const Filepath* path, OpenMode openMode, XM6_FILE_HANDLE* out) = 0;
-	virtual int	close		(XM6_FILE_HANDLE fh) = 0;
-	virtual int	seek		(XM6_FILE_HANDLE fh, uint32_t offset) = 0;
-	virtual int	read		(XM6_FILE_HANDLE fh, void* buffer, uint32_t size) = 0;
-	virtual int	write		(XM6_FILE_HANDLE fh, const void* buffer, uint32_t size) = 0;
-	virtual int	getFileSize	(XM6_FILE_HANDLE fh, uint32_t* size) = 0;
-	virtual int	getFilePos	(XM6_FILE_HANDLE fh, uint32_t* pos) = 0;
-	virtual int	isValid		(XM6_FILE_HANDLE fh) = 0;
-	virtual int setInvalid	(XM6_FILE_HANDLE* out) = 0;
-};
+		virtual int			close				(int fd) = 0;
 
-const Filepath* getSystemFilepath(XM6_SYSTEM_FILEPATH_TYPE sft);
-*/
+		virtual int			isValid				(int fd) const = 0;
+		virtual int			getInvalidFd		() const = 0;
+
+		virtual uint32_t	read				(int fd, void* buffer, unsigned int count) = 0;
+		virtual uint32_t	write				(int fd, const void* buffer, unsigned int count) = 0;
+		virtual uint32_t	seekSet				(int fd, int offset) = 0;
+		virtual uint32_t	filelength			(int fd) = 0;
+		virtual uint32_t	tell				(int fd) = 0;
+		virtual int			getSystemFilePath	(SysFileType sysFileType, const FiosPath** ppFiosPath) = 0;
+
+		virtual int			open				(const FiosPath* fiosPath, OpenMode mode) = 0;
+		virtual int			access				(const FiosPath* filename, int mode) = 0;
+	};
+} // namespace XM6_pid
 
 
 

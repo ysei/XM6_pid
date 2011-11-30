@@ -401,6 +401,8 @@ protected:
 	FDITrack* FASTCALL GetHead(int idx) { ASSERT((idx==0)||(idx==1)); return disk.head[idx]; }
 										// ヘッドに対応するトラックを取得
 
+	void setDiskNameByFilepath(const Filepath* filepath);
+
 	// 内部データ
 	disk_t disk;
 										// ディスク内部データ
