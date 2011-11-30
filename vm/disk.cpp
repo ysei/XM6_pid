@@ -367,7 +367,7 @@ DiskCache::DiskCache(const Filepath& path, int size, int blocks)
 	// その他
 	serial = 0;
 //	sec_path = path;
-	*pSec_path = path;
+	pSec_path->set(&path);
 	sec_size = size;
 	sec_blocks = blocks;
 	cd_raw = FALSE;
@@ -921,7 +921,7 @@ int FASTCALL Disk::Open(const Filepath& path)
 	disk.lock = FALSE;
 
 	// パス保存
-	*pDiskpath = path;
+	pDiskpath->set(&path);
 
 	// 成功
 	return TRUE;
@@ -1010,7 +1010,7 @@ void FASTCALL Disk::GetDisk(disk_t *buffer) const
 //---------------------------------------------------------------------------
 void FASTCALL Disk::GetPath(Filepath& path) const
 {
-	path = *pDiskpath;
+	path.set(pDiskpath);
 }
 
 //---------------------------------------------------------------------------
@@ -2448,7 +2448,7 @@ void FASTCALL CDTrack::SetPath(int cdda, const Filepath& path)
 	audio = cdda;
 
 	// パス記憶
-	*pImgpath = path;
+	pImgpath->set(&path);
 }
 
 //---------------------------------------------------------------------------
@@ -2462,7 +2462,7 @@ void FASTCALL CDTrack::GetPath(Filepath& path) const
 	ASSERT(valid);
 
 	// パスを返す
-	path = *pImgpath;
+	path.set(pImgpath);
 }
 
 //---------------------------------------------------------------------------

@@ -3520,7 +3520,7 @@ void FASTCALL FDIDisk::GetPath(Filepath& path) const
 	ASSERT(this);
 
 	// 代入
-	path = disk.path;
+	path.set(&disk.path);
 }
 
 //---------------------------------------------------------------------------
@@ -4823,7 +4823,7 @@ int FASTCALL FDIDisk2HD::Open(const Filepath& path, uint32_t offset)
 	fio.Close();
 
 	// パス、オフセットを記憶
-	disk.path = path;
+	disk.path.set(&path);
 	disk.offset = offset;
 
 	// ディスク名はファイル名＋拡張子とする
@@ -4922,7 +4922,7 @@ int FASTCALL FDIDisk2HD::Create(const Filepath& path, const option_t *opt)
 	disk.readonly = FALSE;
 
 	// パス名、オフセットを記録
-	disk.path = path;
+	disk.path.set(&path);
 	disk.offset = 0;
 
 	// ディスク名はファイル名＋拡張子とする
@@ -5278,7 +5278,7 @@ int FASTCALL FDIDiskDIM::Open(const Filepath& path, uint32_t offset)
 	}
 
 	// パス名＋オフセットを記録
-	disk.path = path;
+	disk.path.set(&path);
 	disk.offset = offset;
 
 	// コメントがあるか
@@ -5609,7 +5609,7 @@ int FASTCALL FDIDiskDIM::Create(const Filepath& path, const option_t *opt)
 	dim_load = TRUE;
 
 	// パス名＋オフセットを記録
-	disk.path = path;
+	disk.path.set(&path);
 	disk.offset = 0;
 
 	// ディスク名はファイル名＋拡張子とする
@@ -6168,7 +6168,7 @@ int FASTCALL FDIDiskD68::Open(const Filepath& path, uint32_t offset)
 	fio.Close();
 
 	// パス名＋オフセットを記録
-	disk.path = path;
+	disk.path.set(&path);
 	disk.offset = offset;
 
 	// ディスク名(必ず16文字で切る)
@@ -6534,7 +6534,7 @@ int FASTCALL FDIDiskD68::Create(const Filepath& path, const option_t *opt)
 	fio.Close();
 
 	// パス、ディスク名、オフセット
-	disk.path = path;
+	disk.path.set(&path);
 	strcpy(disk.name, opt->name);
 	disk.offset = 0;
 
@@ -7026,7 +7026,7 @@ int FASTCALL FDIDiskBAD::Open(const Filepath& path, uint32_t offset)
 	fio.Close();
 
 	// パス、オフセットを記憶
-	disk.path = path;
+	disk.path.set(&path);
 	disk.offset = offset;
 
 	// ディスク名はファイル名＋拡張子とする
@@ -7308,7 +7308,7 @@ int FASTCALL FDIDisk2DD::Open(const Filepath& path, uint32_t offset)
 	fio.Close();
 
 	// パス、オフセットを記憶
-	disk.path = path;
+	disk.path.set(&path);
 	disk.offset = offset;
 
 	// ディスク名はファイル名＋拡張子とする
@@ -7407,7 +7407,7 @@ int FASTCALL FDIDisk2DD::Create(const Filepath& path, const option_t *opt)
 	disk.readonly = FALSE;
 
 	// パス名、オフセットを記録
-	disk.path = path;
+	disk.path.set(&path);
 	disk.offset = 0;
 
 	// ディスク名はファイル名＋拡張子とする
@@ -7659,7 +7659,7 @@ int FASTCALL FDIDisk2HQ::Open(const Filepath& path, uint32_t offset)
 	fio.Close();
 
 	// パス、オフセットを記憶
-	disk.path = path;
+	disk.path.set(&path);
 	disk.offset = offset;
 
 	// ディスク名はファイル名＋拡張子とする
@@ -7758,7 +7758,7 @@ int FASTCALL FDIDisk2HQ::Create(const Filepath& path, const option_t *opt)
 	disk.readonly = FALSE;
 
 	// パス名、オフセットを記録
-	disk.path = path;
+	disk.path.set(&path);
 	disk.offset = 0;
 
 	// ディスク名はファイル名＋拡張子とする

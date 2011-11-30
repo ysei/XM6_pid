@@ -113,6 +113,23 @@ namespace XM6_pid {
 		void set(const FiosPath* p) {
 			memcpy(path, p->path, sizeof(path));
 		}
+
+		const char* getShort() const {
+			const char* ret = 0;
+			for(const char* p = &path[0]; *p != 0; ++p) {
+				if(*p == '\\') {
+					ret = p;
+				}
+			}
+			if(ret) {
+				ret += 1;
+			} else {
+				ret = &path[0];
+			}
+			return ret;
+		}
+
+		int cmpPath(const FiosPath* p);
 	};
 
 	class XM6_FILEIO_SYSTEM {

@@ -336,7 +336,7 @@ uint32_t FASTCALL VM::Save(const Filepath& path)
 	fio.Close();
 
 	// カレントに設定
-	*pCurrent = path;
+	pCurrent->set(&path);
 
 	// 成功
 	return pos;
@@ -433,7 +433,7 @@ uint32_t FASTCALL VM::Load(const Filepath& path)
 	fio.Close();
 
 	// カレントに設定
-	*pCurrent = path;
+	pCurrent->set(&path);
 
 	// 成功
 	return pos;
@@ -448,7 +448,7 @@ void FASTCALL VM::GetPath(Filepath& path) const
 {
 	ASSERT(this);
 
-	path = *pCurrent;
+	path.set(pCurrent);
 }
 
 
