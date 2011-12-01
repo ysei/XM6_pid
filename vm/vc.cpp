@@ -33,7 +33,7 @@
 VC::VC(VM *p) : MemDevice(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('V', 'C', ' ', ' ');
+	dev.id = XM6_MAKEID('V', 'C', ' ', ' ');
 	dev.desc = "VC (CATHY & VIPS)";
 
 	// 開始アドレス、終了アドレス
@@ -59,7 +59,7 @@ int FASTCALL VC::Init()
 	}
 
 	// レンダラ取得
-	render = (Render*)vm->SearchDevice(MAKEID('R', 'E', 'N', 'D'));
+	render = (Render*)vm->SearchDevice(XM6_MAKEID('R', 'E', 'N', 'D'));
 	ASSERT(render);
 
 	// パレットワークをクリア

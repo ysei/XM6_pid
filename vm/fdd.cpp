@@ -37,7 +37,7 @@
 FDD::FDD(VM *p) : Device(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('F', 'D', 'D', ' ');
+	dev.id = XM6_MAKEID('F', 'D', 'D', ' ');
 	dev.desc = "Floppy Drive";
 
 	// オブジェクト
@@ -64,19 +64,19 @@ int FASTCALL FDD::Init()
 	}
 
 	// FDC取得
-	fdc = (FDC*)vm->SearchDevice(MAKEID('F', 'D', 'C', ' '));
+	fdc = (FDC*)vm->SearchDevice(XM6_MAKEID('F', 'D', 'C', ' '));
 	ASSERT(fdc);
 
 	// IOSC取得
-	iosc = (IOSC*)vm->SearchDevice(MAKEID('I', 'O', 'S', 'C'));
+	iosc = (IOSC*)vm->SearchDevice(XM6_MAKEID('I', 'O', 'S', 'C'));
 	ASSERT(iosc);
 
 	// スケジューラ取得
-	scheduler = (Scheduler*)vm->SearchDevice(MAKEID('S', 'C', 'H', 'E'));
+	scheduler = (Scheduler*)vm->SearchDevice(XM6_MAKEID('S', 'C', 'H', 'E'));
 	ASSERT(scheduler);
 
 	// RTC取得
-	rtc = (RTC*)vm->SearchDevice(MAKEID('R', 'T', 'C', ' '));
+	rtc = (RTC*)vm->SearchDevice(XM6_MAKEID('R', 'T', 'C', ' '));
 	ASSERT(rtc);
 
 	// ドライブ別の初期化
@@ -105,27 +105,21 @@ int FASTCALL FDD::Init()
 
 	// シークイベント初期化
 	seek.SetDevice(this);
-#if defined(XM6_USE_EVENT_DESC)
 	seek.SetDesc("Seek");
-#endif
 	seek.SetUser(0);
 	seek.SetTime(0);
 	scheduler->AddEvent(&seek);
 
 	// 回転数イベント初期化(セトリング兼用)
 	rotation.SetDevice(this);
-#if defined(XM6_USE_EVENT_DESC)
 	rotation.SetDesc("Rotation Stopped");
-#endif
 	rotation.SetUser(1);
 	rotation.SetTime(0);
 	scheduler->AddEvent(&rotation);
 
 	// イジェクトイベント初期化(誤挿入兼用)
 	eject.SetDevice(this);
-#if defined(XM6_USE_EVENT_DESC)
 	eject.SetDesc("Eject");
-#endif
 	eject.SetUser(2);
 	eject.SetTime(0);
 	scheduler->AddEvent(&eject);
@@ -215,9 +209,7 @@ void FASTCALL FDD::Reset()
 	seek.SetTime(0);
 
 	// 回転数・セトリングイベントなし(motor=FALSE, settle=FALSE)
-#if defined(XM6_USE_EVENT_DESC)
 	rotation.SetDesc("Rotation Stopped");
-#endif
 	rotation.SetTime(0);
 
 	// イジェクトイベントなし(格上げ＆invalid)
@@ -894,13 +886,7 @@ void FASTCALL FDD::Rotation()
 	rpm = 2000 * 1000 * 60;
 	hus = GetRotationTime();
 	rpm /= hus;
-#if defined(XM6_USE_EVENT_DESC)
-	{
-		char desc[0x20];
-		sprintf(desc, "Rotation %drpm", rpm);
-		rotation.SetDesc(desc);
-	}
-#endif
+	rotation.SetDesc("Rotation %drpm", rpm);
 	rotation.SetTime(hus);
 }
 
@@ -1176,9 +1162,7 @@ void FASTCALL FDD::SetMotor(int drive, int flag)
 		fdd.selected = drive;
 
 		// スタンバイイベントを設定
-#if defined(XM6_USE_EVENT_DESC)
 		rotation.SetDesc("Standby 54000ms");
-#endif
 		rotation.SetTime(54 * 1000 * 2 * 1000);
 		return;
 	}
@@ -1212,9 +1196,7 @@ void FASTCALL FDD::SetMotor(int drive, int flag)
 	fdd.settle = TRUE;
 
 	// セトリングイベントを設定(高速モード時64us、通常モード時384ms)
-#if defined(XM6_USE_EVENT_DESC)
 	rotation.SetDesc("Settle 384ms");
-#endif
 	if (fdd.fast) {
 		rotation.SetTime(128);
 	}

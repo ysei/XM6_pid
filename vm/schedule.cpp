@@ -46,7 +46,7 @@ Scheduler::Scheduler(VM *p) : Device(p)
 	int i;
 
 	// デバイスIDを初期化
-	dev.id = MAKEID('S', 'C', 'H', 'E');
+	dev.id = XM6_MAKEID('S', 'C', 'H', 'E');
 	dev.desc = "Scheduler";
 
 	// ブレークポイント個別
@@ -101,12 +101,12 @@ int FASTCALL Scheduler::Init()
 
 	// CPU取得
 	ASSERT(!cpu);
-	cpu = (CPU*)vm->SearchDevice(MAKEID('C', 'P', 'U', ' '));
+	cpu = (CPU*)vm->SearchDevice(XM6_MAKEID('C', 'P', 'U', ' '));
 	ASSERT(cpu);
 
 	// DMAC取得
 	ASSERT(!dmac);
-	dmac = (DMAC*)vm->SearchDevice(MAKEID('D', 'M', 'A', 'C'));
+	dmac = (DMAC*)vm->SearchDevice(XM6_MAKEID('D', 'M', 'A', 'C'));
 	ASSERT(dmac);
 
 	return TRUE;
@@ -302,11 +302,11 @@ void FASTCALL Scheduler::ApplyCfg(const Config *config)
 void FASTCALL Scheduler::AssertDiag() const
 {
 	ASSERT(this);
-	ASSERT(GetID() == MAKEID('S', 'C', 'H', 'E'));
+	ASSERT(GetID() == XM6_MAKEID('S', 'C', 'H', 'E'));
 	ASSERT(cpu);
-	ASSERT(cpu->GetID() == MAKEID('C', 'P', 'U', ' '));
+	ASSERT(cpu->GetID() == XM6_MAKEID('C', 'P', 'U', ' '));
 	ASSERT(dmac);
-	ASSERT(dmac->GetID() == MAKEID('D', 'M', 'A', 'C'));
+	ASSERT(dmac->GetID() == XM6_MAKEID('D', 'M', 'A', 'C'));
 }
 #endif	// _DEBUG
 

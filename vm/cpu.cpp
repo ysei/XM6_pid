@@ -27,26 +27,16 @@ struct CPU::Region {
 	enum {
 		REGION_MAX = 10
 	};
-	STARSCREAM_PROGRAMREGION u_pgr[REGION_MAX];
-										// プログラムリージョン(User)
-	STARSCREAM_PROGRAMREGION s_pgr[REGION_MAX];
-										// プログラムリージョン(Super)
-	STARSCREAM_DATAREGION u_rbr[REGION_MAX];
-										// Read Byteリージョン(User)
-	STARSCREAM_DATAREGION s_rbr[REGION_MAX];
-										// Read Byteリージョン(Super)
-	STARSCREAM_DATAREGION u_rwr[REGION_MAX];
-										// Read Wordリージョン(User)
-	STARSCREAM_DATAREGION s_rwr[REGION_MAX];
-										// Read Wordリージョン(Super)
-	STARSCREAM_DATAREGION u_wbr[REGION_MAX];
-										// Write Byteリージョン(User)
-	STARSCREAM_DATAREGION s_wbr[REGION_MAX];
-										// Write Byteリージョン(Super)
-	STARSCREAM_DATAREGION u_wwr[REGION_MAX];
-										// Write Wordリージョン(User)
-	STARSCREAM_DATAREGION s_wwr[REGION_MAX];
-										// Write Wordリージョン(Super)
+	STARSCREAM_PROGRAMREGION u_pgr[REGION_MAX];		// プログラムリージョン(User)
+	STARSCREAM_PROGRAMREGION s_pgr[REGION_MAX];		// プログラムリージョン(Super)
+	STARSCREAM_DATAREGION u_rbr[REGION_MAX];		// Read Byteリージョン(User)
+	STARSCREAM_DATAREGION s_rbr[REGION_MAX];		// Read Byteリージョン(Super)
+	STARSCREAM_DATAREGION u_rwr[REGION_MAX];		// Read Wordリージョン(User)
+	STARSCREAM_DATAREGION s_rwr[REGION_MAX];		// Read Wordリージョン(Super)
+	STARSCREAM_DATAREGION u_wbr[REGION_MAX];		// Write Byteリージョン(User)
+	STARSCREAM_DATAREGION s_wbr[REGION_MAX];		// Write Byteリージョン(Super)
+	STARSCREAM_DATAREGION u_wwr[REGION_MAX];		// Write Wordリージョン(User)
+	STARSCREAM_DATAREGION s_wwr[REGION_MAX];		// Write Wordリージョン(Super)
 	STARSCREAM_PROGRAMREGION* pProgramRegion;
 	int	iProgramRegion;
 	STARSCREAM_DATAREGION* pDataRegion;
@@ -67,20 +57,17 @@ extern "C" {
 //	スタティック ワーク
 //
 //---------------------------------------------------------------------------
-static CPU *cpu;
-										// CPU
+static CPU *cpu;						// CPU
 
 //---------------------------------------------------------------------------
 //
 //	外部定義
 //
 //---------------------------------------------------------------------------
-uint32_t s68000fbpc(void);
-										// PCフィードバック
-void s68000buserr(uint32_t addr, uint32_t param);
-										// バスエラー
-extern uint32_t s68000getcounter();		// クロックカウンタ取得
-extern uint32_t s68000iocycle;				// __io_cycle_counter(Starscream)
+uint32_t s68000fbpc(void);							// PCフィードバック
+void s68000buserr(uint32_t addr, uint32_t param);	// バスエラー
+extern uint32_t s68000getcounter();					// クロックカウンタ取得
+extern uint32_t s68000iocycle;						// __io_cycle_counter(Starscream)
 
 //---------------------------------------------------------------------------
 //
@@ -137,7 +124,12 @@ void s68000addrerrlog(uint32_t addr, uint32_t stat)
 //	CPU
 //
 //===========================================================================
-//#define CPU_LOG
+#if defined(CPU_LOG)
+#undef  CPU_LOG
+#define CPU_LOG(...)	__VA_ARGS__
+#else
+#define	CPU_LOG(...)
+#endif
 
 //---------------------------------------------------------------------------
 //
@@ -147,7 +139,7 @@ void s68000addrerrlog(uint32_t addr, uint32_t stat)
 CPU::CPU(VM *p) : Device(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('C', 'P', 'U', ' ');
+	dev.id = XM6_MAKEID('C', 'P', 'U', ' ');
 	dev.desc = "MPU (MC68000)";
 
 	// ポインタ初期化
@@ -181,35 +173,35 @@ int FASTCALL CPU::Init()
 	::cpu = this;
 
 	// メモリ取得
-	memory = (Memory*)vm->SearchDevice(MAKEID('M', 'E', 'M', ' '));
+	memory = (Memory*)vm->SearchDevice(XM6_MAKEID('M', 'E', 'M', ' '));
 	ASSERT(memory);
 
 	// DMAC取得
-	dmac = (DMAC*)vm->SearchDevice(MAKEID('D', 'M', 'A', 'C'));
+	dmac = (DMAC*)vm->SearchDevice(XM6_MAKEID('D', 'M', 'A', 'C'));
 	ASSERT(dmac);
 
 	// MFP取得
-	mfp = (MFP*)vm->SearchDevice(MAKEID('M', 'F', 'P', ' '));
+	mfp = (MFP*)vm->SearchDevice(XM6_MAKEID('M', 'F', 'P', ' '));
 	ASSERT(mfp);
 
 	// IOSC取得
-	iosc = (IOSC*)vm->SearchDevice(MAKEID('I', 'O', 'S', 'C'));
+	iosc = (IOSC*)vm->SearchDevice(XM6_MAKEID('I', 'O', 'S', 'C'));
 	ASSERT(iosc);
 
 	// SCC取得
-	scc = (SCC*)vm->SearchDevice(MAKEID('S', 'C', 'C', ' '));
+	scc = (SCC*)vm->SearchDevice(XM6_MAKEID('S', 'C', 'C', ' '));
 	ASSERT(scc);
 
 	// MIDI取得
-	midi = (MIDI*)vm->SearchDevice(MAKEID('M', 'I', 'D', 'I'));
+	midi = (MIDI*)vm->SearchDevice(XM6_MAKEID('M', 'I', 'D', 'I'));
 	ASSERT(midi);
 
 	// SCSI取得
-	scsi = (SCSI*)vm->SearchDevice(MAKEID('S', 'C', 'S', 'I'));
+	scsi = (SCSI*)vm->SearchDevice(XM6_MAKEID('S', 'C', 'S', 'I'));
 	ASSERT(scsi);
 
 	// スケジューラ取得
-	scheduler = (Scheduler*)vm->SearchDevice(MAKEID('S', 'C', 'H', 'E'));
+	scheduler = (Scheduler*)vm->SearchDevice(XM6_MAKEID('S', 'C', 'H', 'E'));
 	ASSERT(scheduler);
 
 	// リージョンエリアを設定
@@ -496,9 +488,7 @@ int FASTCALL CPU::Interrupt(int level, int vector)
 
 	// 結果評価
 	if (ret == 0) {
-#if defined(CPU_LOG)
-		LOG2(Log::Normal, "割り込み要求受理 レベル%d ベクタ$%02X", level, vector);
-#endif	// CPU_LOG
+		CPU_LOG(LOG2(Log::Normal, "割り込み要求受理 レベル%d ベクタ$%02X", level, vector));
 		sub.intreq[level]++;
 		return TRUE;
 	}
@@ -516,9 +506,7 @@ void FASTCALL CPU::IntAck(int level)
 	ASSERT(this);
 	ASSERT((level >= 1) && (level <= 7));
 
-#if defined(CPU_LOG)
-	LOG1(Log::Normal, "割り込み要求ACK レベル%d", level);
-#endif	// CPU_LOG
+	CPU_LOG(LOG1(Log::Normal, "割り込み要求ACK レベル%d", level));
 
 	// カウントアップ
 	sub.intack[level]++;
@@ -583,9 +571,7 @@ void FASTCALL CPU::IntCancel(int level)
 	// 該当ビットがオンなら
 	bit = (1 << level);
 	if (context.interrupts[0] & bit) {
-#if defined(CPU_LOG)
-		LOG1(Log::Normal, "割り込みキャンセル レベル%d", level);
-#endif	// CPU_LOG
+		CPU_LOG(LOG1(Log::Normal, "割り込みキャンセル レベル%d", level));
 
 		// ビットを降ろす
 		context.interrupts[0] &= (uint8_t)(~bit);
@@ -611,10 +597,10 @@ void FASTCALL CPU::ResetInst()
 	Device *device;
 
 	ASSERT(this);
-	LOG0(Log::Detail, "RESET命令");
+	CPU_LOG(LOG0(Log::Detail, "RESET命令"));
 
 	// メモリを取得
-	device = (Device*)vm->SearchDevice(MAKEID('M', 'E', 'M', ' '));
+	device = (Device*)vm->SearchDevice(XM6_MAKEID('M', 'E', 'M', ' '));
 	ASSERT(device);
 
 	// メモリデバイスに対してすべてリセットをかけておく

@@ -38,7 +38,7 @@
 SCSI::SCSI(VM *p) : MemDevice(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('S', 'C', 'S', 'I');
+	dev.id = XM6_MAKEID('S', 'C', 'S', 'I');
 	dev.desc = "SCSI (MB89352)";
 
 	// 開始アドレス、終了アドレス
@@ -76,12 +76,12 @@ int FASTCALL SCSI::Init()
 
 	// メモリ取得
 	ASSERT(!memory);
-	memory = (Memory*)vm->SearchDevice(MAKEID('M', 'E', 'M', ' '));
+	memory = (Memory*)vm->SearchDevice(XM6_MAKEID('M', 'E', 'M', ' '));
 	ASSERT(memory);
 
 	// SRAM取得
 	ASSERT(!sram);
-	sram = (SRAM*)vm->SearchDevice(MAKEID('S', 'R', 'A', 'M'));
+	sram = (SRAM*)vm->SearchDevice(XM6_MAKEID('S', 'R', 'A', 'M'));
 	ASSERT(sram);
 
 	// ワーク初期化
@@ -99,15 +99,11 @@ int FASTCALL SCSI::Init()
 
 	// イベント初期化
 	event.SetDevice(this);
-#if defined(XM6_USE_EVENT_DESC)
 	event.SetDesc("Selection");
-#endif
 	event.SetUser(0);
 	event.SetTime(0);
 	cdda.SetDevice(this);
-#if defined(XM6_USE_EVENT_DESC)
 	cdda.SetDesc("CD-DA 75fps");
-#endif
 	cdda.SetUser(1);
 	cdda.SetTime(0);
 
@@ -525,7 +521,7 @@ void FASTCALL SCSI::ApplyCfg(const Config *config)
 
 	// SCSIファイル名
 	for (i=0; i<HDMax; i++) {
-		scsihd[i].SetPath(&config->scsi_file[i]);
+		scsihd[i].SetPath(config->scsi_file[i]);
 	}
 
 	// ディスク再構築
@@ -544,11 +540,11 @@ void FASTCALL SCSI::AssertDiag() const
 	MemDevice::AssertDiag();
 
 	ASSERT(this);
-	ASSERT(GetID() == MAKEID('S', 'C', 'S', 'I'));
+	ASSERT(GetID() == XM6_MAKEID('S', 'C', 'S', 'I'));
 	ASSERT(memory);
-	ASSERT(memory->GetID() == MAKEID('M', 'E', 'M', ' '));
+	ASSERT(memory->GetID() == XM6_MAKEID('M', 'E', 'M', ' '));
 	ASSERT(sram);
-	ASSERT(sram->GetID() == MAKEID('S', 'R', 'A', 'M'));
+	ASSERT(sram->GetID() == XM6_MAKEID('S', 'R', 'A', 'M'));
 	ASSERT((scsi.type == 0) || (scsi.type == 1) || (scsi.type == 2));
 	ASSERT((scsi.vector == -1) || (scsi.vector == 0x6c) || (scsi.vector == 0xf6));
 	ASSERT((scsi.id >= -1) && (scsi.id <= 7));
@@ -2363,9 +2359,7 @@ void FASTCALL SCSI::SelectTime()
 	scsi.sel = TRUE;
 
 	// イベントタイム設定
-#if defined(XM6_USE_EVENT_DESC)
 	event.SetDesc("Selection");
-#endif
 	if (scsi.id != -1) {
 		if (scsi.disk[scsi.id]) {
 			// 指定IDが正常の場合、16usでセレクションを成功させる
@@ -3873,7 +3867,7 @@ void FASTCALL SCSI::Construct()
 
 		// ディスク種別を確認
 		if (scsi.hd[i]) {
-			if (scsi.hd[i]->GetID() != MAKEID('S', 'C', 'H', 'D')) {
+			if (scsi.hd[i]->GetID() != XM6_MAKEID('S', 'C', 'H', 'D')) {
 				delete scsi.hd[i];
 				scsi.hd[i] = NULL;
 			}
@@ -3906,7 +3900,7 @@ void FASTCALL SCSI::Construct()
 	if (mo) {
 		// MOあり
 		if (scsi.mo) {
-			if (scsi.mo->GetID() != MAKEID('S', 'C', 'M', 'O')) {
+			if (scsi.mo->GetID() != XM6_MAKEID('S', 'C', 'M', 'O')) {
 				delete scsi.mo;
 				scsi.mo = NULL;
 			}
@@ -3927,7 +3921,7 @@ void FASTCALL SCSI::Construct()
 	if (cd) {
 		// CD-ROMあり
 		if (scsi.cdrom) {
-			if (scsi.cdrom->GetID() != MAKEID('S', 'C', 'C', 'D')) {
+			if (scsi.cdrom->GetID() != XM6_MAKEID('S', 'C', 'C', 'D')) {
 				delete scsi.cdrom;
 				scsi.cdrom = NULL;
 			}
@@ -3999,13 +3993,13 @@ void FASTCALL SCSI::Construct()
 			continue;
 		}
 		switch (scsi.disk[i]->GetID()) {
-			case MAKEID('S', 'C', 'H', 'D'):
+			case XM6_MAKEID('S', 'C', 'H', 'D'):
 				LOG1(Log::Detail, "ID=%d : SCSI ハードディスク", i);
 				break;
-			case MAKEID('S', 'C', 'M', 'O'):
+			case XM6_MAKEID('S', 'C', 'M', 'O'):
 				LOG1(Log::Detail, "ID=%d : SCSI MOディスク", i);
 				break;
-			case MAKEID('S', 'C', 'C', 'D'):
+			case XM6_MAKEID('S', 'C', 'C', 'D'):
 				LOG1(Log::Detail, "ID=%d : SCSI CD-ROMドライブ", i);
 				break;
 			default:

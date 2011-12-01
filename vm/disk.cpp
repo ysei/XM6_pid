@@ -684,7 +684,7 @@ Disk::Disk(Device *dev)
 	ctrl = dev;
 
 	// ワーク初期化
-	disk.id = MAKEID('N', 'U', 'L', 'L');
+	disk.id = XM6_MAKEID('N', 'U', 'L', 'L');
 	disk.ready = FALSE;
 	disk.writep = FALSE;
 	disk.readonly = FALSE;
@@ -862,7 +862,7 @@ int FASTCALL Disk::IsNULL() const
 {
 	ASSERT(this);
 
-	if (disk.id == MAKEID('N', 'U', 'L', 'L')) {
+	if (disk.id == XM6_MAKEID('N', 'U', 'L', 'L')) {
 		return TRUE;
 	}
 	return FALSE;
@@ -877,7 +877,7 @@ int FASTCALL Disk::IsSASI() const
 {
 	ASSERT(this);
 
-	if (disk.id == MAKEID('S', 'A', 'H', 'D')) {
+	if (disk.id == XM6_MAKEID('S', 'A', 'H', 'D')) {
 		return TRUE;
 	}
 	return FALSE;
@@ -1071,7 +1071,7 @@ int FASTCALL Disk::CheckReady()
 //	※常時成功する必要がある
 //
 //---------------------------------------------------------------------------
-int FASTCALL Disk::Inquiry(const uint32_t* /*cdb*/, uint8_t* /*buf*/)
+int FASTCALL Disk::Inquiry(const uint32_t*, uint8_t*)
 {
 	ASSERT(this);
 
@@ -1251,7 +1251,7 @@ int FASTCALL Disk::ModeSense(const uint32_t *cdb, uint8_t *buf)
 	}
 
 	// ページコード6(optical)
-	if (disk.id == MAKEID('S', 'C', 'M', 'O')) {
+	if (disk.id == XM6_MAKEID('S', 'C', 'M', 'O')) {
 		if ((page == 0x06) || (page == 0x3f)) {
 			size += AddOpt(change, &buf[size]);
 			valid = TRUE;
@@ -1265,7 +1265,7 @@ int FASTCALL Disk::ModeSense(const uint32_t *cdb, uint8_t *buf)
 	}
 
 	// ページコード13(CD-ROM)
-	if (disk.id == MAKEID('S', 'C', 'C', 'D')) {
+	if (disk.id == XM6_MAKEID('S', 'C', 'C', 'D')) {
 		if ((page == 0x0d) || (page == 0x3f)) {
 			size += AddCDROM(change, &buf[size]);
 			valid = TRUE;
@@ -1273,7 +1273,7 @@ int FASTCALL Disk::ModeSense(const uint32_t *cdb, uint8_t *buf)
 	}
 
 	// ページコード14(CD-DA)
-	if (disk.id == MAKEID('S', 'C', 'C', 'D')) {
+	if (disk.id == XM6_MAKEID('S', 'C', 'C', 'D')) {
 		if ((page == 0x0e) || (page == 0x3f)) {
 			size += AddCDDA(change, &buf[size]);
 			valid = TRUE;
@@ -1453,7 +1453,7 @@ int FASTCALL Disk::AddCDDA(int change, uint8_t *buf)
 //	TEST UNIT READY
 //
 //---------------------------------------------------------------------------
-int FASTCALL Disk::TestUnitReady(const uint32_t* /*cdb*/)
+int FASTCALL Disk::TestUnitReady(const uint32_t*)
 {
 	ASSERT(this);
 
@@ -1471,7 +1471,7 @@ int FASTCALL Disk::TestUnitReady(const uint32_t* /*cdb*/)
 //	REZERO UNIT
 //
 //---------------------------------------------------------------------------
-int FASTCALL Disk::Rezero(const uint32_t* /*cdb*/)
+int FASTCALL Disk::Rezero(const uint32_t*)
 {
 	ASSERT(this);
 
@@ -1514,7 +1514,7 @@ int FASTCALL Disk::Format(const uint32_t *cdb)
 //	REASSIGN BLOCKS
 //
 //---------------------------------------------------------------------------
-int FASTCALL Disk::Reassign(const uint32_t* /*cdb*/)
+int FASTCALL Disk::Reassign(const uint32_t*)
 {
 	ASSERT(this);
 
@@ -1635,7 +1635,7 @@ int FASTCALL Disk::Write(const uint8_t *buf, int block)
 //	※LBAのチェックは行わない(SASI IOCS)
 //
 //---------------------------------------------------------------------------
-int FASTCALL Disk::Seek(const uint32_t* /*cdb*/)
+int FASTCALL Disk::Seek(const uint32_t*)
 {
 	ASSERT(this);
 
@@ -1737,7 +1737,7 @@ int FASTCALL Disk::Removal(const uint32_t *cdb)
 //	READ CAPACITY
 //
 //---------------------------------------------------------------------------
-int FASTCALL Disk::ReadCapacity(const uint32_t* /*cdb*/, uint8_t *buf)
+int FASTCALL Disk::ReadCapacity(const uint32_t*, uint8_t *buf)
 {
 	uint32_t blocks;
 	uint32_t length;
@@ -1892,7 +1892,7 @@ int FASTCALL Disk::PlayAudioTrack(const uint32_t *cdb)
 SASIHD::SASIHD(Device *dev) : Disk(dev)
 {
 	// SASI ハードディスク
-	disk.id = MAKEID('S', 'A', 'H', 'D');
+	disk.id = XM6_MAKEID('S', 'A', 'H', 'D');
 }
 
 //---------------------------------------------------------------------------
@@ -2004,7 +2004,7 @@ int FASTCALL SASIHD::RequestSense(const uint32_t *cdb, uint8_t *buf)
 SCSIHD::SCSIHD(Device *dev) : Disk(dev)
 {
 	// SCSI ハードディスク
-	disk.id = MAKEID('S', 'C', 'H', 'D');
+	disk.id = XM6_MAKEID('S', 'C', 'H', 'D');
 }
 
 //---------------------------------------------------------------------------
@@ -2057,11 +2057,6 @@ int FASTCALL SCSIHD::Open(const Filepath& path)
 //---------------------------------------------------------------------------
 int FASTCALL SCSIHD::Inquiry(const uint32_t *cdb, uint8_t *buf)
 {
-	uint32_t major;
-	uint32_t minor;
-	int size;
-	int len;
-
 	ASSERT(this);
 	ASSERT(cdb);
 	ASSERT(buf);
@@ -2094,6 +2089,7 @@ int FASTCALL SCSIHD::Inquiry(const uint32_t *cdb, uint8_t *buf)
 	memcpy(&buf[8], "XM6", 3);
 
 	// 製品名
+	int size;
 	size = disk.blocks >> 11;
 #if 0
 	char string[32];
@@ -2111,6 +2107,8 @@ int FASTCALL SCSIHD::Inquiry(const uint32_t *cdb, uint8_t *buf)
 		sprintf(string, "FBSE%d.%dS", size / 1000, (size % 1000) / 100);
 	memcpy(&buf[16], string, strlen(string));
 	// リビジョン(XM6のバージョンNo)
+	uint32_t major;
+	uint32_t minor;
 	ctrl->GetVM()->GetVersion(major, minor);
 	sprintf(string, "0%01d%01d%01d",
 				major, (minor >> 4), (minor & 0x0f));
@@ -2134,6 +2132,8 @@ int FASTCALL SCSIHD::Inquiry(const uint32_t *cdb, uint8_t *buf)
 	buf[31] = '\0';
 
 	// リビジョン(XM6のバージョンNo)
+	uint32_t major;
+	uint32_t minor;
 	ctrl->GetVM()->GetVersion(major, minor);
 
 	setRevisionString(&buf[32], major, minor);
@@ -2141,6 +2141,7 @@ int FASTCALL SCSIHD::Inquiry(const uint32_t *cdb, uint8_t *buf)
 
 	// サイズ36バイトかアロケーションレングスのうち、短い方で転送
 	size = 36;
+	int len;
 	len = (int)cdb[4];
 	if (len < size) {
 		size = len;
@@ -2165,7 +2166,7 @@ int FASTCALL SCSIHD::Inquiry(const uint32_t *cdb, uint8_t *buf)
 SCSIMO::SCSIMO(Device *dev) : Disk(dev)
 {
 	// SCSI 光磁気ディスク
-	disk.id = MAKEID('S', 'C', 'M', 'O');
+	disk.id = XM6_MAKEID('S', 'C', 'M', 'O');
 
 	// リムーバブル
 	disk.removable = TRUE;
@@ -2620,7 +2621,7 @@ SCSICD::SCSICD(Device *dev) : Disk(dev)
 	int i;
 
 	// SCSI CD-ROM
-	disk.id = MAKEID('S', 'C', 'C', 'D');
+	disk.id = XM6_MAKEID('S', 'C', 'C', 'D');
 
 	// リムーバブル、書込み禁止
 	disk.removable = TRUE;

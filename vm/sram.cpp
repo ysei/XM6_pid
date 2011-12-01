@@ -35,7 +35,7 @@
 SRAM::SRAM(VM *p) : MemDevice(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('S', 'R', 'A', 'M');
+	dev.id = XM6_MAKEID('S', 'R', 'A', 'M');
 	dev.desc = "Static RAM";
 
 	// 開始アドレス、終了アドレス
@@ -270,7 +270,7 @@ void FASTCALL SRAM::AssertDiag() const
 	MemDevice::AssertDiag();
 
 	ASSERT(this);
-	ASSERT(GetID() == MAKEID('S', 'R', 'A', 'M'));
+	ASSERT(GetID() == XM6_MAKEID('S', 'R', 'A', 'M'));
 	ASSERT(memdev.first == 0xed0000);
 	ASSERT(memdev.last == 0xedffff);
 	ASSERT((sram_size == 16) || (sram_size == 32) || (sram_size == 48) || (sram_size == 64));

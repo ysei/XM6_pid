@@ -30,7 +30,7 @@
 Neptune::Neptune(VM *p) : MemDevice(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('N', 'E', 'P', 'X');
+	dev.id = XM6_MAKEID('N', 'E', 'P', 'X');
 	dev.desc = "Neptune-X (DP8390)";
 
 	// 開始アドレス、終了アドレス
@@ -136,7 +136,7 @@ void FASTCALL Neptune::AssertDiag() const
 	MemDevice::AssertDiag();
 
 	ASSERT(this);
-	ASSERT(GetID() == MAKEID('N', 'E', 'P', 'X'));
+	ASSERT(GetID() == XM6_MAKEID('N', 'E', 'P', 'X'));
 	ASSERT(memdev.first == 0xece000);
 	ASSERT(memdev.last == 0xecffff);
 }

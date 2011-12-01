@@ -36,7 +36,7 @@
 OPMIF::OPMIF(VM *p) : MemDevice(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('O', 'P', 'M', ' ');
+	dev.id = XM6_MAKEID('O', 'P', 'M', ' ');
 	dev.desc = "OPM (YM2151)";
 
 	// 開始アドレス、終了アドレス
@@ -69,28 +69,24 @@ int FASTCALL OPMIF::Init()
 
 	// MFP取得
 	ASSERT(!mfp);
-	mfp = (MFP*)vm->SearchDevice(MAKEID('M', 'F', 'P', ' '));
+	mfp = (MFP*)vm->SearchDevice(XM6_MAKEID('M', 'F', 'P', ' '));
 	ASSERT(mfp);
 
 	// ADPCM取得
 	ASSERT(!adpcm);
-	adpcm = (ADPCM*)vm->SearchDevice(MAKEID('A', 'P', 'C', 'M'));
+	adpcm = (ADPCM*)vm->SearchDevice(XM6_MAKEID('A', 'P', 'C', 'M'));
 	ASSERT(adpcm);
 
 	// FDD取得
 	ASSERT(!fdd);
-	fdd = (FDD*)vm->SearchDevice(MAKEID('F', 'D', 'D', ' '));
+	fdd = (FDD*)vm->SearchDevice(XM6_MAKEID('F', 'D', 'D', ' '));
 	ASSERT(fdd);
 
 	// イベント作成
 	event[0].SetDevice(this);
-#if defined(XM6_USE_EVENT_DESC)
 	event[0].SetDesc("Timer-A");
-#endif
 	event[1].SetDevice(this);
-#if defined(XM6_USE_EVENT_DESC)
 	event[1].SetDesc("Timer-B");
-#endif
 	for (i=0; i<2; i++) {
 		event[i].SetUser(i);
 		event[i].SetTime(0);
@@ -352,15 +348,15 @@ void FASTCALL OPMIF::AssertDiag() const
 	MemDevice::AssertDiag();
 
 	ASSERT(this);
-	ASSERT(GetID() == MAKEID('O', 'P', 'M', ' '));
+	ASSERT(GetID() == XM6_MAKEID('O', 'P', 'M', ' '));
 	ASSERT(memdev.first == 0xe90000);
 	ASSERT(memdev.last == 0xe91fff);
 	ASSERT(mfp);
-	ASSERT(mfp->GetID() == MAKEID('M', 'F', 'P', ' '));
+	ASSERT(mfp->GetID() == XM6_MAKEID('M', 'F', 'P', ' '));
 	ASSERT(adpcm);
-	ASSERT(adpcm->GetID() == MAKEID('A', 'P', 'C', 'M'));
+	ASSERT(adpcm->GetID() == XM6_MAKEID('A', 'P', 'C', 'M'));
 	ASSERT(fdd);
-	ASSERT(fdd->GetID() == MAKEID('F', 'D', 'D', ' '));
+	ASSERT(fdd->GetID() == XM6_MAKEID('F', 'D', 'D', ' '));
 	ASSERT(opm.addr < 0x100);
 	ASSERT((opm.busy == TRUE) || (opm.busy == FALSE));
 	ASSERT((opm.enable[0] == TRUE) || (opm.enable[0] == FALSE));

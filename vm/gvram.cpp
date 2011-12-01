@@ -1117,7 +1117,7 @@ uint32_t FASTCALL GVRAM64K::ReadOnly(uint32_t addr) const
 GVRAM::GVRAM(VM *p) : MemDevice(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('G', 'V', 'R', 'M');
+	dev.id = XM6_MAKEID('G', 'V', 'R', 'M');
 	dev.desc = "Graphic VRAM";
 
 	// 開始アドレス、終了アドレス
@@ -1164,7 +1164,7 @@ int FASTCALL GVRAM::Init()
 	memset(gvram, 0, 0x80000);
 
 	// レンダラ取得
-	render = (Render*)vm->SearchDevice(MAKEID('R', 'E', 'N', 'D'));
+	render = (Render*)vm->SearchDevice(XM6_MAKEID('R', 'E', 'N', 'D'));
 	ASSERT(render);
 
 	// ハンドラ作成
@@ -1413,7 +1413,7 @@ void FASTCALL GVRAM::AssertDiag() const
 	MemDevice::AssertDiag();
 
 	ASSERT(this);
-	ASSERT(GetID() == MAKEID('G', 'V', 'R', 'M'));
+	ASSERT(GetID() == XM6_MAKEID('G', 'V', 'R', 'M'));
 	ASSERT(memdev.first == 0xc00000);
 	ASSERT(memdev.last == 0xdfffff);
 	ASSERT(gvram);

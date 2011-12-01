@@ -41,7 +41,7 @@
 Render::Render(VM *p) : Device(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('R', 'E', 'N', 'D');
+	dev.id = XM6_MAKEID('R', 'E', 'N', 'D');
 	dev.desc = "Renderer";
 
 	// デバイスポインタ
@@ -120,11 +120,11 @@ int FASTCALL Render::Init()
 	}
 
 	// CRTC取得
-	crtc = (CRTC*)vm->SearchDevice(MAKEID('C', 'R', 'T', 'C'));
+	crtc = (CRTC*)vm->SearchDevice(XM6_MAKEID('C', 'R', 'T', 'C'));
 	ASSERT(crtc);
 
 	// VC取得
-	vc = (VC*)vm->SearchDevice(MAKEID('V', 'C', ' ', ' '));
+	vc = (VC*)vm->SearchDevice(XM6_MAKEID('V', 'C', ' ', ' '));
 	ASSERT(vc);
 
 	// パレットバッファ確保(4MB)
@@ -363,17 +363,17 @@ void FASTCALL Render::Reset()
 	render.palvc = (const uint16_t*)vc->GetPalette();
 
 	// テキストVRAMよりポインタ取得
-	tvram = (TVRAM*)vm->SearchDevice(MAKEID('T', 'V', 'R', 'M'));
+	tvram = (TVRAM*)vm->SearchDevice(XM6_MAKEID('T', 'V', 'R', 'M'));
 	ASSERT(tvram);
 	render.texttv = tvram->GetTVRAM();
 
 	// グラフィックVRAMよりポインタ取得
-	gvram = (GVRAM*)vm->SearchDevice(MAKEID('G', 'V', 'R', 'M'));
+	gvram = (GVRAM*)vm->SearchDevice(XM6_MAKEID('G', 'V', 'R', 'M'));
 	ASSERT(gvram);
 	render.grpgv = gvram->GetGVRAM();
 
 	// スプライトコントローラよりポインタ取得
-	sprite = (Sprite*)vm->SearchDevice(MAKEID('S', 'P', 'R', ' '));
+	sprite = (Sprite*)vm->SearchDevice(XM6_MAKEID('S', 'P', 'R', ' '));
 	ASSERT(sprite);
 	render.sprmem = sprite->GetPCG() - 0x8000;
 

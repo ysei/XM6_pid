@@ -35,7 +35,7 @@
 FDC::FDC(VM *p) : MemDevice(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('F', 'D', 'C', ' ');
+	dev.id = XM6_MAKEID('F', 'D', 'C', ' ');
 	dev.desc = "FDC (uPD72065)";
 
 	// 開始アドレス、終了アドレス
@@ -63,22 +63,20 @@ int FASTCALL FDC::Init()
 	}
 
 	// IOSC取得
-	iosc = (IOSC*)vm->SearchDevice(MAKEID('I', 'O', 'S', 'C'));
+	iosc = (IOSC*)vm->SearchDevice(XM6_MAKEID('I', 'O', 'S', 'C'));
 	ASSERT(iosc);
 
 	// DMAC取得
-	dmac = (DMAC*)vm->SearchDevice(MAKEID('D', 'M', 'A', 'C'));
+	dmac = (DMAC*)vm->SearchDevice(XM6_MAKEID('D', 'M', 'A', 'C'));
 	ASSERT(dmac);
 
 	// FDD取得
-	fdd = (FDD*)vm->SearchDevice(MAKEID('F', 'D', 'D', ' '));
+	fdd = (FDD*)vm->SearchDevice(XM6_MAKEID('F', 'D', 'D', ' '));
 	ASSERT(fdd);
 
 	// イベント初期化
 	event.SetDevice(this);
-#if defined(XM6_USE_EVENT_DESC)
 	event.SetDesc("Data Transfer");
-#endif
 	event.SetUser(0);
 	event.SetTime(0);
 	scheduler->AddEvent(&event);

@@ -32,7 +32,7 @@
 RTC::RTC(VM *p) : MemDevice(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('R', 'T', 'C', ' ');
+	dev.id = XM6_MAKEID('R', 'T', 'C', ' ');
 	dev.desc = "RTC (RP5C15)";
 
 	// 開始アドレス、終了アドレス
@@ -59,14 +59,12 @@ int FASTCALL RTC::Init()
 
 	// MFPを取得
 	ASSERT(!mfp);
-	mfp = (MFP*)vm->SearchDevice(MAKEID('M', 'F', 'P', ' '));
+	mfp = (MFP*)vm->SearchDevice(XM6_MAKEID('M', 'F', 'P', ' '));
 	ASSERT(mfp);
 
 	// イベントを作成(32Hz)
 	event.SetDevice(this);
-#if defined(XM6_USE_EVENT_DESC)
 	event.SetDesc("Clock 16Hz");
-#endif
 	event.SetUser(0);
 	event.SetTime(62500);
 	scheduler->AddEvent(&event);

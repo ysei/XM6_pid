@@ -33,7 +33,7 @@
 Mouse::Mouse(VM *p) : Device(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('M', 'O', 'U', 'S');
+	dev.id = XM6_MAKEID('M', 'O', 'U', 'S');
 	dev.desc = "Mouse";
 }
 
@@ -54,18 +54,16 @@ int FASTCALL Mouse::Init()
 	}
 
 	// SCC取得
-	scc = (SCC*)vm->SearchDevice(MAKEID('S', 'C', 'C', ' '));
+	scc = (SCC*)vm->SearchDevice(XM6_MAKEID('S', 'C', 'C', ' '));
 	ASSERT(scc);
 
 	// スケジューラ取得
-	scheduler = (Scheduler*)vm->SearchDevice(MAKEID('S', 'C', 'H', 'E'));
+	scheduler = (Scheduler*)vm->SearchDevice(XM6_MAKEID('S', 'C', 'H', 'E'));
 	ASSERT(scheduler);
 
 	// イベント設定
 	event.SetDevice(this);
-#if defined(XM6_USE_EVENT_DESC)
 	event.SetDesc("Latency 725us");
-#endif
 	event.SetUser(0);
 	event.SetTime(0);
 	scheduler->AddEvent(&event);

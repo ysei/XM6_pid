@@ -35,7 +35,7 @@
 Windrv::Windrv(VM *p) : MemDevice(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('W', 'D', 'R', 'V');
+	dev.id = XM6_MAKEID('W', 'D', 'R', 'V');
 	dev.desc = "Windrv";
 
 	// 開始アドレス、終了アドレス

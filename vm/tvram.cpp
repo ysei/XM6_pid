@@ -498,7 +498,7 @@ void FASTCALL TVRAMBoth::WriteWord(uint32_t addr, uint32_t data)
 TVRAM::TVRAM(VM *p) : MemDevice(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('T', 'V', 'R', 'M');
+	dev.id = XM6_MAKEID('T', 'V', 'R', 'M');
 	dev.desc = "Text VRAM";
 
 	// 開始アドレス、終了アドレス
@@ -531,7 +531,7 @@ int FASTCALL TVRAM::Init()
 	}
 
 	// レンダラ取得
-	render = (Render*)vm->SearchDevice(MAKEID('R', 'E', 'N', 'D'));
+	render = (Render*)vm->SearchDevice(XM6_MAKEID('R', 'E', 'N', 'D'));
 	ASSERT(render);
 
 	// メモリ確保、クリア
@@ -751,7 +751,7 @@ void FASTCALL TVRAM::AssertDiag() const
 	MemDevice::AssertDiag();
 
 	ASSERT(this);
-	ASSERT(GetID() == MAKEID('T', 'V', 'R', 'M'));
+	ASSERT(GetID() == XM6_MAKEID('T', 'V', 'R', 'M'));
 	ASSERT(memdev.first == 0xe00000);
 	ASSERT(memdev.last == 0xe7ffff);
 	ASSERT(tvram);

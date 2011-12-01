@@ -78,6 +78,90 @@ void t_strcpy(void* dst, const void* src);
 using namespace XM6_pid;
 
 
+
+//---------------------------------------------------------------------------
+//	XM6_pid::FiosPath
+//---------------------------------------------------------------------------
+class FiosPathImpl : public XM6_pid::FiosPath {
+public:
+	FiosPathImpl() {
+		path[0] = 0;
+	}
+
+	FiosPathImpl(const char* p) {
+		clear();
+		strcpy(path, p);
+	}
+
+	~FiosPathImpl() {
+	}
+
+	int getSaveInfo(const void*& srcPtr, int& srcMaxBytes) const {
+		srcPtr = (const void*) &path[0];
+		srcMaxBytes = sizeof(PATH_MAX);
+		return 1;
+	}
+
+	int getLoadInfo(void*& dstPtr, int& dstMaxBytes) {
+		dstPtr = (void*) &path[0];
+		dstMaxBytes = sizeof(PATH_MAX);
+		return 1;
+	}
+
+	void clear() {
+	//	path[0] = 0;
+		memset(path, 0, sizeof(path));
+	}
+
+	const char* getLongPath() const {
+		return &path[0];
+	}
+
+	const char* getShort() const {
+		const char* ret = 0;
+		for(const char* p = &path[0]; *p != 0; ++p) {
+			if(*p == '\\') {
+				ret = p;
+			}
+		}
+		if(ret) {
+			ret += 1;
+		} else {
+			ret = &path[0];
+		}
+		return ret;
+	}
+
+	void set(const FiosPath* p) {
+		const FiosPathImpl* pi = reinterpret_cast<const FiosPathImpl*>(p);
+		memcpy(path, pi->path, sizeof(path));
+	}
+
+	int cmpPath(const XM6_pid::FiosPath* p) {
+		const FiosPathImpl* pi = reinterpret_cast<const FiosPathImpl*>(p);
+		return _tcscmp(path, pi->path);
+	}
+
+//	const char* getPathPtr() const {
+//		return &path[0];
+//	}
+//
+//	char* getPathPtr() {
+//		return &path[0];
+//	}
+
+protected:
+	enum {
+		PATH_MAX	= 260,
+	};
+	char		path[PATH_MAX];
+};
+
+XM6_pid::FiosPath* XM6_pid::FiosPath::create() {
+	return new FiosPathImpl();
+}
+
+
 //---------------------------------------------------------------------------
 //
 //	VM Interface
@@ -196,7 +280,8 @@ public:
 	}
 
 	int open(const FiosPath* fiosPath, OpenMode mode) {
-		return open((const void*) &fiosPath->path[0], mode);
+//		return open((const void*) &fiosPath->path[0], mode);
+		return open((const void*) fiosPath->getLongPath(), mode);
 	}
 
 	int open			(const void* filename, OpenMode mode) {
@@ -268,7 +353,7 @@ public:
 	}
 
 	int access(const FiosPath* fiosPath, int mode) {
-		return access((const void*) &fiosPath->path[0], mode);
+		return access((const void*) fiosPath->getLongPath(), mode);
 	}
 
 	int		 access		(const void* path, int mode) {
@@ -323,10 +408,15 @@ public:
 		if(getSystemFile(sysFileType, 0)) {
 			p = pSysPath[sysFileType];
 			if(p == 0) {
-				FiosPath* f = new XM6_pid::FiosPath();
+#if 0
+				FiosPath* f = FiosPath::create();	//new XM6_pid::FiosPath();
 				memset(&f->path[0], 0, sizeof(f->path));
 				t_strcpy(&f->path[0], sptr[sysFileType]);
-
+#else
+				FiosPathImpl* f = new FiosPathImpl(sptr[sysFileType]);	//new XM6_pid::FiosPath();
+//				memset(&f->path[0], 0, sizeof(f->path));
+//				t_strcpy(&f->path[0], sptr[sysFileType]);
+#endif
 				pSysPath[sysFileType] = f;
 				p = f;
 			}
@@ -524,7 +614,8 @@ static void configGetConfig(Config* c) {
 	c->resume_xm6			= 0;		// ステート有効フラグ
 	c->resume_screen		= 0;		// 画面モードレジューム
 	c->resume_dir			= 0;		// デフォルトディレクトリレジューム
-	XM6_pid::t_strcpy(c->resume_path.path, _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\"));
+//	XM6_pid::t_strcpy(c->resume_path.path, _T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\"));
+	c->resume_path			= new FiosPathImpl(_T("C:\\projects\\x68k\\xm6_205s\\00proj.vc10\\Debug\\"));
 
 	// 描画
 	c->caption_info			= 1;		// キャプション情報表示
@@ -849,10 +940,10 @@ static void processInput(HWND hWnd) {
 	if(lpDi == 0) {
 		m_dwDispCount	= 0;
 
-		m_pCRTC		= (CRTC*)		cvm->getDevice(MAKEID('C', 'R', 'T', 'C'));
-		m_pKeyboard	= (Keyboard*)	cvm->getDevice(MAKEID('K', 'E', 'Y', 'B'));
-		m_pMouse	= (Mouse*)		cvm->getDevice(MAKEID('M', 'O', 'U', 'S'));
-		m_pPPI		= (PPI*)		cvm->getDevice(MAKEID('P', 'P', 'I', ' '));
+		m_pCRTC		= (CRTC*)		cvm->getDevice(XM6_MAKEID('C', 'R', 'T', 'C'));
+		m_pKeyboard	= (Keyboard*)	cvm->getDevice(XM6_MAKEID('K', 'E', 'Y', 'B'));
+		m_pMouse	= (Mouse*)		cvm->getDevice(XM6_MAKEID('M', 'O', 'U', 'S'));
+		m_pPPI		= (PPI*)		cvm->getDevice(XM6_MAKEID('P', 'P', 'I', ' '));
 
 		DirectInput8Create(GetModuleHandle(0), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**) &lpDi, 0);
 
@@ -1036,10 +1127,10 @@ static void processSound(HWND hWnd) {
 	static Scheduler*			m_pScheduler	= 0;	// スケジューラ
 
 	if(m_pScheduler == 0) {
-		m_pScheduler	= (Scheduler*)cvm->getDevice(MAKEID('S', 'C', 'H', 'E'));
-		m_pOPMIF		= (OPMIF*)cvm->getDevice(MAKEID('O', 'P', 'M', ' '));
-		m_pADPCM		= (ADPCM*)cvm->getDevice(MAKEID('A', 'P', 'C', 'M'));
-		m_pSCSI			= (SCSI*)cvm->getDevice(MAKEID('S', 'C', 'S', 'I'));
+		m_pScheduler	= (Scheduler*)cvm->getDevice(XM6_MAKEID('S', 'C', 'H', 'E'));
+		m_pOPMIF		= (OPMIF*)cvm->getDevice(XM6_MAKEID('O', 'P', 'M', ' '));
+		m_pADPCM		= (ADPCM*)cvm->getDevice(XM6_MAKEID('A', 'P', 'C', 'M'));
+		m_pSCSI			= (SCSI*)cvm->getDevice(XM6_MAKEID('S', 'C', 'S', 'I'));
 
 		// デバイス列挙
 		class DsEnumerator {
@@ -1241,10 +1332,12 @@ static BOOL FASTCALL InitCmdSub(int nDrive, LPCTSTR lpszPath) {
 	{
 //		TCHAR szPath[_MAX_PATH] = { 0 };
 //		::GetFullPathName(lpszPath, _MAX_PATH, szPath, &lpszFile);
-		XM6_pid::FiosPath fpath = { 0 };
 		LPTSTR lpszFile;
-		::GetFullPathName(lpszPath, _MAX_PATH, fpath.path, &lpszFile);
-		path.SetPath(&fpath);
+		TCHAR buffer[256];
+		::GetFullPathName(lpszPath, _MAX_PATH, &buffer[0], &lpszFile);
+
+		FiosPathImpl* pFpath = new FiosPathImpl(&buffer[0]);
+		path.SetPath(pFpath);
 
 //		Fileio fio;
 //		isExist = fio.Open(path, Fileio::ReadOnly);
@@ -1256,14 +1349,14 @@ static BOOL FASTCALL InitCmdSub(int nDrive, LPCTSTR lpszPath) {
 		FDI *pFDI = NULL;
 
 		{
-			FDD* pFDD = (FDD*)cvm->getDevice(MAKEID('F', 'D', 'D', ' '));
+			FDD* pFDD = (FDD*)cvm->getDevice(XM6_MAKEID('F', 'D', 'D', ' '));
 			if(pFDD && pFDD->Open(nDrive, path)) {
 				pFDI = pFDD->GetFDI(nDrive);
 			}
 		}
 
 		if(pFDI) {
-			if (pFDI->GetID() == MAKEID('B', 'A', 'D', ' ')) {
+			if (pFDI->GetID() == XM6_MAKEID('B', 'A', 'D', ' ')) {
 				//	bad image
 			}
 			ret = TRUE;
@@ -1364,7 +1457,7 @@ static void OnDraw(HDC hdc) {
 	}
 
 	if(m_Info.hBitmap && m_Info.pRender == 0) {
-		m_Info.pRender = (Render*)cvm->getDevice(MAKEID('R', 'E', 'N', 'D'));
+		m_Info.pRender = (Render*)cvm->getDevice(XM6_MAKEID('R', 'E', 'N', 'D'));
 		ASSERT(m_Info.pRender);
 		m_Info.pWork = m_Info.pRender->GetWorkAddr();
 		ASSERT(m_Info.pWork);
@@ -1543,7 +1636,7 @@ static unsigned int GetTime() {
 //			pFDI = m_pFDD->GetFDI(nDrive);
 //		}
 //		if(pFDI) {
-//			if (pFDI->GetID() == MAKEID('B', 'A', 'D', ' ')) {
+//			if (pFDI->GetID() == XM6_MAKEID('B', 'A', 'D', ' ')) {
 //				//	bad image
 //			}
 //		} else {
@@ -1587,7 +1680,7 @@ INT WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, INT) {
 
 		{
 			const TCHAR* err = 0;
-			Memory* pMemory = (Memory*)cvm->getDevice(MAKEID('M', 'E', 'M', ' '));
+			Memory* pMemory = (Memory*)cvm->getDevice(XM6_MAKEID('M', 'E', 'M', ' '));
 			ASSERT(pMemory);
 			if(err == 0 && pMemory->GetIPL()[0] == 0xff) {
 				err = _T("IPL ROM LOADING ERROR (THERE IS NO 'IPLROM.DAT')");
@@ -1614,7 +1707,7 @@ INT WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, INT) {
 			cvm->reset();
 		}
 
-		Render*		pRender		= (Render*)cvm->getDevice(MAKEID('R', 'E', 'N', 'D'));
+		Render*		pRender		= (Render*)cvm->getDevice(XM6_MAKEID('R', 'E', 'N', 'D'));
 		HWND		hFrmWnd		= getMainWindow();	//m_pFrmWnd->m_hWnd;
 		DWORD		dwExecTime	= GetTime();
 		DWORD		dwExecCount	= 0;

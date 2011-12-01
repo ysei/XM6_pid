@@ -32,7 +32,7 @@
 Sprite::Sprite(VM *p) : MemDevice(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('S', 'P', 'R', ' ');
+	dev.id = XM6_MAKEID('S', 'P', 'R', ' ');
 	dev.desc = "Sprite (CYNTHIA)";
 
 	// 開始アドレス、終了アドレス
@@ -82,7 +82,7 @@ int FASTCALL Sprite::Init()
 	spr.pcg = &sprite[0x8000];
 
 	// レンダラ取得
-	render = (Render*)vm->SearchDevice(MAKEID('R', 'E', 'N', 'D'));
+	render = (Render*)vm->SearchDevice(XM6_MAKEID('R', 'E', 'N', 'D'));
 	ASSERT(render);
 
 	return TRUE;

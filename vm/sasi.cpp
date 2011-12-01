@@ -41,7 +41,7 @@
 SASI::SASI(VM *p) : MemDevice(p), sasihd(0), scsihd(0), scsimo(0)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('S', 'A', 'S', 'I');
+	dev.id = XM6_MAKEID('S', 'A', 'S', 'I');
 	dev.desc = "SASI (IOSC-2)";
 
 	// 開始アドレス、終了アドレス
@@ -76,19 +76,19 @@ int FASTCALL SASI::Init()
 	}
 
 	// DMAC取得
-	dmac = (DMAC*)vm->SearchDevice(MAKEID('D', 'M', 'A', 'C'));
+	dmac = (DMAC*)vm->SearchDevice(XM6_MAKEID('D', 'M', 'A', 'C'));
 	ASSERT(dmac);
 
 	// IOSC取得
-	iosc = (IOSC*)vm->SearchDevice(MAKEID('I', 'O', 'S', 'C'));
+	iosc = (IOSC*)vm->SearchDevice(XM6_MAKEID('I', 'O', 'S', 'C'));
 	ASSERT(iosc);
 
 	// SRAM取得
-	sram = (SRAM*)vm->SearchDevice(MAKEID('S', 'R', 'A', 'M'));
+	sram = (SRAM*)vm->SearchDevice(XM6_MAKEID('S', 'R', 'A', 'M'));
 	ASSERT(sram);
 
 	// SCSI取得
-	scsi = (SCSI*)vm->SearchDevice(MAKEID('S', 'C', 'S', 'I'));
+	scsi = (SCSI*)vm->SearchDevice(XM6_MAKEID('S', 'C', 'S', 'I'));
 	ASSERT(scsi);
 
 	// 内部データ初期化
@@ -105,9 +105,7 @@ int FASTCALL SASI::Init()
 
 	// イベント作成
 	event.SetDevice(this);
-#if defined(XM6_USE_EVENT_DESC)
 	event.SetDesc("Data Transfer");
-#endif
 	event.SetUser(0);
 	event.SetTime(0);
 	scheduler->AddEvent(&event);
@@ -165,7 +163,7 @@ void FASTCALL SASI::Reset()
 	LOG0(Log::Normal, "リセット");
 
 	// SCSIタイプ(メモリに問い合わせる)
-	memory = (Memory*)vm->SearchDevice(MAKEID('M', 'E', 'M', ' '));
+	memory = (Memory*)vm->SearchDevice(XM6_MAKEID('M', 'E', 'M', ' '));
 	ASSERT(memory);
 	type = memory->GetMemType();
 	switch (type) {
@@ -410,7 +408,7 @@ void FASTCALL SASI::ApplyCfg(const Config *config)
 
 	// SASIファイル名
 	for (i=0; i<SASIMax; i++) {
-		sasihd[i].SetPath(&config->sasi_file[i]);
+		sasihd[i].SetPath(config->sasi_file[i]);
 	}
 
 	// パリティ回路付加
@@ -421,7 +419,7 @@ void FASTCALL SASI::ApplyCfg(const Config *config)
 
 	// SCSIファイル名
 	for (i=0; i<SCSIMax; i++) {
-		scsihd[i].SetPath(&config->sxsi_file[i]);
+		scsihd[i].SetPath(config->sxsi_file[i]);
 	}
 
 	// MO優先フラグ
@@ -929,7 +927,7 @@ void FASTCALL SASI::Construct()
 			// SCSIハードディスク
 			case 2:
 				// SCSIハードディスクか
-				if (sasi.disk[i]->GetID() == MAKEID('S', 'C', 'H', 'D')) {
+				if (sasi.disk[i]->GetID() == XM6_MAKEID('S', 'C', 'H', 'D')) {
 					// パスを取得し、一致すればok
 					sasi.disk[i]->GetPath(path);
 					if (path.CmpPath(scsihd[index])) {
@@ -958,7 +956,7 @@ void FASTCALL SASI::Construct()
 			// SCSI光磁気ディスク
 			case 3:
 				// SCSI光磁気ディスクか
-				if (sasi.disk[i]->GetID() == MAKEID('S', 'C', 'M', 'O')) {
+				if (sasi.disk[i]->GetID() == XM6_MAKEID('S', 'C', 'M', 'O')) {
 					// 記憶
 					sasi.mo = (SCSIMO*)sasi.disk[i];
 				}

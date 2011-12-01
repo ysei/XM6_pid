@@ -34,7 +34,7 @@
 SCC::SCC(VM *p) : MemDevice(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('S', 'C', 'C', ' ');
+	dev.id = XM6_MAKEID('S', 'C', 'C', ' ');
 	dev.desc = "SCC (Z8530)";
 
 	// 開始アドレス、終了アドレス
@@ -65,21 +65,17 @@ int FASTCALL SCC::Init()
 	clkup = FALSE;
 
 	// マウス取得
-	mouse = (Mouse*)vm->SearchDevice(MAKEID('M', 'O', 'U', 'S'));
+	mouse = (Mouse*)vm->SearchDevice(XM6_MAKEID('M', 'O', 'U', 'S'));
 	ASSERT(mouse);
 
 	// イベント追加
 	event[0].SetDevice(this);
-#if defined(XM6_USE_EVENT_DESC)
 	event[0].SetDesc("Channel-A");
-#endif
 	event[0].SetUser(0);
 	event[0].SetTime(0);
 	scheduler->AddEvent(&event[0]);
 	event[1].SetDevice(this);
-#if defined(XM6_USE_EVENT_DESC)
 	event[1].SetDesc("Channel-B");
-#endif
 	event[1].SetUser(1);
 	event[1].SetTime(0);
 	scheduler->AddEvent(&event[1]);

@@ -72,7 +72,7 @@ void WriteBusErr(uint32_t addr)
 Memory::Memory(VM *p) : MemDevice(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('M', 'E', 'M', ' ');
+	dev.id = XM6_MAKEID('M', 'E', 'M', ' ');
 	dev.desc = "Memory Ctrl (OHM2)";
 
 	// 開始アドレス、終了アドレス
@@ -196,11 +196,11 @@ int FASTCALL Memory::Init()
 	}
 
 	// エリアセット取得
-	areaset = (AreaSet*)vm->SearchDevice(MAKEID('A', 'R', 'E', 'A'));
+	areaset = (AreaSet*)vm->SearchDevice(XM6_MAKEID('A', 'R', 'E', 'A'));
 	ASSERT(areaset);
 
 	// SRAM取得
-	sram = (SRAM*)vm->SearchDevice(MAKEID('S', 'R', 'A', 'M'));
+	sram = (SRAM*)vm->SearchDevice(XM6_MAKEID('S', 'R', 'A', 'M'));
 	ASSERT(sram);
 
 	// staticワーク
@@ -1095,12 +1095,12 @@ void FASTCALL Memory::MakeContext(int reset)
 			}
 
 			// グラフィックVRAM
-			GVRAM *gvram = (GVRAM*)vm->SearchDevice(MAKEID('G', 'V', 'R', 'M'));
+			GVRAM *gvram = (GVRAM*)vm->SearchDevice(XM6_MAKEID('G', 'V', 'R', 'M'));
 			ASSERT(gvram);
 			pCPU->AddProgramRegion(0xc00000, 0xdfffff, ((unsigned int)gvram->GetGVRAM()) - 0xc00000);
 
 			// テキストVRAM
-			TVRAM* tvram = (TVRAM*)vm->SearchDevice(MAKEID('T', 'V', 'R', 'M'));
+			TVRAM* tvram = (TVRAM*)vm->SearchDevice(XM6_MAKEID('T', 'V', 'R', 'M'));
 			ASSERT(tvram);
 			pCPU->AddProgramRegion(0xe00000, 0xe7ffff, ((unsigned int)tvram->GetTVRAM()) - 0xe00000);
 

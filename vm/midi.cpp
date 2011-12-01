@@ -33,7 +33,7 @@
 MIDI::MIDI(VM *p) : MemDevice(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('M', 'I', 'D', 'I');
+	dev.id = XM6_MAKEID('M', 'I', 'D', 'I');
 	dev.desc = "MIDI (YM3802)";
 
 	// 開始アドレス、終了アドレス
@@ -115,21 +115,15 @@ int FASTCALL MIDI::Init()
 
 	// イベント初期化
 	event[0].SetDevice(this);
-#if defined(XM6_USE_EVENT_DESC)
 	event[0].SetDesc("MIDI 31250bps");
-#endif
 	event[0].SetUser(0);
 	event[0].SetTime(0);
 	event[1].SetDevice(this);
-#if defined(XM6_USE_EVENT_DESC)
 	event[1].SetDesc("Clock");
-#endif
 	event[1].SetUser(1);
 	event[1].SetTime(0);
 	event[2].SetDevice(this);
-#if defined(XM6_USE_EVENT_DESC)
 	event[2].SetDesc("General Timer");
-#endif
 	event[2].SetUser(2);
 	event[2].SetTime(0);
 
@@ -363,7 +357,7 @@ void FASTCALL MIDI::AssertDiag() const
 	MemDevice::AssertDiag();
 
 	ASSERT(this);
-	ASSERT(GetID() == MAKEID('M', 'I', 'D', 'I'));
+	ASSERT(GetID() == XM6_MAKEID('M', 'I', 'D', 'I'));
 	ASSERT(memdev.first == 0xeae000);
 	ASSERT(memdev.last == 0xeaffff);
 	ASSERT((midi.bid >= 0) && (midi.bid < 2));
@@ -1475,9 +1469,7 @@ void FASTCALL MIDI::ResetReg()
 	event[2].SetTime(0);
 
 	// イベント開始(MIDIクロック)(OPMDRV3.X)
-#if defined(XM6_USE_EVENT_DESC)
 	event[1].SetDesc("Clock");
-#endif
 	event[1].SetTime(0x40000);
 
 	// エクスクルーシブカウンタ
@@ -2742,16 +2734,12 @@ void FASTCALL MIDI::SetSCR(uint32_t data)
 		ASSERT(midi.sct > 0);
 
 		// イベント文字列
-#if defined(XM6_USE_EVENT_DESC)
 		if (midi.scr == 1) {
 			event[1].SetDesc("Clock");
 		}
 		else {
-			char desc[16];
-			sprintf(desc, "Clock (Div%d)", midi.scr);
-			event[1].SetDesc(desc);
+			event[1].SetDesc("Clock (Div%d)", midi.scr);
 		}
-#endif
 	}
 
 	// プレイバックカウンタクリア

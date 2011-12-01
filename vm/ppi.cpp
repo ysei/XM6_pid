@@ -35,7 +35,7 @@ PPI::PPI(VM *p) : MemDevice(p)
 	int i;
 
 	// デバイスIDを初期化
-	dev.id = MAKEID('P', 'P', 'I', ' ');
+	dev.id = XM6_MAKEID('P', 'P', 'I', ' ');
 	dev.desc = "PPI (i8255A)";
 
 	// 開始アドレス、終了アドレス
@@ -70,7 +70,7 @@ int FASTCALL PPI::Init()
 
 	// ADPCM取得
 	ASSERT(!adpcm);
-	adpcm = (ADPCM*)vm->SearchDevice(MAKEID('A', 'P', 'C', 'M'));
+	adpcm = (ADPCM*)vm->SearchDevice(XM6_MAKEID('A', 'P', 'C', 'M'));
 	ASSERT(adpcm);
 
 	// ジョイスティックタイプ
@@ -286,9 +286,9 @@ void FASTCALL PPI::ApplyCfg(const Config *config)
 void FASTCALL PPI::AssertDiag() const
 {
 	ASSERT(this);
-	ASSERT(GetID() == MAKEID('P', 'P', 'I', ' '));
+	ASSERT(GetID() == XM6_MAKEID('P', 'P', 'I', ' '));
 	ASSERT(adpcm);
-	ASSERT(adpcm->GetID() == MAKEID('A', 'P', 'C', 'M'));
+	ASSERT(adpcm->GetID() == XM6_MAKEID('A', 'P', 'C', 'M'));
 	ASSERT(joy[0]);
 	ASSERT(joy[1]);
 }
@@ -694,7 +694,7 @@ JoyDevice::JoyDevice(PPI *parent, int no)
 	ASSERT((no >= 0) || (no < PPI::PortMax));
 
 	// タイプNULL
-	id = MAKEID('N', 'U', 'L', 'L');
+	id = XM6_MAKEID('N', 'U', 'L', 'L');
 	type = 0;
 
 	// 親デバイス(PPI)を記憶、ポート番号設定
@@ -913,7 +913,7 @@ const char* FASTCALL JoyDevice::GetButtonDesc(int button) const
 JoyAtari::JoyAtari(PPI *parent, int no) : JoyDevice(parent, no)
 {
 	// タイプATAR
-	id = MAKEID('A', 'T', 'A', 'R');
+	id = XM6_MAKEID('A', 'T', 'A', 'R');
 	type = 1;
 
 	// 2軸2ボタン、データ数1
@@ -1033,7 +1033,7 @@ const char* JoyAtari::ButtonDescTable[] = {
 JoyASS::JoyASS(PPI *parent, int no) : JoyDevice(parent, no)
 {
 	// タイプATSS
-	id = MAKEID('A', 'T', 'S', 'S');
+	id = XM6_MAKEID('A', 'T', 'S', 'S');
 	type = 2;
 
 	// 2軸4ボタン、データ数1
@@ -1167,7 +1167,7 @@ JoyCyberA::JoyCyberA(PPI *parent, int no) : JoyDevice(parent, no)
 	int i;
 
 	// タイプCYBA
-	id = MAKEID('C', 'Y', 'B', 'A');
+	id = XM6_MAKEID('C', 'Y', 'B', 'A');
 	type = 3;
 
 	// 3軸8ボタン、アナログ、データ数11
@@ -1201,7 +1201,7 @@ JoyCyberA::JoyCyberA(PPI *parent, int no) : JoyDevice(parent, no)
 	}
 
 	// スケジューラ取得
-	scheduler = (Scheduler*)ppi->GetVM()->SearchDevice(MAKEID('S', 'C', 'H', 'E'));
+	scheduler = (Scheduler*)ppi->GetVM()->SearchDevice(XM6_MAKEID('S', 'C', 'H', 'E'));
 	ASSERT(scheduler);
 
 	// 自動リセット(コントローラを差し替えた場合に備える)
@@ -1592,7 +1592,7 @@ const char* JoyCyberA::ButtonDescTable[] = {
 JoyCyberD::JoyCyberD(PPI *parent, int no) : JoyDevice(parent, no)
 {
 	// タイプCYBD
-	id = MAKEID('C', 'Y', 'B', 'D');
+	id = XM6_MAKEID('C', 'Y', 'B', 'D');
 	type = 4;
 
 	// 3軸6ボタン、データ数2
@@ -1751,7 +1751,7 @@ const char* JoyCyberD::ButtonDescTable[] = {
 JoyMd3::JoyMd3(PPI *parent, int no) : JoyDevice(parent, no)
 {
 	// タイプMD3B
-	id = MAKEID('M', 'D', '3', 'B');
+	id = XM6_MAKEID('M', 'D', '3', 'B');
 	type = 5;
 
 	// 2軸4ボタン、データ数2
@@ -1889,7 +1889,7 @@ const char* JoyMd3::ButtonDescTable[] = {
 JoyMd6::JoyMd6(PPI *parent, int no) : JoyDevice(parent, no)
 {
 	// タイプMD6B
-	id = MAKEID('M', 'D', '6', 'B');
+	id = XM6_MAKEID('M', 'D', '6', 'B');
 	type = 6;
 
 	// 2軸8ボタン、データ数3
@@ -1912,7 +1912,7 @@ JoyMd6::JoyMd6(PPI *parent, int no) : JoyDevice(parent, no)
 	data[4] = 0xff;
 
 	// スケジューラ取得
-	scheduler = (Scheduler*)ppi->GetVM()->SearchDevice(MAKEID('S', 'C', 'H', 'E'));
+	scheduler = (Scheduler*)ppi->GetVM()->SearchDevice(XM6_MAKEID('S', 'C', 'H', 'E'));
 	ASSERT(scheduler);
 
 	// 自動リセット(コントローラを差し替えた場合に備える)
@@ -2339,7 +2339,7 @@ const char* JoyMd6::ButtonDescTable[] = {
 JoyCpsf::JoyCpsf(PPI *parent, int no) : JoyDevice(parent, no)
 {
 	// タイプCPSF
-	id = MAKEID('C', 'P', 'S', 'F');
+	id = XM6_MAKEID('C', 'P', 'S', 'F');
 	type = 7;
 
 	// 2軸8ボタン、データ数2
@@ -2499,7 +2499,7 @@ const char* JoyCpsf::ButtonDescTable[] = {
 JoyCpsfMd::JoyCpsfMd(PPI *parent, int no) : JoyDevice(parent, no)
 {
 	// タイプCPSM
-	id = MAKEID('C', 'P', 'S', 'M');
+	id = XM6_MAKEID('C', 'P', 'S', 'M');
 	type = 8;
 
 	// 2軸8ボタン、データ数2
@@ -2659,7 +2659,7 @@ const char* JoyCpsfMd::ButtonDescTable[] = {
 JoyMagical::JoyMagical(PPI *parent, int no) : JoyDevice(parent, no)
 {
 	// タイプMAGI
-	id = MAKEID('M', 'A', 'G', 'I');
+	id = XM6_MAKEID('M', 'A', 'G', 'I');
 	type = 9;
 
 	// 2軸6ボタン、データ数2
@@ -2807,7 +2807,7 @@ const char* JoyMagical::ButtonDescTable[] = {
 JoyLR::JoyLR(PPI *parent, int no) : JoyDevice(parent, no)
 {
 	// タイプXPLR
-	id = MAKEID('X', 'P', 'L', 'R');
+	id = XM6_MAKEID('X', 'P', 'L', 'R');
 	type = 10;
 
 	// 4軸2ボタン、データ数2
@@ -2963,7 +2963,7 @@ const char* JoyLR::ButtonDescTable[] = {
 JoyPacl::JoyPacl(PPI *parent, int no) : JoyDevice(parent, no)
 {
 	// タイプPACL
-	id = MAKEID('P', 'A', 'C', 'L');
+	id = XM6_MAKEID('P', 'A', 'C', 'L');
 	type = 11;
 
 	// 0軸3ボタン、データ数1
@@ -3058,7 +3058,7 @@ const char* JoyPacl::ButtonDescTable[] = {
 JoyBM::JoyBM(PPI *parent, int no) : JoyDevice(parent, no)
 {
 	// タイプBM68
-	id = MAKEID('B', 'M', '6', '8');
+	id = XM6_MAKEID('B', 'M', '6', '8');
 	type = 12;
 
 	// 0軸6ボタン、データ数1

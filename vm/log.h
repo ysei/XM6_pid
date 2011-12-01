@@ -128,4 +128,5 @@ static inline LOG_NONE(enum Log::loglevel level, char *format, ...) {}
 #define LOG3(l, s, a, b, c)	  	((void)0)
 #define LOG4(l, s, a, b, c, d)	((void)0)
 #endif	// XM6_USE_LOG
+
 #endif	// log_h

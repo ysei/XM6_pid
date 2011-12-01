@@ -59,7 +59,7 @@ void FASTCALL Event::AssertDiag() const
 	ASSERT(ev.remain <=(ev.time + 625));
 	ASSERT(ev.device);
 	ASSERT(ev.scheduler);
-	ASSERT(ev.scheduler->GetID() == MAKEID('S', 'C', 'H', 'E'));
+	ASSERT(ev.scheduler->GetID() == XM6_MAKEID('S', 'C', 'H', 'E'));
 //	ASSERT(ev.desc[0] != '\0');
 }
 #endif	// NDEBUG
@@ -190,7 +190,7 @@ void FASTCALL Event::SetDevice(Device *p)
 	// スケジューラを得る
 	vm = p->GetVM();
 	ASSERT(vm);
-	ev.scheduler = (Scheduler*)vm->SearchDevice(MAKEID('S', 'C', 'H', 'E'));
+	ev.scheduler = (Scheduler*)vm->SearchDevice(XM6_MAKEID('S', 'C', 'H', 'E'));
 	ASSERT(ev.scheduler);
 
 	// デバイスを記憶

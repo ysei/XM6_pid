@@ -51,11 +51,6 @@
 //	基本型定義
 //
 //---------------------------------------------------------------------------
-//	typedef uint8_t uint8_t;
-//	typedef uint16_t uint16_t;
-//	typedef uint32_t uint32_t;
-//	typedef int int;
-
 //#define	XM6_USE_EVENT_DESC
 
 namespace XM6_pid {
@@ -86,50 +81,21 @@ namespace XM6_pid {
 
 	typedef int (__stdcall *XM6_RTC_CALLBACK)(XM6_RTC*);
 
-//	struct FiosPath;
-	struct FiosPath {
-		enum {
-			PATH_MAX	= 260,
-		};
-		char	path[PATH_MAX];
+	class FiosPath {
+	protected:
+							FiosPath() {}						// Do not use 'new'. see create()
+				void		operator=(const FiosPath&);		// Do not use '=' operator. see set()
+	public:
+		virtual				~FiosPath() {}
+		virtual	int			getSaveInfo(const void*& srcPtr, int& srcMaxBytes) const = 0;
+		virtual	int			getLoadInfo(void*& dstPtr, int& dstMaxBytes) = 0;
+		virtual	void		clear() = 0;
+		virtual	void		set(const FiosPath* p) = 0;
+		virtual	const char*	getLongPath() const = 0;
+		virtual	const char*	getShort() const = 0;
+		virtual	int			cmpPath(const FiosPath* p) = 0;
 
-		int getSaveInfo(const void*& srcPtr, int& srcMaxBytes) const {
-			srcPtr = (const void*) &path[0];
-			srcMaxBytes = sizeof(PATH_MAX);
-			return 1;
-		}
-
-		int getLoadInfo(void*& dstPtr, int& dstMaxBytes) {
-			dstPtr = (void*) &path[0];
-			dstMaxBytes = sizeof(PATH_MAX);
-			return 1;
-		}
-
-		void clear() {
-		//	path[0] = 0;
-			memset(path, 0, sizeof(path));
-		}
-
-		void set(const FiosPath* p) {
-			memcpy(path, p->path, sizeof(path));
-		}
-
-		const char* getShort() const {
-			const char* ret = 0;
-			for(const char* p = &path[0]; *p != 0; ++p) {
-				if(*p == '\\') {
-					ret = p;
-				}
-			}
-			if(ret) {
-				ret += 1;
-			} else {
-				ret = &path[0];
-			}
-			return ret;
-		}
-
-		int cmpPath(const FiosPath* p);
+		static	FiosPath*	create();
 	};
 
 	class XM6_FILEIO_SYSTEM {
@@ -168,7 +134,7 @@ namespace XM6_pid {
 //	IDマクロ
 //
 //---------------------------------------------------------------------------
-#define MAKEID(a, b, c, d)	((uint32_t)((a<<24) | (b<<16) | (c<<8) | d))
+#define XM6_MAKEID(a, b, c, d)	((uint32_t)((a<<24) | (b<<16) | (c<<8) | d))
 
 //---------------------------------------------------------------------------
 //

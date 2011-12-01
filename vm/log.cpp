@@ -58,12 +58,12 @@ int FASTCALL Log::Init(VM *vm)
 
 	// CPUを取得
 	ASSERT(!cpu);
-	cpu = (CPU *)vm->SearchDevice(MAKEID('C', 'P', 'U', ' '));
+	cpu = (CPU *)vm->SearchDevice(XM6_MAKEID('C', 'P', 'U', ' '));
 	ASSERT(cpu);
 
 	// スケジューラを取得
 	ASSERT(!scheduler);
-	scheduler = (Scheduler *)vm->SearchDevice(MAKEID('S', 'C', 'H', 'E'));
+	scheduler = (Scheduler *)vm->SearchDevice(XM6_MAKEID('S', 'C', 'H', 'E'));
 	ASSERT(scheduler);
 
 	// 同期オブジェクト作成
@@ -119,9 +119,9 @@ void FASTCALL Log::AssertDiag() const
 {
 	ASSERT(this);
 	ASSERT(cpu);
-	ASSERT(cpu->GetID() == MAKEID('C', 'P', 'U', ' '));
+	ASSERT(cpu->GetID() == XM6_MAKEID('C', 'P', 'U', ' '));
 	ASSERT(scheduler);
-	ASSERT(scheduler->GetID() == MAKEID('S', 'C', 'H', 'E'));
+	ASSERT(scheduler->GetID() == XM6_MAKEID('S', 'C', 'H', 'E'));
 	ASSERT(sync);
 	ASSERT((logtop >= 0) && (logtop < LogMax));
 	ASSERT((lognum >= 0) && (lognum <= LogMax));

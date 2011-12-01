@@ -23,7 +23,12 @@
 //	ADPCM
 //
 //===========================================================================
-//#define ADPCM_LOG
+#if defined(ADPCM_LOG)
+#undef  ADPCM_LOG
+#define ADPCM_LOG(...)	__VA_ARGS__
+#else
+#define ADPCM_LOG(...)
+#endif
 
 //---------------------------------------------------------------------------
 //
@@ -33,7 +38,7 @@
 ADPCM::ADPCM(VM *p) : MemDevice(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('A', 'P', 'C', 'M');
+	dev.id = XM6_MAKEID('A', 'P', 'C', 'M');
 	dev.desc = "ADPCM (MSM6258V)";
 
 	// 開始アドレス、終了アドレス
@@ -67,7 +72,7 @@ int FASTCALL ADPCM::Init()
 
 	// DMAC取得
 	ASSERT(!dmac);
-	dmac = (DMAC*)vm->SearchDevice(MAKEID('D', 'M', 'A', 'C'));
+	dmac = (DMAC*)vm->SearchDevice(XM6_MAKEID('D', 'M', 'A', 'C'));
 	ASSERT(dmac);
 
 	// バッファ確保
@@ -84,9 +89,7 @@ int FASTCALL ADPCM::Init()
 
 	// イベント作成
 	event.SetDevice(this);
-#if defined(XM6_USE_EVENT_DESC)
 	event.SetDesc("Sampling");
-#endif
 	event.SetUser(0);
 	event.SetTime(0);
 	scheduler->AddEvent(&event);
@@ -164,9 +167,7 @@ void FASTCALL ADPCM::Reset()
 	// イベントを止める
 	event.SetUser(0);
 	event.SetTime(0);
-#if defined(XM6_USE_EVENT_DESC)
 	event.SetDesc("Sampling");
-#endif
 }
 
 //---------------------------------------------------------------------------
@@ -268,11 +269,11 @@ void FASTCALL ADPCM::AssertDiag() const
 	MemDevice::AssertDiag();
 
 	ASSERT(this);
-	ASSERT(GetID() == MAKEID('A', 'P', 'C', 'M'));
+	ASSERT(GetID() == XM6_MAKEID('A', 'P', 'C', 'M'));
 	ASSERT(memdev.first == 0xe92000);
 	ASSERT(memdev.last == 0xe93fff);
 	ASSERT(dmac);
-	ASSERT(dmac->GetID() == MAKEID('D', 'M', 'A', 'C'));
+	ASSERT(dmac->GetID() == XM6_MAKEID('D', 'M', 'A', 'C'));
 	ASSERT((adpcm.panpot >= 0) && (adpcm.panpot <= 3));
 	ASSERT((adpcm.play == TRUE) || (adpcm.play == FALSE));
 	ASSERT((adpcm.rec == TRUE) || (adpcm.rec == FALSE));
@@ -381,9 +382,7 @@ void FASTCALL ADPCM::WriteByte(uint32_t addr, uint32_t data)
 			return;
 		}
 
-#if defined(ADPCM_LOG)
-		LOG1(Log::Normal, "ADPCMコマンド $%02X", data);
-#endif	// ADPCM_LOG
+		ADPCM_LOG(LOG1(Log::Normal, "ADPCMコマンド $%02X", data));
 
 		// コマンドレジスタ
 		if (data & 1) {
@@ -511,11 +510,7 @@ int FASTCALL ADPCM::Callback(Event *ev)
 			if (ev->GetUser() == 0) {
 				// 0x88,0x80,0x00以外はスタートフラグON
 				if ((adpcm.data != 0x88) && (adpcm.data != 0x80) && (adpcm.data != 0x00)) {
-#if defined(ADPCM_LOG)
-					if (!adpcm.started) {
-						LOG0(Log::Normal, "初回有効データ検出");
-					}
-#endif	// ADPCM_LOG
+					ADPCM_LOG((!adpcm.started) && LOG0(Log::Normal, "初回有効データ検出"));
 					adpcm.started = TRUE;
 				}
 
@@ -537,13 +532,7 @@ int FASTCALL ADPCM::Callback(Event *ev)
 		if (ev->GetTime() == adpcm.speed) {
 			return TRUE;
 		}
-#if defined(XM6_USE_EVENT_DESC)
-		{
-			char string[64];
-			sprintf(string, "Sampling %dHz", (2 * 1000 * 1000) / adpcm.speed);
-			ev->SetDesc(string);
-		}
-#endif
+		ev->SetDesc("Sampling %dHz", (2 * 1000 * 1000) / adpcm.speed);
 		ev->SetTime(adpcm.speed);
 		return TRUE;
 	}
@@ -555,13 +544,7 @@ int FASTCALL ADPCM::Callback(Event *ev)
 	if (ev->GetTime() == adpcm.speed) {
 		return TRUE;
 	}
-#if defined(XM6_USE_EVENT_DESC)
-	{
-		char string[64];
-		sprintf(string, "Sampling %dHz", (2 * 1000 * 1000) / adpcm.speed);
-		ev->SetDesc(string);
-	}
-#endif
+	ev->SetDesc("Sampling %dHz", (2 * 1000 * 1000) / adpcm.speed);
 	ev->SetTime(adpcm.speed);
 	return TRUE;
 }
@@ -577,9 +560,7 @@ void FASTCALL ADPCM::SetClock(uint32_t clk)
 	ASSERT((clk == 4) || (clk == 8));
 	ASSERT_DIAG();
 
-#if defined(ADPCM_LOG)
-	LOG1(Log::Normal, "クロック %dMHz", clk);
-#endif	// ADPCM_LOG
+	ADPCM_LOG(LOG1(Log::Normal, "クロック %dMHz", clk));
 
 	// 速度を再計算
 	adpcm.clock = clk;
@@ -597,9 +578,7 @@ void FASTCALL ADPCM::SetRatio(uint32_t ratio)
 	ASSERT((ratio >= 0) || (ratio <= 3));
 	ASSERT_DIAG();
 
-#if defined(ADPCM_LOG)
-	LOG1(Log::Normal, "速度比率 %d", ratio);
-#endif	// ADPCM_LOG
+	ADPCM_LOG(LOG1(Log::Normal, "速度比率 %d", ratio));
 
 	// ratio=3は2とみなす
 	if (ratio == 3) {
@@ -625,9 +604,7 @@ void FASTCALL ADPCM::SetPanpot(uint32_t panpot)
 	ASSERT((panpot >= 0) || (panpot <= 3));
 	ASSERT_DIAG();
 
-#if defined(ADPCM_LOG)
-	LOG1(Log::Normal, "パンポット指定 %d", panpot);
-#endif	// ADPCM_LOG
+	ADPCM_LOG(LOG1(Log::Normal, "パンポット指定 %d", panpot));
 
 	adpcm.panpot = panpot;
 }
@@ -664,9 +641,7 @@ void FASTCALL ADPCM::Start(int type)
 	ASSERT((type == 0) || (type == 1));
 	ASSERT_DIAG();
 
-#if defined(ADPCM_LOG)
-	LOG1(Log::Normal, "再生開始 %d", type);
-#endif	// ADPCM_LOG
+	ADPCM_LOG(LOG1(Log::Normal, "再生開始 %d", type));
 
 	// アクティブフラグを上げる
 	adpcm.active = TRUE;
@@ -678,11 +653,7 @@ void FASTCALL ADPCM::Start(int type)
 	event.SetUser(type);
 
 	// ここで必ず時間設定(実機とは異なる可能性があるが、FM音源との同期を優先)
-#if defined(XM6_USE_EVENT_DESC)
-	char string[64];
-	sprintf(string, "Sampling %dHz", (2 * 1000 * 1000) / adpcm.speed);
-	event.SetDesc(string);
-#endif
+	event.SetDesc("Sampling %dHz", (2 * 1000 * 1000) / adpcm.speed);
 	event.SetTime(adpcm.speed);
 
 	// 初回のイベントをここで実行(FM音源との同期をとる特別措置)
@@ -699,9 +670,7 @@ void FASTCALL ADPCM::Stop()
 	ASSERT(this);
 	ASSERT_DIAG();
 
-#if defined(ADPCM_LOG)
-	LOG0(Log::Normal, "停止");
-#endif	// ADPCM_LOG
+	ADPCM_LOG(LOG0(Log::Normal, "停止"));
 
 	// フラグを降ろす
 	adpcm.active = FALSE;
@@ -851,9 +820,7 @@ void FASTCALL ADPCM::Decode(int data, int num, int valid)
 	// 個数を更新
 	adpcm.number += (num << 1);
 	if (adpcm.number >= BufMax) {
-#if defined(ADPCM_LOG)
-		LOG0(Log::Warning, "ADPCMバッファ オーバーラン");
-#endif	// ADPCM_LOG
+		ADPCM_LOG(LOG0(Log::Warning, "ADPCMバッファ オーバーラン"));
 		adpcm.number = BufMax;
 		adpcm.readpoint = adpcm.writepoint;
 	}
@@ -883,9 +850,7 @@ void FASTCALL ADPCM::InitBuf(uint32_t rate)
 	ASSERT(rate > 0);
 	ASSERT((rate % 100) == 0);
 
-#if defined(ADPCM_LOG)
-	LOG0(Log::Normal, "バッファ初期化");
-#endif	// ADPCM_LOG
+	ADPCM_LOG(LOG0(Log::Normal, "バッファ初期化"));
 
 	// カウンタ、ポインタ
 	adpcm.number = 0;
@@ -1060,11 +1025,7 @@ void FASTCALL ADPCM::Wait(int num)
 		i *= adpcm.sync_rate;
 		adpcm.wait = -((625 * num) / i);
 
-#if defined(ADPCM_LOG)
-		if (adpcm.wait != 0) {
-			LOG1(Log::Normal, "ウェイト設定 %d", adpcm.wait);
-		}
-#endif	// ADPCM_LOG
+		ADPCM_LOG(adpcm.wait && LOG1(Log::Normal, "ウェイト設定 %d", adpcm.wait));
 		return;
 	}
 
@@ -1078,11 +1039,7 @@ void FASTCALL ADPCM::Wait(int num)
 	i *= adpcm.sync_rate;
 	adpcm.wait = (625 * num) / i;
 
-#if defined(ADPCM_LOG)
-	if (adpcm.wait != 0) {
-		LOG1(Log::Normal, "ウェイト設定 %d", adpcm.wait);
-	}
-#endif	// ADPCM_LOG
+	ADPCM_LOG(adpcm.wait && LOG1(Log::Normal, "ウェイト設定 %d", adpcm.wait));
 }
 
 //---------------------------------------------------------------------------

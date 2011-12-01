@@ -33,7 +33,7 @@
 Printer::Printer(VM *p) : MemDevice(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('P', 'R', 'N', ' ');
+	dev.id = XM6_MAKEID('P', 'R', 'N', ' ');
 	dev.desc = "Printer";
 
 	// 開始アドレス、終了アドレス
@@ -60,7 +60,7 @@ int FASTCALL Printer::Init()
 	}
 
 	// IOSCを取得
-	iosc = (IOSC*)vm->SearchDevice(MAKEID('I', 'O', 'S', 'C'));
+	iosc = (IOSC*)vm->SearchDevice(XM6_MAKEID('I', 'O', 'S', 'C'));
 	ASSERT(iosc);
 
 	// Sync作成

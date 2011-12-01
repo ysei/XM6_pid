@@ -323,7 +323,7 @@ uint32_t FASTCALL VM::Save(const Filepath& path)
 	}
 
 	// 識別用として、デバイス名ENDを与える
-	id = MAKEID('E', 'N', 'D', ' ');
+	id = XM6_MAKEID('E', 'N', 'D', ' ');
 	if (!fio.Write(&id, sizeof(id))) {
 		fio.Close();
 		return 0;
@@ -406,7 +406,7 @@ uint32_t FASTCALL VM::Load(const Filepath& path)
 		}
 
 		// 終端チェック
-		if (id == MAKEID('E', 'N', 'D', ' ')) {
+		if (id == XM6_MAKEID('E', 'N', 'D', ' ')) {
 			break;
 		}
 

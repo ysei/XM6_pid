@@ -35,7 +35,7 @@
 MFP::MFP(VM *p) : MemDevice(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('M', 'F', 'P', ' ');
+	dev.id = XM6_MAKEID('M', 'F', 'P', ' ');
 	dev.desc = "MFP (MC68901)";
 
 	// 開始アドレス、終了アドレス
@@ -67,13 +67,7 @@ int FASTCALL MFP::Init()
 	// タイマイベント初期化
 	for (i=0; i<4; i++) {
 		timer[i].SetDevice(this);
-#if defined(XM6_USE_EVENT_DESC)
-		{
-			char buf[0x20];
-			sprintf(buf, "Timer-%c", 'A' + i);
-			timer[i].SetDesc(buf);
-		}
-#endif
+		timer[i].SetDesc("Timer-%c", 'A' + i);
 		timer[i].SetUser(i);
 		timer[i].SetTime(0);
 
@@ -84,15 +78,13 @@ int FASTCALL MFP::Init()
 	}
 
 	// キーボードを取得
-	keyboard = (Keyboard*)vm->SearchDevice(MAKEID('K', 'E', 'Y', 'B'));
+	keyboard = (Keyboard*)vm->SearchDevice(XM6_MAKEID('K', 'E', 'Y', 'B'));
 
 	// USARTイベント初期化
 	// 1(us)x13(回)x(デューティ50%)x16(分周)x10(bit)で約2400bps
 	usart.SetDevice(this);
 	usart.SetUser(4);
-#if defined(XM6_USE_EVENT_DESC)
 	usart.SetDesc("USART 2400bps");
-#endif
 	usart.SetTime(8320);
 	scheduler->AddEvent(&usart);
 

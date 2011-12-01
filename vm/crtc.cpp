@@ -28,7 +28,12 @@
 //	CRTC
 //
 //===========================================================================
-//#define CRTC_LOG
+#if defined(CRTC_LOG)
+#undef  CRTC_LOG
+#define CRTC_LOG(...)	__VA_ARGS__
+#else
+#define	CRTC_LOG(...)
+#endif
 
 //---------------------------------------------------------------------------
 //
@@ -38,7 +43,7 @@
 CRTC::CRTC(VM *p) : MemDevice(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('C', 'R', 'T', 'C');
+	dev.id = XM6_MAKEID('C', 'R', 'T', 'C');
 	dev.desc = "CRTC (VICON)";
 
 	// 開始アドレス、終了アドレス
@@ -69,34 +74,32 @@ int FASTCALL CRTC::Init()
 	}
 
 	// テキストVRAMを取得
-	tvram = (TVRAM*)vm->SearchDevice(MAKEID('T', 'V', 'R', 'M'));
+	tvram = (TVRAM*)vm->SearchDevice(XM6_MAKEID('T', 'V', 'R', 'M'));
 	ASSERT(tvram);
 
 	// グラフィックVRAMを取得
-	gvram = (GVRAM*)vm->SearchDevice(MAKEID('G', 'V', 'R', 'M'));
+	gvram = (GVRAM*)vm->SearchDevice(XM6_MAKEID('G', 'V', 'R', 'M'));
 	ASSERT(gvram);
 
 	// スプライトコントローラを取得
-	sprite = (Sprite*)vm->SearchDevice(MAKEID('S', 'P', 'R', ' '));
+	sprite = (Sprite*)vm->SearchDevice(XM6_MAKEID('S', 'P', 'R', ' '));
 	ASSERT(sprite);
 
 	// MFPを取得
-	mfp = (MFP*)vm->SearchDevice(MAKEID('M', 'F', 'P', ' '));
+	mfp = (MFP*)vm->SearchDevice(XM6_MAKEID('M', 'F', 'P', ' '));
 	ASSERT(mfp);
 
 	// レンダラを取得
-	render = (Render*)vm->SearchDevice(MAKEID('R', 'E', 'N', 'D'));
+	render = (Render*)vm->SearchDevice(XM6_MAKEID('R', 'E', 'N', 'D'));
 	ASSERT(render);
 
 	// プリンタを取得
-	printer = (Printer*)vm->SearchDevice(MAKEID('P', 'R', 'N', ' '));
+	printer = (Printer*)vm->SearchDevice(XM6_MAKEID('P', 'R', 'N', ' '));
 	ASSERT(printer);
 
 	// イベント初期化
 	event.SetDevice(this);
-#if defined(XM6_USE_EVENT_DESC)
 	event.SetDesc("H-Sync");
-#endif
 	event.SetTime(0);
 	scheduler->AddEvent(&event);
 
@@ -447,9 +450,7 @@ void FASTCALL CRTC::WriteByte(uint32_t addr, uint32_t data)
 			crtc.text_scrly &= 0x3ff;
 			render->TextScrl(crtc.text_scrlx, crtc.text_scrly);
 
-#if defined(CRTC_LOG)
-			LOG2(Log::Normal, "テキストスクロール x=%d y=%d", crtc.text_scrlx, crtc.text_scrly);
-#endif	// CRTC_LOG
+			CRTC_LOG(LOG2(Log::Normal, "テキストスクロール x=%d y=%d", crtc.text_scrlx, crtc.text_scrly));
 			return;
 		}
 
@@ -497,16 +498,12 @@ void FASTCALL CRTC::WriteByte(uint32_t addr, uint32_t data)
 		if (data & 0x02) {
 			// ラスタコピーと共用、ラスタコピー優先(大戦略III'90)
 			if ((crtc.fast_clr == 0) && !crtc.raster_copy) {
-#if defined(CRTC_LOG)
-				LOG0(Log::Normal, "グラフィック高速クリア指示");
-#endif	// CRTC_LOG
+				CRTC_LOG(LOG0(Log::Normal, "グラフィック高速クリア指示"));
 				crtc.fast_clr = 1;
 			}
-#if defined(CRTC_LOG)
 			else {
-				LOG1(Log::Normal, "グラフィック高速クリア指示無効 State=%d", crtc.fast_clr);
+				CRTC_LOG(LOG1(Log::Normal, "グラフィック高速クリア指示無効 State=%d", crtc.fast_clr));
 			}
-#endif	//CRTC_LOG
 		}
 		return;
 	}
@@ -760,16 +757,14 @@ void FASTCALL CRTC::ReCalc()
 {
 	int dc;
 	int over;
-uint16_t *p;
+	uint16_t *p;
 
 	ASSERT(this);
 	ASSERT(crtc.changed);
 
 	// CRTCレジスタ0がクリアされていれば、無効(Macエミュレータ)
 	if (crtc.reg[0x0] != 0) {
-#if defined(CRTC_LOG)
-		LOG0(Log::Normal, "再計算");
-#endif	// CRTC_LOG
+		CRTC_LOG(LOG0(Log::Normal, "再計算"));
 
 		// ドットクロックを取得
 		dc = Get8DotClock();
@@ -888,9 +883,7 @@ void FASTCALL CRTC::VBlank()
 
 		// グラフィック高速クリア
 		if (crtc.fast_clr == 2) {
-#if defined(CRTC_LOG)
-			LOG0(Log::Normal, "グラフィック高速クリア終了");
-#endif	// CRTC_LOG
+			CRTC_LOG(LOG0(Log::Normal, "グラフィック高速クリア終了"));
 			crtc.fast_clr = 0;
 		}
 
@@ -913,9 +906,7 @@ void FASTCALL CRTC::VBlank()
 
 	// グラフィック高速クリア
 	if (crtc.fast_clr == 1) {
-#if defined(CRTC_LOG)
-		LOG1(Log::Normal, "グラフィック高速クリア開始 data=%02X", crtc.reg[42]);
-#endif	// CRTC_LOG
+		CRTC_LOG(LOG1(Log::Normal, "グラフィック高速クリア開始 data=%02X", crtc.reg[42]));
 		crtc.fast_clr = 2;
 		gvram->FastSet((uint32_t)crtc.reg[42]);
 		gvram->FastClr(&crtc);
@@ -1036,16 +1027,10 @@ int FASTCALL CRTC::GetHRL() const
 //---------------------------------------------------------------------------
 void FASTCALL CRTC::CheckRaster()
 {
-#if 1
 	if (crtc.raster_count == crtc.raster_int) {
-#else
-	if (crtc.raster_count == crtc.raster_int) {
-#endif
 		// 要求
 		mfp->SetGPIP(6, 0);
-#if defined(CRTC_LOG)
-		LOG2(Log::Normal, "ラスタ割り込み要求 raster=%d scan=%d", crtc.raster_count, crtc.v_scan);
-#endif	// CRTC_LOG
+		CRTC_LOG(LOG2(Log::Normal, "ラスタ割り込み要求 raster=%d scan=%d", crtc.raster_count, crtc.v_scan));
 	}
 	else {
 		// 取り下げ

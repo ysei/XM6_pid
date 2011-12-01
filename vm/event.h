@@ -58,8 +58,10 @@ public:
 	Device* FASTCALL GetDevice() const	{ return ev.device; }
 										// 親デバイス取得
 #if defined(XM6_USE_EVENT_DESC)
-	void FASTCALL SetDesc(const char *desc);
+	void FASTCALL SetDesc(const char *fmt, ...);
 										// 名称設定
+#else
+	void FASTCALL SetDesc(const char *fmt, ...) {}	// 名称設定
 #endif
 	const char* FASTCALL GetDesc() const;
 										// 名称取得

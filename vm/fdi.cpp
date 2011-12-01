@@ -2095,7 +2095,7 @@ FDIDisk::FDIDisk(int index, FDI *fdi)
 	// インデックス、ID指定
 	disk.index = index;
 	disk.fdi = fdi;
-	disk.id = MAKEID('I', 'N', 'I', 'T');
+	disk.id = XM6_MAKEID('I', 'N', 'I', 'T');
 
 	// 状態
 	disk.writep = FALSE;
@@ -4053,7 +4053,7 @@ uint32_t FASTCALL FDI::GetID() const
 
 	// ノットレディならNULL
 	if (!IsReady()) {
-		return MAKEID('N', 'U', 'L', 'L');
+		return XM6_MAKEID('N', 'U', 'L', 'L');
 	}
 
 	// ディスクに聞く
@@ -4635,7 +4635,7 @@ void FASTCALL FDI::Adjust()
 	disk = GetFirst();
 	while (disk) {
 		// D68の場合のみ
-		if (disk->GetID() == MAKEID('D', '6', '8', ' ')) {
+		if (disk->GetID() == XM6_MAKEID('D', '6', '8', ' ')) {
 			disk68 = (FDIDiskD68*)disk;
 			disk68->AdjustOffset();
 		}
@@ -4748,7 +4748,7 @@ int FASTCALL FDITrack2HD::Load(const Filepath& path, uint32_t offset)
 FDIDisk2HD::FDIDisk2HD(int index, FDI *fdi) : FDIDisk(index, fdi)
 {
 	// ID設定
-	disk.id = MAKEID('2', 'H', 'D', ' ');
+	disk.id = XM6_MAKEID('2', 'H', 'D', ' ');
 }
 
 //---------------------------------------------------------------------------
@@ -5207,7 +5207,7 @@ int FASTCALL FDITrackDIM::Load(const Filepath& path, uint32_t offset, int load)
 FDIDiskDIM::FDIDiskDIM(int index, FDI *fdi) : FDIDisk(index, fdi)
 {
 	// ID設定
-	disk.id = MAKEID('D', 'I', 'M', ' ');
+	disk.id = XM6_MAKEID('D', 'I', 'M', ' ');
 
 	// ヘッダをクリア
 	memset(dim_hdr, 0, sizeof(dim_hdr));
@@ -6101,7 +6101,7 @@ const int FDITrackD68::Gap3Table[] = {
 FDIDiskD68::FDIDiskD68(int index, FDI *fdi) : FDIDisk(index, fdi)
 {
 	// ID設定
-	disk.id = MAKEID('D', '6', '8', ' ');
+	disk.id = XM6_MAKEID('D', '6', '8', ' ');
 
 	// ヘッダをクリア
 	memset(d68_hdr, 0, sizeof(d68_hdr));
@@ -6947,7 +6947,7 @@ int FASTCALL FDITrackBAD::Save(const Filepath& path, uint32_t offset)
 FDIDiskBAD::FDIDiskBAD(int index, FDI *fdi) : FDIDisk(index, fdi)
 {
 	// ID設定
-	disk.id = MAKEID('B', 'A', 'D', ' ');
+	disk.id = XM6_MAKEID('B', 'A', 'D', ' ');
 }
 
 //---------------------------------------------------------------------------
@@ -7233,7 +7233,7 @@ int FASTCALL FDITrack2DD::Load(const Filepath& path, uint32_t offset)
 FDIDisk2DD::FDIDisk2DD(int index, FDI *fdi) : FDIDisk(index, fdi)
 {
 	// ID設定
-	disk.id = MAKEID('2', 'D', 'D', ' ');
+	disk.id = XM6_MAKEID('2', 'D', 'D', ' ');
 }
 
 //---------------------------------------------------------------------------
@@ -7584,7 +7584,7 @@ int FASTCALL FDITrack2HQ::Load(const Filepath& path, uint32_t offset)
 FDIDisk2HQ::FDIDisk2HQ(int index, FDI *fdi) : FDIDisk(index, fdi)
 {
 	// ID設定
-	disk.id = MAKEID('2', 'H', 'Q', ' ');
+	disk.id = XM6_MAKEID('2', 'H', 'Q', ' ');
 }
 
 //---------------------------------------------------------------------------

@@ -22,7 +22,12 @@
 //	エリアセット
 //
 //===========================================================================
-//#define AREASET_LOG
+#if defined(AREASET_LOG)
+#undef  AREASET_LOG
+#define AREASET_LOG(...)	__VA_ARGS__
+#else
+#define AREASET_LOG(...)
+#endif
 
 //---------------------------------------------------------------------------
 //
@@ -32,7 +37,7 @@
 AreaSet::AreaSet(VM *p) : MemDevice(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('A', 'R', 'E', 'A');
+	dev.id = XM6_MAKEID('A', 'R', 'E', 'A');
 	dev.desc = "Area Set";
 
 	// 開始アドレス、終了アドレス
@@ -58,7 +63,7 @@ int FASTCALL AreaSet::Init()
 	}
 
 	// メモリ取得
-	memory = (Memory*)vm->SearchDevice(MAKEID('M', 'E', 'M', ' '));
+	memory = (Memory*)vm->SearchDevice(XM6_MAKEID('M', 'E', 'M', ' '));
 	ASSERT(memory);
 
 	return TRUE;
@@ -88,9 +93,7 @@ void FASTCALL AreaSet::Reset()
 	ASSERT(this);
 	LOG0(Log::Normal, "リセット");
 
-#if defined(AREASET_LOG)
-	LOG0(Log::Normal, "エリアセット設定 $00");
-#endif	// AREASET_LOG
+	AREASET_LOG(LOG0(Log::Normal, "エリアセット設定 $00"));
 
 	// エリア指定初期化
 	area = 0;

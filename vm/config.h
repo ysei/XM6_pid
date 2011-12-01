@@ -69,19 +69,19 @@ public:
 	// SASI
 	int sasi_drives;					// SASIドライブ数
 	int sasi_sramsync;					// SASIメモリスイッチ自動更新
-	Path	sasi_file[16];	// SASIイメージファイル
+	Path*	sasi_file[16];	// SASIイメージファイル
 
 	// SxSI
 	int sxsi_drives;					// SxSIドライブ数
 	int sxsi_mofirst;					// MOドライブ優先割り当て
-	Path	sxsi_file[6];	// SxSIイメージファイル
+	Path*	sxsi_file[6];	// SxSIイメージファイル
 
 	// ポート
 	int port_com;						// COMxポート
-	Path	port_recvlog;	// シリアル受信ログ
+	Path*	port_recvlog;	// シリアル受信ログ
 	int port_384;						// シリアル38400bps固定
 	int port_lpt;						// LPTxポート
-	Path	port_sendlog;	// パラレル送信ログ
+	Path*	port_sendlog;	// パラレル送信ログ
 
 	// MIDI
 	int midi_bid;						// MIDIボードID
@@ -127,7 +127,7 @@ public:
 	int scsi_drives;					// SCSIドライブ数
 	int scsi_sramsync;					// SCSIメモリスイッチ自動更新
 	int scsi_mofirst;					// MOドライブ優先割り当て
-	Path	scsi_file[5];	// SCSIイメージファイル
+	Path*	scsi_file[5];	// SCSIイメージファイル
 };
 
 //===========================================================================
@@ -151,7 +151,7 @@ public:
 	int resume_xm6;					// ステート有効フラグ
 	int resume_screen;					// 画面モードレジューム
 	int resume_dir;					// デフォルトディレクトリレジューム
-	Path	resume_path;	// デフォルトディレクトリ
+	Path*	resume_path;	// デフォルトディレクトリ
 
 	// 描画
 	int caption_info;					// キャプション情報表示
@@ -170,10 +170,10 @@ public:
 
 	// ホスト側ファイルシステム
 	uint32_t host_option;					// 動作フラグ (class CHostFilename 参照)
-	int host_resume;					// ベースパス状態復元有効 FALSEだと毎回スキャンする
+	int 	host_resume;					// ベースパス状態復元有効 FALSEだと毎回スキャンする
 	uint32_t host_drives;					// 有効なドライブ数
 	uint32_t host_flag[10];				// 動作フラグ (class CWinFileDrv 参照)
-	Path	host_path[10];		// ベースパス
+	Path*	host_path[10];		// ベースパス
 };
 
 #endif	// config_h

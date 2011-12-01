@@ -33,7 +33,7 @@
 IOSC::IOSC(VM *p) : MemDevice(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('I', 'O', 'S', 'C');
+	dev.id = XM6_MAKEID('I', 'O', 'S', 'C');
 	dev.desc = "I/O Ctrl (IOSC-2)";
 
 	// 開始アドレス、終了アドレス
@@ -59,7 +59,7 @@ int FASTCALL IOSC::Init()
 	}
 
 	// プリンタを取得
-	printer = (Printer*)vm->SearchDevice(MAKEID('P', 'R', 'N', ' '));
+	printer = (Printer*)vm->SearchDevice(XM6_MAKEID('P', 'R', 'N', ' '));
 	ASSERT(printer);
 
 	return TRUE;

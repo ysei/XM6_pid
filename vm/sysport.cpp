@@ -37,7 +37,7 @@
 SysPort::SysPort(VM *p) : MemDevice(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('S', 'Y', 'S', 'P');
+	dev.id = XM6_MAKEID('S', 'Y', 'S', 'P');
 	dev.desc = "System (MESSIAH)";
 
 	// 開始アドレス、終了アドレス
@@ -71,27 +71,27 @@ int FASTCALL SysPort::Init()
 
 	// メモリ取得
 	ASSERT(!memory);
-	memory = (Memory*)vm->SearchDevice(MAKEID('M', 'E', 'M', ' '));
+	memory = (Memory*)vm->SearchDevice(XM6_MAKEID('M', 'E', 'M', ' '));
 	ASSERT(memory);
 
 	// SRAM取得
 	ASSERT(!sram);
-	sram = (SRAM*)vm->SearchDevice(MAKEID('S', 'R', 'A', 'M'));
+	sram = (SRAM*)vm->SearchDevice(XM6_MAKEID('S', 'R', 'A', 'M'));
 	ASSERT(sram);
 
 	// キーボード取得
 	ASSERT(!keyboard);
-	keyboard = (Keyboard*)vm->SearchDevice(MAKEID('K', 'E', 'Y', 'B'));
+	keyboard = (Keyboard*)vm->SearchDevice(XM6_MAKEID('K', 'E', 'Y', 'B'));
 	ASSERT(keyboard);
 
 	// CRTC取得
 	ASSERT(!crtc);
-	crtc = (CRTC*)vm->SearchDevice(MAKEID('C', 'R', 'T', 'C'));
+	crtc = (CRTC*)vm->SearchDevice(XM6_MAKEID('C', 'R', 'T', 'C'));
 	ASSERT(crtc);
 
 	// レンダラ取得
 	ASSERT(!render);
-	render = (Render*)vm->SearchDevice(MAKEID('R', 'E', 'N', 'D'));
+	render = (Render*)vm->SearchDevice(XM6_MAKEID('R', 'E', 'N', 'D'));
 	ASSERT(render);
 
 	return TRUE;
@@ -218,17 +218,17 @@ void FASTCALL SysPort::AssertDiag() const
 	MemDevice::AssertDiag();
 
 	ASSERT(this);
-	ASSERT(GetID() == MAKEID('S', 'Y', 'S', 'P'));
+	ASSERT(GetID() == XM6_MAKEID('S', 'Y', 'S', 'P'));
 	ASSERT(memdev.first == 0xe8e000);
 	ASSERT(memdev.last == 0xe8ffff);
 	ASSERT(memory);
-	ASSERT(memory->GetID() == MAKEID('M', 'E', 'M', ' '));
+	ASSERT(memory->GetID() == XM6_MAKEID('M', 'E', 'M', ' '));
 	ASSERT(sram);
-	ASSERT(sram->GetID() == MAKEID('S', 'R', 'A', 'M'));
+	ASSERT(sram->GetID() == XM6_MAKEID('S', 'R', 'A', 'M'));
 	ASSERT(keyboard);
-	ASSERT(keyboard->GetID() == MAKEID('K', 'E', 'Y', 'B'));
+	ASSERT(keyboard->GetID() == XM6_MAKEID('K', 'E', 'Y', 'B'));
 	ASSERT(crtc);
-	ASSERT(crtc->GetID() == MAKEID('C', 'R', 'T', 'C'));
+	ASSERT(crtc->GetID() == XM6_MAKEID('C', 'R', 'T', 'C'));
 	ASSERT(sysport.contrast <= 0x0f);
 	ASSERT(sysport.scope_3d <= 0x03);
 	ASSERT(sysport.image_unit <= 0x1f);

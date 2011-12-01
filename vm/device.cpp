@@ -95,7 +95,7 @@ void FASTCALL Device::Reset()
 //	セーブ
 //
 //---------------------------------------------------------------------------
-int FASTCALL Device::Save(Fileio* /*fio*/, int /*ver*/)
+int FASTCALL Device::Save(Fileio*, int)
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -108,7 +108,7 @@ int FASTCALL Device::Save(Fileio* /*fio*/, int /*ver*/)
 //	ロード
 //
 //---------------------------------------------------------------------------
-int FASTCALL Device::Load(Fileio* /*fio*/, int /*ver*/)
+int FASTCALL Device::Load(Fileio*, int)
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -121,7 +121,7 @@ int FASTCALL Device::Load(Fileio* /*fio*/, int /*ver*/)
 //	設定適用
 //
 //---------------------------------------------------------------------------
-void FASTCALL Device::ApplyCfg(const Config* /*config*/)
+void FASTCALL Device::ApplyCfg(const Config*)
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -151,7 +151,7 @@ void FASTCALL Device::AssertDiag() const
 //	イベントコールバック
 //
 //---------------------------------------------------------------------------
-int FASTCALL Device::Callback(Event* /*ev*/)
+int FASTCALL Device::Callback(Event*)
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -200,9 +200,9 @@ int FASTCALL MemDevice::Init()
 	}
 
 	// CPU、スケジューラ取得
-	cpu = (CPU*)vm->SearchDevice(MAKEID('C', 'P', 'U', ' '));
+	cpu = (CPU*)vm->SearchDevice(XM6_MAKEID('C', 'P', 'U', ' '));
 	ASSERT(cpu);
-	scheduler = (Scheduler*)vm->SearchDevice(MAKEID('S', 'C', 'H', 'E'));
+	scheduler = (Scheduler*)vm->SearchDevice(XM6_MAKEID('S', 'C', 'H', 'E'));
 	ASSERT(scheduler);
 
 	return TRUE;
@@ -213,7 +213,7 @@ int FASTCALL MemDevice::Init()
 //	バイト読み込み
 //
 //---------------------------------------------------------------------------
-uint32_t FASTCALL MemDevice::ReadByte(uint32_t /*addr*/)
+uint32_t FASTCALL MemDevice::ReadByte(uint32_t)
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -248,7 +248,7 @@ uint32_t FASTCALL MemDevice::ReadWord(uint32_t addr)
 //	バイト書き込み
 //
 //---------------------------------------------------------------------------
-void FASTCALL MemDevice::WriteByte(uint32_t /*addr*/, uint32_t /*data*/)
+void FASTCALL MemDevice::WriteByte(uint32_t, uint32_t)
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -276,7 +276,7 @@ void FASTCALL MemDevice::WriteWord(uint32_t addr, uint32_t data)
 //	読み込みのみ
 //
 //---------------------------------------------------------------------------
-uint32_t FASTCALL MemDevice::ReadOnly(uint32_t /*addr*/) const
+uint32_t FASTCALL MemDevice::ReadOnly(uint32_t) const
 {
 	ASSERT(this);
 	ASSERT_DIAG();
@@ -301,8 +301,8 @@ void FASTCALL MemDevice::AssertDiag() const
 	ASSERT(memdev.last <= 0xffffff);
 	ASSERT(memdev.first <= memdev.last);
 	ASSERT(cpu);
-	ASSERT(cpu->GetID() == MAKEID('C', 'P', 'U', ' '));
+	ASSERT(cpu->GetID() == XM6_MAKEID('C', 'P', 'U', ' '));
 	ASSERT(scheduler);
-	ASSERT(scheduler->GetID() == MAKEID('S', 'C', 'H', 'E'));
+	ASSERT(scheduler->GetID() == XM6_MAKEID('S', 'C', 'H', 'E'));
 }
 #endif	// NDEBUG

@@ -29,7 +29,7 @@
 //---------------------------------------------------------------------------
 Filepath::Filepath()
 {
-	ffb.path = new XM6_pid::FiosPath();
+	ffb.path = XM6_pid::FiosPath::create();
 	Clear();
 }
 
@@ -51,7 +51,11 @@ XM6_pid::FiosPath* FASTCALL Filepath::getFiosPath() {
 }
 
 void FASTCALL Filepath::set(const Filepath* fp) {
-	ffb.path->set(fp->ffb.path);
+	if(fp) {
+		ffb.path->set(fp->ffb.path);
+	} else {
+		Clear();
+	}
 }
 
 //---------------------------------------------------------------------------
@@ -93,7 +97,11 @@ void FASTCALL Filepath::SysFile(XM6_pid::SysFileType sys)
 void FASTCALL Filepath::SetPath(const XM6_pid::FiosPath* pPath) {
 	ASSERT(this);
 
-	ffb.path->set(pPath);
+	if(pPath) {
+		ffb.path->set(pPath);
+	} else {
+		Clear();
+	}
 }
 
 //---------------------------------------------------------------------------

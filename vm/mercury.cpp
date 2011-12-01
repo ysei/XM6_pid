@@ -30,7 +30,7 @@
 Mercury::Mercury(VM *p) : MemDevice(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('M', 'E', 'R', 'C');
+	dev.id = XM6_MAKEID('M', 'E', 'R', 'C');
 	dev.desc = "Mercury-Unit";
 
 	// 開始アドレス、終了アドレス
@@ -136,7 +136,7 @@ void FASTCALL Mercury::AssertDiag() const
 	MemDevice::AssertDiag();
 
 	ASSERT(this);
-	ASSERT(GetID() == MAKEID('M', 'E', 'R', 'C'));
+	ASSERT(GetID() == XM6_MAKEID('M', 'E', 'R', 'C'));
 	ASSERT(memdev.first == 0xecc000);
 	ASSERT(memdev.last == 0xecdfff);
 }

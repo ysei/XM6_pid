@@ -34,7 +34,7 @@
 DMAC::DMAC(VM *p) : MemDevice(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('D', 'M', 'A', 'C');
+	dev.id = XM6_MAKEID('D', 'M', 'A', 'C');
 	dev.desc = "DMAC (HD63450)";
 
 	// 開始アドレス、終了アドレス
@@ -63,11 +63,11 @@ int FASTCALL DMAC::Init()
 	}
 
 	// メモリ取得
-	memory = (Memory*)vm->SearchDevice(MAKEID('M', 'E', 'M', ' '));
+	memory = (Memory*)vm->SearchDevice(XM6_MAKEID('M', 'E', 'M', ' '));
 	ASSERT(memory);
 
 	// FDC取得
-	fdc = (FDC*)vm->SearchDevice(MAKEID('F', 'D', 'C', ' '));
+	fdc = (FDC*)vm->SearchDevice(XM6_MAKEID('F', 'D', 'C', ' '));
 	ASSERT(fdc);
 
 	// チャネルワークを初期化

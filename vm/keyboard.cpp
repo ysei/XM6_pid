@@ -34,7 +34,7 @@
 Keyboard::Keyboard(VM *p) : Device(p)
 {
 	// デバイスIDを初期化
-	dev.id = MAKEID('K', 'E', 'Y', 'B');
+	dev.id = XM6_MAKEID('K', 'E', 'Y', 'B');
 	dev.desc = "Keyboard";
 
 	// オブジェクト
@@ -64,22 +64,20 @@ int FASTCALL Keyboard::Init()
 	sync = new Sync;
 
 	// MFP取得
-	mfp = (MFP*)vm->SearchDevice(MAKEID('M', 'F', 'P', ' '));
+	mfp = (MFP*)vm->SearchDevice(XM6_MAKEID('M', 'F', 'P', ' '));
 	ASSERT(mfp);
 
 	// スケジューラ取得
-	scheduler = (Scheduler*)vm->SearchDevice(MAKEID('S', 'C', 'H', 'E'));
+	scheduler = (Scheduler*)vm->SearchDevice(XM6_MAKEID('S', 'C', 'H', 'E'));
 	ASSERT(scheduler);
 
 	// マウス取得
-	mouse = (Mouse*)vm->SearchDevice(MAKEID('M', 'O', 'U', 'S'));
+	mouse = (Mouse*)vm->SearchDevice(XM6_MAKEID('M', 'O', 'U', 'S'));
 	ASSERT(mouse);
 
 	// イベント追加
 	event.SetDevice(this);
-#if defined(XM6_USE_EVENT_DESC)
 	event.SetDesc("Key Repeat");
-#endif
 	event.SetUser(0);
 	event.SetTime(0);
 	scheduler->AddEvent(&event);
