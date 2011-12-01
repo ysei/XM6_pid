@@ -123,6 +123,14 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\cpu\musashi331\m68kcpu.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\cpu\musashi331\m68kdasm.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\mfc\mfc_nomfc.cpp" />
     <ClCompile Include="..\mfc\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -188,6 +196,9 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\cpu\musashi331\m68k.h" />
+    <ClInclude Include="..\cpu\musashi331\m68kconf.h" />
+    <ClInclude Include="..\cpu\musashi331\m68kcpu.h" />
     <ClInclude Include="..\mfc\mfc_nomfc.h" />
     <ClInclude Include="..\mfc\stdafx.h" />
     <ClInclude Include="..\vm\adpcm.h" />

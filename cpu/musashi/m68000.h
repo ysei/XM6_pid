@@ -85,6 +85,7 @@ enum
 	M68K_GENPCBASE = STATE_GENPCBASE
 };
 
+/*
 typedef void (*m68k_bkpt_ack_func)(device_t *device, UINT32 data);
 typedef void (*m68k_reset_func)(device_t *device);
 typedef void (*m68k_cmpild_func)(device_t *device, UINT32 data, UINT8 reg);
@@ -120,5 +121,5 @@ void m68k_set_cmpild_callback(device_t *device, m68k_cmpild_func callback);
 void m68k_set_rte_callback(device_t *device, m68k_rte_func callback);
 void m68k_set_tas_callback(device_t *device, m68k_tas_func callback);
 UINT16 m68k_get_fc(device_t *device);
-
+*/
 #endif /* __M68000_H__ */

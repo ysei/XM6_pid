@@ -29,8 +29,9 @@ typedef class _m68ki_cpu_core m68ki_cpu_core;
 
 
 #include "m68000.h"
-#include "../../../lib/softfloat/milieu.h"
-#include "../../../lib/softfloat/softfloat.h"
+//#include "../../../lib/softfloat/milieu.h"
+//#include "../../../lib/softfloat/softfloat.h"
+typedef UINT32 offs_t;			// mame0144s/src/emu/memory.h
 
 #include <limits.h>
 #include <setjmp.h>
@@ -539,6 +540,7 @@ union _fp_reg
 
 /* Redirect memory calls */
 
+/*
 typedef delegate<UINT8 (offs_t)> m68k_read8_delegate;
 typedef delegate<UINT16 (offs_t)> m68k_readimm16_delegate;
 typedef delegate<UINT16 (offs_t)> m68k_read16_delegate;
@@ -546,6 +548,14 @@ typedef delegate<UINT32 (offs_t)> m68k_read32_delegate;
 typedef delegate<void (offs_t, UINT8)> m68k_write8_delegate;
 typedef delegate<void (offs_t, UINT16)> m68k_write16_delegate;
 typedef delegate<void (offs_t, UINT32)> m68k_write32_delegate;
+*/
+typedef UINT8	(*m68k_read8_delegate)		(offs_t);
+typedef UINT16	(*m68k_readimm16_delegate)	(offs_t);
+typedef UINT16	(*m68k_read16_delegate)		(offs_t);
+typedef UINT32	(*m68k_read32_delegate)		(offs_t);
+typedef void	(*m68k_write8_delegate)		(offs_t, UINT8);
+typedef void	(*m68k_write16_delegate)	(offs_t, UINT16);
+typedef void	(*m68k_write32_delegate)	(offs_t, UINT32);
 
 class m68k_memory_interface
 {

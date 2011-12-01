@@ -24,9 +24,53 @@
 /* ======================================================================== */
 /* ================================ INCLUDES ============================== */
 /* ======================================================================== */
-
+#include "stdafx.h"
 #define m68ki_cpu_core void
-#include "emu.h"
+//#include "emu.h"
+#define	_CRT_SECURE_NO_WARNINGS	//add
+#include <stdio.h>				//sprintf
+#include <stdint.h>				// uint32_t, uint16_t
+#include <stdlib.h>				// qsort
+extern "C" char* strcpy(char* dst, const char* src);
+extern "C" char* strcat(char* dst, const char* src);
+extern "C" size_t strlen(const char* s);
+typedef uint32_t UINT32;
+typedef uint16_t UINT16;
+typedef uint8_t UINT8;
+
+typedef UINT32 offs_t;			// mame0144s/src/emu/memory.h
+
+#pragma warning (disable : 4100)
+
+// Disassembler constants : mame0144s/mame/src/emu/emu.h
+const UINT32 DASMFLAG_SUPPORTED		= 0x80000000;	// are disassembly flags supported?
+const UINT32 DASMFLAG_STEP_OUT		= 0x40000000;	// this instruction should be the end of a step out sequence
+const UINT32 DASMFLAG_STEP_OVER		= 0x20000000;	// this instruction should be stepped over by setting a breakpoint afterwards
+const UINT32 DASMFLAG_OVERINSTMASK	= 0x18000000;	// number of extra instructions to skip when stepping over
+const UINT32 DASMFLAG_OVERINSTSHIFT	= 27;			// bits to shift after masking to get the value
+const UINT32 DASMFLAG_LENGTHMASK	= 0x0000ffff;	// the low 16-bits contain the actual length
+
+#define	ARRAY_LENGTH(x)	(sizeof(x)/sizeof(x[0]))
+
+#if 0
+#define CPU_DISASSEMBLE_NAME(name)		cpu_disassemble_##name
+#define CPU_DISASSEMBLE(name)			offs_t CPU_DISASSEMBLE_NAME(name)(legacy_cpu_device *device, char *buffer, offs_t pc, const UINT8 *oprom, const UINT8 *opram, int options)
+#define CPU_DISASSEMBLE_CALL(name)		CPU_DISASSEMBLE_NAME(name)(device, buffer, pc, oprom, opram, options)
+#else
+#define CPU_DISASSEMBLE_NAME(name)		cpu_disassemble_##name
+#define CPU_DISASSEMBLE(name)			offs_t CPU_DISASSEMBLE_NAME(name)(void * dmy0_, char *buffer, offs_t pc, const UINT8 *oprom, const UINT8 *opram, int dmy1_)
+//#define CPU_DISASSEMBLE_CALL(name)		CPU_DISASSEMBLE_NAME(name)(device, buffer, pc, oprom, opram, options)
+#endif
+
+// standard state indexes	mame0144s/mame/src/emu/distate.h
+enum
+{
+	STATE_GENPC = -1,				// generic program counter (live)
+	STATE_GENPCBASE = -2,			// generic program counter (base of current instruction)
+	STATE_GENSP = -3,				// generic stack pointer
+	STATE_GENFLAGS = -4				// generic flags
+};
+
 #include "m68000.h"
 
 #ifndef DECL_SPEC
@@ -1338,22 +1382,24 @@ static void d68040_cinv(void)
 {
 	LIMIT_CPU_TYPES(M68040_PLUS);
 
-	static const char *cachetype[4] = { "nop", "data", "inst", "both" };
-
-	switch((g_cpu_ir>>3)&3)
 	{
-		case 0:
-			sprintf(g_dasm_str, "cinv (illegal scope); (4)");
-			break;
-		case 1:
-			sprintf(g_dasm_str, "cinvl   %s, (A%d); (4)", cachetype[(g_cpu_ir>>6)&3], g_cpu_ir&7);
-			break;
-		case 2:
-			sprintf(g_dasm_str, "cinvp   %s, (A%d); (4)", cachetype[(g_cpu_ir>>6)&3], g_cpu_ir&7);
-			break;
-		case 3:
-			sprintf(g_dasm_str, "cinva   %s; (4)", cachetype[(g_cpu_ir>>6)&3]);
-			break;
+		static const char *cachetype[4] = { "nop", "data", "inst", "both" };
+
+		switch((g_cpu_ir>>3)&3)
+		{
+			case 0:
+				sprintf(g_dasm_str, "cinv (illegal scope); (4)");
+				break;
+			case 1:
+				sprintf(g_dasm_str, "cinvl   %s, (A%d); (4)", cachetype[(g_cpu_ir>>6)&3], g_cpu_ir&7);
+				break;
+			case 2:
+				sprintf(g_dasm_str, "cinvp   %s, (A%d); (4)", cachetype[(g_cpu_ir>>6)&3], g_cpu_ir&7);
+				break;
+			case 3:
+				sprintf(g_dasm_str, "cinva   %s; (4)", cachetype[(g_cpu_ir>>6)&3]);
+				break;
+		}
 	}
 }
 
@@ -3234,7 +3280,7 @@ static void d68020_unpk_mm(void)
 static void d68851_p000(void)
 {
 	char* str;
-	UINT16 modes = read_imm_16();
+	UINT16 modes = (UINT16) read_imm_16();
 
 	// do this after fetching the second PMOVE word so we properly get the 3rd if necessary
 	str = get_ea_mode_str_32(g_cpu_ir);
@@ -3343,7 +3389,7 @@ static void d68851_pbcc32(void)
 static void d68851_pdbcc(void)
 {
 	UINT32 temp_pc = g_cpu_pc;
-	UINT16 modes = read_imm_16();
+	UINT16 modes = (UINT16) read_imm_16();
 
 	sprintf(g_dasm_str, "pb%s %x", g_mmucond[modes&0xf], temp_pc + make_int_16(read_imm_16()));
 }

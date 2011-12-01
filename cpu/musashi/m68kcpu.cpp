@@ -31,10 +31,34 @@ static const char copyright_notice[] =
 /* ======================================================================== */
 /* ================================ INCLUDES ============================== */
 /* ======================================================================== */
+#include "stdafx.h"
+typedef uint64_t UINT64;
+typedef uint32_t UINT32;
+typedef uint16_t UINT16;
+typedef uint8_t UINT8;
+class address_space;
+class direct_read_data;
+class device_t;
+typedef struct {		// mame0144s/mame/src/lib/softfloat/softfloat.h
+	uint16_t	high;
+	uint64_t	low;
+} floatx80;
 
-#include "emu.h"
-#include "debugger.h"
-#include <setjmp.h>
+// IRQ callback to be called by executing devices when an IRQ is actually taken
+typedef int (*device_irq_callback)(device_t *device, int irqnum);	// mame0144s/mame/src/emu/diexec.h
+
+@@m68k_bkpt_ack_func bkpt_ack_callback;         /* Breakpoint Acknowledge */
+
+//	#include "emu.h"
+//	#include "debugger.h"
+//	#include <setjmp.h>
+enum
+{
+	STATE_GENPC = -1,				// generic program counter (live)
+	STATE_GENPCBASE = -2,			// generic program counter (base of current instruction)
+	STATE_GENSP = -3,				// generic stack pointer
+	STATE_GENFLAGS = -4				// generic flags
+};
 #include "m68kcpu.h"
 #include "m68kops.h"
 #include "m68kfpu.c"

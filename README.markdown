@@ -5,7 +5,7 @@
 What is it?
 ===========
 
-XM6_pid (XM6 Platform Independent Development) is experimental project
+XM6_pid (XM6 for Platform Independent Development) is experimental project
 to achieve XM6 source code as platform independent.
 
 
