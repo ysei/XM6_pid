@@ -3507,7 +3507,8 @@ void FASTCALL FDIDisk::GetName(char *buf) const
 	ASSERT(this);
 	ASSERT(buf);
 
-	strcpy(buf, disk.name);
+//	strcpy(buf, disk.name);
+	memcpy(buf, disk.name, sizeof(disk.name));
 }
 
 //---------------------------------------------------------------------------
@@ -3902,7 +3903,8 @@ FDITrack* FASTCALL FDIDisk::Search(int track) const
 
 void FDIDisk::setDiskNameByFilepath(const Filepath* filepath) {
 	if(filepath) {
-		strcpy(disk.name, filepath->GetShort());
+//		strcpy(disk.name, filepath->GetShort());
+		filepath->getName(disk.name, sizeof(disk.name));
 	}
 }
 
@@ -5273,7 +5275,7 @@ int FASTCALL FDIDiskDIM::Open(const Filepath& path, uint32_t offset)
 	// ヘッダ読み込み、認識文字列チェック
 	fio.Read(dim_hdr, sizeof(dim_hdr));
 	fio.Close();
-	if (strcmp((char*)&dim_hdr[171], "DIFC HEADER  ") != 0) {
+	if (memcmp((char*)&dim_hdr[171], "DIFC HEADER  ", 13) != 0) {
 		return FALSE;
 	}
 
@@ -5285,7 +5287,8 @@ int FASTCALL FDIDiskDIM::Open(const Filepath& path, uint32_t offset)
 	if (dim_hdr[0xc2] != '\0') {
 		// ディスク名はコメントとする(必ず60文字で切る)
 		dim_hdr[0xc2 + 60] = '\0';
-		strcpy(disk.name, (char*)&dim_hdr[0xc2]);
+//		strcpy(disk.name, (char*)&dim_hdr[0xc2]);
+		memcpy(disk.name, (char*)&dim_hdr[0xc2], 60);
 	}
 	else {
 		// ディスク名はファイル名＋拡張子とする
@@ -5585,14 +5588,16 @@ int FASTCALL FDIDiskDIM::Create(const Filepath& path, const option_t *opt)
 	}
 
 	// ヘッダ残り(日付は2001-03-22 00:00:00とする; XM6開発開始日)
-	strcpy((char*)&dim_hdr[0xab], "DIFC HEADER  ");
+//	strcpy((char*)&dim_hdr[0xab], "DIFC HEADER  ");
+	memcpy((char*)&dim_hdr[0xab], "DIFC HEADER  ", 14);
 	dim_hdr[0xfe] = 0x19;
 	if (opt->phyfmt == FDI_2HDA) {
 		dim_hdr[0xff] = 0x01;
 	}
 	memcpy(&dim_hdr[0xba], iocsdata, 8);
-	ASSERT(strlen(opt->name) < 60);
-	strcpy((char*)&dim_hdr[0xc2], opt->name);
+//	ASSERT(strlen(opt->name) < 60);
+//	strcpy((char*)&dim_hdr[0xc2], opt->name);
+	memcpy((char*)&dim_hdr[0xc2], opt->name, 60);
 
 	// ヘッダ書き込み
 	if (!fio.Open(path, Fileio::WriteOnly)) {
@@ -6173,13 +6178,15 @@ int FASTCALL FDIDiskD68::Open(const Filepath& path, uint32_t offset)
 
 	// ディスク名(必ず16文字で切る)
 	d68_hdr[0x10] = 0;
-	strcpy(disk.name, (char*)d68_hdr);
+//	strcpy(disk.name, (char*)d68_hdr);
+	memcpy(disk.name, (char*)d68_hdr, 16);
 	// ただしシングルディスクで、NULLかDefaultならファイル名+拡張子
 	if (!GetFDI()->IsMulti()) {
-		if (strcmp(disk.name, "Default") == 0) {
+		if (memcmp(disk.name, "Default", 7) == 0) {
 			setDiskNameByFilepath(&path);
 		}
-		if (strlen(disk.name) == 0) {
+//		if (strlen(disk.name) == 0) {
+		if (disk.name[0] == 0) {
 			setDiskNameByFilepath(&path);
 		}
 	}
@@ -6512,8 +6519,9 @@ int FASTCALL FDIDiskD68::Create(const Filepath& path, const option_t *opt)
 
 	// ヘッダを作る
 	memset(&d68_hdr, 0, sizeof(d68_hdr));
-	ASSERT(strlen(opt->name) <= 16);
-	strcpy((char*)d68_hdr, opt->name);
+//	ASSERT(strlen(opt->name) <= 16);
+//	strcpy((char*)d68_hdr, opt->name);
+	memcpy((char*)d68_hdr, opt->name, 16);
 	if (opt->phyfmt == FDI_2DD) {
 		hd = FALSE;
 		d68_hdr[0x1b] = 0x10;
@@ -6535,7 +6543,8 @@ int FASTCALL FDIDiskD68::Create(const Filepath& path, const option_t *opt)
 
 	// パス、ディスク名、オフセット
 	disk.path.set(&path);
-	strcpy(disk.name, opt->name);
+//	strcpy(disk.name, opt->name);
+	memcpy(disk.name, opt->name, sizeof(disk.name));
 	disk.offset = 0;
 
 	// トラックを作成(0～81シリンダまで、82*2トラック)

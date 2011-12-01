@@ -21,8 +21,6 @@
 #include "filepath.h"
 #include "scsi.h"
 
-#include <new>	// placement new
-
 //===========================================================================
 //
 //	SCSI
@@ -52,9 +50,8 @@ SCSI::SCSI(VM *p) : MemDevice(p)
 	memory = NULL;
 	sram = NULL;
 
-	scsihd = new Filepath [DeviceMax];
 	for(int i = 0; i < DeviceMax; ++i) {
-		new (&scsihd[i]) Filepath;		// inplace new
+		scsihd[i] = new Filepath();
 	}
 }
 
@@ -132,8 +129,10 @@ void FASTCALL SCSI::Cleanup()
 	ASSERT(this);
 
 	if(scsihd) {
-		delete [] scsihd;
-		scsihd = 0;
+		for(int i = 0; i < DeviceMax; ++i) {
+			delete scsihd[i];
+			scsihd[i] = 0;
+		}
 	}
 
 	// HD削除
@@ -320,7 +319,7 @@ int FASTCALL SCSI::Save(Fileio *fio, int ver)
 
 	// パスをセーブ
 	for (i=0; i<HDMax; i++) {
-		if (!scsihd[i].Save(fio, ver)) {
+		if (!scsihd[i]->Save(fio, ver)) {
 			return FALSE;
 		}
 	}
@@ -438,7 +437,7 @@ int FASTCALL SCSI::Load(Fileio *fio, int ver)
 
 	// パスをロード
 	for (i=0; i<HDMax; i++) {
-		if (!scsihd[i].Load(fio, ver)) {
+		if (!scsihd[i]->Load(fio, ver)) {
 			return FALSE;
 		}
 	}
@@ -521,7 +520,7 @@ void FASTCALL SCSI::ApplyCfg(const Config *config)
 
 	// SCSIファイル名
 	for (i=0; i<HDMax; i++) {
-		scsihd[i].SetPath(config->scsi_file[i]);
+		scsihd[i]->SetPath(config->scsi_file[i]);
 	}
 
 	// ディスク再構築
@@ -3877,7 +3876,7 @@ void FASTCALL SCSI::Construct()
 		if (scsi.hd[i]) {
 			// パスを取得し、一致すればok
 			scsi.hd[i]->GetPath(path);
-			if (path.CmpPath(scsihd[i])) {
+			if (path.CmpPath(*scsihd[i])) {
 				// パスが一致している
 				continue;
 			}
@@ -3889,7 +3888,7 @@ void FASTCALL SCSI::Construct()
 
 		// SCSIハードディスクを作成してオープンを試みる
 		scsi.hd[i] = new SCSIHD(this);
-		if (!scsi.hd[i]->Open(scsihd[i])) {
+		if (!scsi.hd[i]->Open(*scsihd[i])) {
 			// オープン失敗。この番号のscsi.diskはNULLとする
 			delete scsi.hd[i];
 			scsi.hd[i] = NULL;

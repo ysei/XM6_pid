@@ -26,7 +26,8 @@ public:
 	void						FASTCALL	Clear();									// クリア
 	void						FASTCALL	SysFile(XM6_pid::SysFileType sys);			// ファイル設定(システム)
 	void						FASTCALL	SetPath(const XM6_pid::FiosPath* fiosPath);	// ファイル設定(ユーザ)
-	const char*					FASTCALL	GetShort() const;							// ショート名取得(const char*)
+//	const char*					FASTCALL	GetShort() const;							// ショート名取得(const char*)
+	int							FASTCALL	getName(char* dst, int dstBytes) const;		// ショート名取得
 	int							FASTCALL	CmpPath(const Filepath& path) const;		// パス比較
 	int							FASTCALL	Save(Fileio *fio, int ver) const;			// セーブ
 	int							FASTCALL	Load(Fileio *fio, int ver);					// ロード

@@ -205,13 +205,8 @@ private:
 										// 内部データ
 	Event event;
 										// イベント
-//	Filepath sasihd[SASIMax];
-	Filepath* sasihd;
-										// SASI-HDファイルパス
-//	Filepath scsihd[SCSIMax];
-	Filepath* scsihd;
-										// SCSI-HDファイルパス
-//	Filepath scsimo;
+	Filepath* sasihd[SASIMax];
+	Filepath* scsihd[SCSIMax];
 	Filepath* scsimo;
 										// SCSI-MOファイルパス
 	DMAC *dmac;

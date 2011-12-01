@@ -30,6 +30,8 @@
 //	äÓñ{É}ÉNÉç
 //
 //---------------------------------------------------------------------------
+extern "C" void XM6_xassert(const char* message, const char* file, int line);
+
 #if !defined(ASSERT)
 #if !defined(NDEBUG)
 #define ASSERT(cond)	assert(cond)
@@ -92,7 +94,8 @@ namespace XM6_pid {
 		virtual	void		clear() = 0;
 		virtual	void		set(const FiosPath* p) = 0;
 		virtual	const char*	getLongPath() const = 0;
-		virtual	const char*	getShort() const = 0;
+//		virtual	const char*	getShort() const = 0;
+		virtual	int			getName(char* dst, int dstBytes) const = 0;
 		virtual	int			cmpPath(const FiosPath* p) = 0;
 
 		static	FiosPath*	create();

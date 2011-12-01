@@ -333,12 +333,8 @@ private:
 	// ドライブ・ファイルパス
 	void FASTCALL Construct();
 										// ドライブ構築
-//	Filepath* scsihd[DeviceMax];
-//	Filepath scsihd[DeviceMax];
-//										// SCSI-HDファイルパス
-	Filepath* scsihd;
+	Filepath* scsihd[DeviceMax];
 										// SCSI-HDファイルパス
-
 	// その他
 	scsi_t scsi;
 										// 内部データ

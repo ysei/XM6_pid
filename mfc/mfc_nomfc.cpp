@@ -22,6 +22,13 @@
 #endif
 */
 
+#define WINVER					0x500
+#define _WIN32_WINNT			0x501
+#define VC_EXTRALEAN
+
+#define DIRECTSOUND_VERSION		0x500	// DirectSound5
+#define DIRECTINPUT_VERSION		0x0800	// DirectInput8
+
 // Win32API
 #include <windows.h>
 #include <imm.h>
@@ -117,7 +124,7 @@ public:
 		return &path[0];
 	}
 
-	const char* getShort() const {
+	int getName(char* dst, int dstBytes) const {
 		const char* ret = 0;
 		for(const char* p = &path[0]; *p != 0; ++p) {
 			if(*p == '\\') {
@@ -129,7 +136,9 @@ public:
 		} else {
 			ret = &path[0];
 		}
-		return ret;
+
+		strcpy(dst, ret);
+		return strlen(ret);
 	}
 
 	void set(const FiosPath* p) {

@@ -160,7 +160,8 @@ int FASTCALL Event::Load201(Fileio *fio)
 	}
 
 	// ÉRÉsÅ[(ã§í )
-	strcpy(ev.desc, ev201.desc);
+//	strcpy(ev.desc, ev201.desc);
+	memcpy(ev.desc, ev201.desc, sizeof(ev.desc));
 	ev.user = ev201.user;
 	ev.time = ev201.time;
 	ev.remain = ev201.remain;

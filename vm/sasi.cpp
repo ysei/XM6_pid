@@ -23,9 +23,6 @@
 #include "scsi.h"
 #include "sasi.h"
 
-#include <new>	// placement new
-
-
 //===========================================================================
 //
 //	SASI
@@ -38,7 +35,7 @@
 //	コンストラクタ
 //
 //---------------------------------------------------------------------------
-SASI::SASI(VM *p) : MemDevice(p), sasihd(0), scsihd(0), scsimo(0)
+SASI::SASI(VM *p) : MemDevice(p), scsimo(0)
 {
 	// デバイスIDを初期化
 	dev.id = XM6_MAKEID('S', 'A', 'S', 'I');
@@ -48,13 +45,11 @@ SASI::SASI(VM *p) : MemDevice(p), sasihd(0), scsihd(0), scsimo(0)
 	memdev.first = 0xe96000;
 	memdev.last = 0xe97fff;
 
-	sasihd = new Filepath [SASIMax];
 	for(int i = 0; i < SASIMax; ++i) {
-		new (&sasihd[i]) Filepath;
+		sasihd[i] = new Filepath;
 	}
-	scsihd = new Filepath [SCSIMax];
 	for(int i = 0; i < SCSIMax; ++i) {
-		new (&scsihd[i]) Filepath;
+		scsihd[i] = new Filepath;
 	}
 	scsimo = new Filepath;
 }
@@ -128,13 +123,13 @@ void FASTCALL SASI::Cleanup()
 		delete scsimo;
 		scsimo = 0;
 	}
-	if(scsihd) {
-		delete [] scsihd;
-		scsihd = 0;
+	for(int i = 0; i < SASIMax; ++i) {
+		delete sasihd[i];
+		sasihd[i] = 0;
 	}
-	if(sasihd) {
-		delete [] sasihd;
-		sasihd = 0;
+	for(int i = 0; i < SCSIMax; ++i) {
+		delete scsihd[i];
+		scsihd[i] = 0;
 	}
 
 	// ディスクを削除
@@ -267,12 +262,12 @@ int FASTCALL SASI::Save(Fileio *fio, int ver)
 
 	// パスをセーブ
 	for (i=0; i<SASIMax; i++) {
-		if (!sasihd[i].Save(fio, ver)) {
+		if (!sasihd[i]->Save(fio, ver)) {
 			return FALSE;
 		}
 	}
 	for (i=0; i<SCSIMax; i++) {
-		if (!scsihd[i].Save(fio, ver)) {
+		if (!scsihd[i]->Save(fio, ver)) {
 			return FALSE;
 		}
 	}
@@ -349,12 +344,12 @@ int FASTCALL SASI::Load(Fileio *fio, int ver)
 
 	// パスをロード
 	for (i=0; i<SASIMax; i++) {
-		if (!sasihd[i].Load(fio, ver)) {
+		if (!sasihd[i]->Load(fio, ver)) {
 			return FALSE;
 		}
 	}
 	for (i=0; i<SCSIMax; i++) {
-		if (!scsihd[i].Load(fio, ver)) {
+		if (!scsihd[i]->Load(fio, ver)) {
 			return FALSE;
 		}
 	}
@@ -408,7 +403,7 @@ void FASTCALL SASI::ApplyCfg(const Config *config)
 
 	// SASIファイル名
 	for (i=0; i<SASIMax; i++) {
-		sasihd[i].SetPath(config->sasi_file[i]);
+		sasihd[i]->SetPath(config->sasi_file[i]);
 	}
 
 	// パリティ回路付加
@@ -419,7 +414,7 @@ void FASTCALL SASI::ApplyCfg(const Config *config)
 
 	// SCSIファイル名
 	for (i=0; i<SCSIMax; i++) {
-		scsihd[i].SetPath(config->sxsi_file[i]);
+		scsihd[i]->SetPath(config->sxsi_file[i]);
 	}
 
 	// MO優先フラグ
@@ -901,7 +896,7 @@ void FASTCALL SASI::Construct()
 				if (sasi.disk[i]->IsSASI()) {
 					// パスを取得し、一致すればok
 					sasi.disk[i]->GetPath(path);
-					if (path.CmpPath(sasihd[i])) {
+					if (path.CmpPath(*sasihd[i])) {
 						// パスが一致している
 						break;
 					}
@@ -909,7 +904,7 @@ void FASTCALL SASI::Construct()
 
 				// SASIハードディスクを作成してオープンを試みる
 				sasitmp = new SASIHD(this);
-				if (sasitmp->Open(sasihd[i])) {
+				if (sasitmp->Open(*sasihd[i])) {
 					// LUN設定
 					sasitmp->SetLUN(i & 1);
 					// 入れ替え
@@ -930,7 +925,7 @@ void FASTCALL SASI::Construct()
 				if (sasi.disk[i]->GetID() == XM6_MAKEID('S', 'C', 'H', 'D')) {
 					// パスを取得し、一致すればok
 					sasi.disk[i]->GetPath(path);
-					if (path.CmpPath(scsihd[index])) {
+					if (path.CmpPath(*scsihd[index])) {
 						// パスが一致している
 						index++;
 						break;
@@ -939,7 +934,7 @@ void FASTCALL SASI::Construct()
 
 				// SCSIハードディスクを作成してオープンを試みる
 				scsitmp = new SCSIHD(this);
-				if (scsitmp->Open(scsihd[index])) {
+				if (scsitmp->Open(*scsihd[index])) {
 					// 入れ替え
 					delete sasi.disk[i];
 					sasi.disk[i] = scsitmp;

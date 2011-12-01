@@ -385,7 +385,7 @@ uint32_t FASTCALL VM::Load(const Filepath& path)
 
 	// ヘッダチェック
 	buf[0x09] = '\0';
-	if (strcmp(buf, "XM6 DATA ") != 0) {
+	if (memcmp(buf, "XM6 DATA ", 9) != 0) {
 		fio.Close();
 		return 0;
 	}

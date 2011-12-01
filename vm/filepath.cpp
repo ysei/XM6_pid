@@ -111,9 +111,8 @@ void FASTCALL Filepath::SetPath(const XM6_pid::FiosPath* pPath) {
 //	¦FDIDisk‚Ìdisk.name‚Æ‚ÌŠÖŒW‚ÅA•¶Žš—ñ‚ÍÅ‘å59•¶Žš+I’[‚Æ‚·‚é‚±‚Æ
 //
 //---------------------------------------------------------------------------
-const char* FASTCALL Filepath::GetShort() const
-{
-	return ffb.path->getShort();
+int FASTCALL Filepath::getName(char* dst, int dstBytes) const {
+	return ffb.path->getName(dst, dstBytes);
 }
 
 //---------------------------------------------------------------------------
